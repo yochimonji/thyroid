@@ -1,12 +1,15 @@
 import random
 import os
 import glob
+import itertools
 
+from torch import nn
 from torch.utils.data import Dataset
 from torchvision import transforms
-from PIL import Image
+from torchvision.models import resnet50, resnet18, resnet101, resnet152
 import numpy as np
 import matplotlib.pyplot as plt
+from PIL import Image
 
 
 # 与えられた角度をランダムに一つ選択する
@@ -161,3 +164,22 @@ def show_transform_img(img_path):
     img_transform_val = np.clip(img_transform_val, 0, 1)
     plt.imshow(img_transform_val)
     plt.show()
+    
+    
+# 初期化したネットワークを返却
+def init_net(only_fc=True, pretrained=True):
+#     net = resnet18(pretrained=pretrained)
+#     net = resnet50(pretrained=pretrained)
+    net = resnet101(pretrained=pretrained)  # 性能良い
+#     net = resnet152(pretrained=pretrained)
+    
+    # 最終の全結合層のみ重みの計算をするか否か
+    # する：FineTuning, しない：転移学習
+    if only_fc is True:
+        for p in net.parameters():
+            p.requires_grad = False
+            
+    fc_input_dim = net.fc.in_features
+    net.fc = nn.Linear(fc_input_dim, 8)
+    
+    return net

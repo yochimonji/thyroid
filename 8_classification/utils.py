@@ -1,4 +1,6 @@
 import random
+import os
+import glob
 
 from torchvision import transforms
 
@@ -16,8 +18,7 @@ class MyRotationTransform():
     
 
 # 画像に変換処理を行う
-# ResNetで転移学習するとき、sizeは224×224にする
-# ResNetで転移学習するとき、defaultのmean,stdで標準化する
+# ResNetで転移学習するとき、sizeは224×224、defaultのmean,stdで標準化する
 class ImageTransform():
     def __init__(self, size=224, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
         self.transform = {
@@ -42,3 +43,16 @@ class ImageTransform():
         
     def __call__(self, img, phase):
         return self.transform[phase](img)
+    
+    
+# path以下にあるすべてのディレクトリからtifファイルのパスリスト取得
+def make_datapath_list(path):
+    target_path = os.path.join(path+'/**/*.tif')
+    print(target_path)
+    path_list = []
+    
+    # recursive=True:子ディレクトリも再帰的に探索する
+    for path in glob.glob(target_path, recursive=True):
+        path_list.append(path)
+    
+    return path_list

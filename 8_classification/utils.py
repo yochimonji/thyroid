@@ -103,6 +103,7 @@ class ArrangeNumDataset(Dataset):
         self.transform = transform
         self.phase = phase
         self.targets = self.make_targets()
+        self.weights = self.calc_weights()
         
     def __len__(self):
         return len(self.file_list)
@@ -139,6 +140,18 @@ class ArrangeNumDataset(Dataset):
                     targets.append(self.target_list.index(target))
             
         return targets
+    
+    # ラベル数に応じてweightを計算する
+    # 戻り値がnp.arrayなのに注意。PyTorchで使う場合、Tensorに変換する必要あり
+    def calc_weights(self):
+        data_num = np.bincount(np.array(self.targets))
+        data_num_sum = data_num.sum()
+        weights = []
+        for n in data_num:
+            weights.append(data_num_sum / n)
+        
+        return weights
+            
     
     
 # img_pathの画像をそのまま・train変換・val変換で表示

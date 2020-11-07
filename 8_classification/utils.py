@@ -5,6 +5,8 @@ import glob
 from torch.utils.data import Dataset
 from torchvision import transforms
 from PIL import Image
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 # 与えられた角度をランダムに一つ選択する
@@ -134,3 +136,28 @@ class ArrangeNumDataset(Dataset):
                     targets.append(self.target_list.index(target))
             
         return targets
+    
+    
+# img_pathの画像をそのまま・train変換・val変換で表示
+# 変換した画像を確認する
+def show_transform_img(img_path):
+    img = Image.open(img_path)
+
+    plt.imshow(img)
+    plt.show()
+    
+    transform = ImageTransform()
+
+    img_transform_train = transform(img, phase="train")
+    img_transform_train = img_transform_train.numpy().transpose((1, 2, 0))
+#     標準化で0より下の値になるため0~1にクリップ
+    img_transform_train = np.clip(img_transform_train, 0, 1)
+    plt.imshow(img_transform_train)
+    plt.show()
+
+    img_transform_val = transform(img, phase="val")
+    img_transform_val = img_transform_val.numpy().transpose((1, 2, 0))
+#     標準化で0より下の値になるため0~1にクリップ
+    img_transform_val = np.clip(img_transform_val, 0, 1)
+    plt.imshow(img_transform_val)
+    plt.show()

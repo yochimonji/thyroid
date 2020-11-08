@@ -30,10 +30,10 @@ class ImageTransform():
     def __init__(self, size=224, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
         self.transform = {
             "train": transforms.Compose([  # 他の前処理をまとめる
-                transforms.Resize((size, size)),  # リサイズ
-#                 transforms.RandomResizedCrop(size, scale=(0.8, 1.0)),
+                transforms.Resize((256, 256)),  # リサイズ
 #                 # scaleのサイズとratioのアスペクト比でクロップ後、sizeにリサイズ
-#                 transforms.RandomCrop(size),  # ランダムにクロップ後、sizeにリサイズ
+#                 transforms.RandomResizedCrop(size, scale=(0.8, 1.0)),
+                transforms.RandomCrop(size),  # ランダムにクロップ後、sizeにリサイズ
                 transforms.RandomHorizontalFlip(),  # 50%の確率で左右対称に変換
                 transforms.RandomVerticalFlip(),  # 50%の確率で上下対象に変換
                 MyRotationTransform([0, 90, 180, 270]),  # [0, 90, 180, 270]度で回転
@@ -102,8 +102,8 @@ class ArrangeNumDataset(Dataset):
         self.target_list = target_list
         self.transform = transform
         self.phase = phase
-        self.targets = self.make_targets()
-        self.weights = self.calc_weights()
+        self.targets = self.make_targets()  # self.fileリストと対になるラベルのリスト
+        self.weights = self.calc_weights()  # ラベルリストからweightのリストを生成
         
     def __len__(self):
         return len(self.file_list)
@@ -114,9 +114,7 @@ class ArrangeNumDataset(Dataset):
         if self.transform:
             img = self.transform(img, self.phase)
         
-        for target in self.target_list:
-            if target in img_path:
-                label = self.target_list.index(target)
+        label = self.targets[index]
             
         return img, label
     
@@ -196,3 +194,29 @@ def init_net(only_fc=True, pretrained=True):
     net.fc = nn.Linear(fc_input_dim, 8)
     
     return net
+
+
+# 識別を間違えた画像を表示する
+# dataset:transformしていないdataset
+# ys,ypreds:本物ラベルリスト、予測ラベルリスト
+# indices:シャッフル前のys,ypredsのインデックス（順番）。シャッフルしていない場合None
+# y,ypred:表示したいラベル番号
+def show_wrong_img(dataset, ys, ypreds, indices=None, y=None, ypred=None):
+    if indices is None:
+        indices = range(dataset.__len__())
+    
+    # miss.shape:(len(dataset), 3)
+    miss = np.stack([ys, ypreds, indices], axis=1)
+    miss = miss[miss[:, 0]!=miss[:, 1]]  # ミス画像のみ残す
+    if y is not None:
+        miss = miss[miss[:, 0]==y]  # 本物のラベルがyのみ残す
+    if ypred is not None:
+        miss = miss[miss[:, 1]==ypred]  # 予測のラベルがypredのみ残す
+        
+    print("wrong_img_num:", len(miss))
+    for (y, ypred, index) in miss:
+        img = dataset[index][0]
+        plt.imshow(img)
+        plt.title("real:{}  prediction:{}".format(
+            dataset.target_list[y], dataset.target_list[ypred]))
+        plt.show()

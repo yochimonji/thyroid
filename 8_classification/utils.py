@@ -6,7 +6,7 @@ import itertools
 from torch import nn
 from torch.utils.data import Dataset
 from torchvision import transforms
-from torchvision.models import resnet50, resnet18, resnet101, resnet152
+from torchvision.models import resnet18, resnet50, resnet101, resnet152
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -68,14 +68,14 @@ def make_datapath_list(path):
 # データ数を調整したDatasetを作成するクラス
 # オーバー・アンダーサンプリング用
 class ArrangeNumDataset(Dataset):
-    def __init__(self, file_list, target_list, phase="train", transform=None, arrange=None):
+    def __init__(self, file_list, label_list, phase=None, transform=None, arrange=None):
         # データ数の調整なしの場合
         if arrange == None:
             self.file_list = file_list
             
         else:
             self.file_list = []
-            file_dict = self.make_file_dict(file_list, target_list)
+            file_dict = self.make_file_dict(file_list, label_list)
             
             # undrersampling(+bagging)を行う場合
             if arrange == "undersampling":
@@ -99,10 +99,10 @@ class ArrangeNumDataset(Dataset):
                 
             self.file_list = list(itertools.chain.from_iterable(self.file_list))
             
-        self.target_list = target_list
+        self.label_list = label_list
         self.transform = transform
         self.phase = phase
-        self.targets = self.make_targets()  # self.fileリストと対になるラベルのリスト
+        self.labels = self.make_labels()  # self.fileリストと対になるラベルのリスト
         self.weights = self.calc_weights()  # ラベルリストからweightのリストを生成
         
     def __len__(self):
@@ -114,35 +114,35 @@ class ArrangeNumDataset(Dataset):
         if self.transform:
             img = self.transform(img, self.phase)
         
-        label = self.targets[index]
+        label = self.labels[index]
             
         return img, label
     
     # key:ラベル、value:ファイルパスリストの辞書を作成
-    def make_file_dict(self, file_list, target_list):
-        targets = {}
-        for target in target_list:
-            targets[target] = list()
+    def make_file_dict(self, file_list, label_list):
+        labels = {}
+        for label in label_list:
+            labels[label] = list()
         for file in file_list:
-            for key in targets.keys():
+            for key in labels.keys():
                 if key in file:
-                    targets[key].append(file)
-        return targets
+                    labels[key].append(file)
+        return labels
     
     # self.file_listのラベルリストを返却する
-    def make_targets(self):
-        targets = []
+    def make_labels(self):
+        labels = []
         for file in self.file_list:
-            for target in self.target_list:
-                if target in file:
-                    targets.append(self.target_list.index(target))
+            for label in self.label_list:
+                if label in file:
+                    labels.append(self.label_list.index(label))
             
-        return targets
+        return labels
     
     # ラベル数に応じてweightを計算する
     # 戻り値がnp.arrayなのに注意。PyTorchで使う場合、Tensorに変換する必要あり
     def calc_weights(self):
-        data_num = np.bincount(np.array(self.targets))
+        data_num = np.bincount(np.array(self.labels))
         data_num_sum = data_num.sum()
         weights = []
         for n in data_num:
@@ -218,5 +218,5 @@ def show_wrong_img(dataset, ys, ypreds, indices=None, y=None, ypred=None):
         img = dataset[index][0]
         plt.imshow(img)
         plt.title("real:{}  prediction:{}".format(
-            dataset.target_list[y], dataset.target_list[ypred]))
+            dataset.label_list[y], dataset.label_list[ypred]))
         plt.show()

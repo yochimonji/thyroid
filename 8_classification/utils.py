@@ -30,10 +30,10 @@ class ImageTransform():
     def __init__(self, size=224, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
         self.transform = {
             "train": transforms.Compose([  # 他の前処理をまとめる
-                transforms.Resize((256, 256)),  # リサイズ
+                transforms.Resize((size, size)),  # リサイズ
 #                 # scaleのサイズとratioのアスペクト比でクロップ後、sizeにリサイズ
 #                 transforms.RandomResizedCrop(size, scale=(0.8, 1.0)),
-                transforms.RandomCrop(size),  # ランダムにクロップ後、sizeにリサイズ
+#                 transforms.RandomCrop(size),  # ランダムにクロップ後、sizeにリサイズ
                 transforms.RandomHorizontalFlip(),  # 50%の確率で左右対称に変換
                 transforms.RandomVerticalFlip(),  # 50%の確率で上下対象に変換
                 MyRotationTransform([0, 90, 180, 270]),  # [0, 90, 180, 270]度で回転
@@ -186,7 +186,7 @@ def init_net(only_fc=True, pretrained=True):
     
     # 最終の全結合層のみ重みの計算をするか否か
     # する：FineTuning, しない：転移学習
-    if only_fc is True:
+    if only_fc:
         for p in net.parameters():
             p.requires_grad = False
             

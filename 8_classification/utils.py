@@ -180,22 +180,53 @@ def show_transform_img(img_path):
     
     
 # 初期化したネットワークを返却
-def init_net(only_fc=True, pretrained=True):
-#     net = resnet18(pretrained=pretrained)
-#     net = resnet50(pretrained=pretrained)
-    net = resnet101(pretrained=pretrained)  # 性能良い
-#     net = resnet152(pretrained=pretrained)
+class InitNet():
+    def __init__(self, only_fc=True, pretrained=True):
+        self.only_fc = only_fc
+    #     self.net = resnet18(pretrained=pretrained)
+        self.net = resnet50(pretrained=pretrained)
+#         self.net = resnet101(pretrained=pretrained)  # 性能良い
+    #     self.net = resnet152(pretrained=pretrained)
+
+        fc_input_dim = self.net.fc.in_features
+        self.net.fc = nn.Linear(fc_input_dim, 8)
+        
+        self.set_grad()
+            
+    def __call__(self):
+        return self.net
     
     # 最終の全結合層のみ重みの計算をするか否か
-    # する：FineTuning, しない：転移学習
-    if only_fc:
-        for p in net.parameters():
-            p.requires_grad = False
+    # True：転移学習、False：FineTuning
+    def set_grad(self):
+        if self.only_fc:
+            for name, param in self.net.named_parameters():
+                # net.parameters()のrequires_gradの初期値はTrueだから
+                # 勾配を求めたくないパラメータだけFalseにする
+                if not("fc" in name):
+                    param.requires_grad = False
+                    
+    def get_params_lr(self):
+        fc_params = []
+        not_fc_params = []
+        params_lr = []
+        
+        if self.only_fc:
+            for name, param in self.net.named_parameters():
+                if "fc" in name:
+                    fc_params.append(param)
+            params_lr.append({"params": fc_params, "lr": 1e-4})
+                    
+        else:
+            for name, param in self.net.named_parameters():
+                if "fc" in name:
+                    fc_params.append(param)
+                else:
+                    not_fc_params.append(param)
+            params_lr.append({"params": fc_params, "lr": 5e-5})
+            params_lr.append({"params": not_fc_params, "lr": 1e-6})
             
-    fc_input_dim = net.fc.in_features
-    net.fc = nn.Linear(fc_input_dim, 8)
-    
-    return net
+        return params_lr
 
 
 # 識別を間違えた画像を表示する
@@ -247,7 +278,7 @@ def eval_net(net, loader, device="cpu"):
 
 # ネットワークの訓練を行う
 def train_net(net, train_loader, val_loader, optimizer,
-              loss_fn=nn.CrossEntropyLoss(), epochs=10, only_fc=True, device="cpu"):
+              loss_fn=nn.CrossEntropyLoss(), epochs=10, device="cpu"):
     
     net = net.to(device)
     

@@ -3,6 +3,7 @@ import os
 import glob
 import itertools
 
+import torch
 from torch import nn
 from torch.utils.data import Dataset
 from torchvision import transforms
@@ -10,6 +11,7 @@ from torchvision.models import resnet18, resnet50, resnet101, resnet152
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
+from tqdm import tqdm
 
 
 # 与えられた角度をランダムに一つ選択する
@@ -220,3 +222,66 @@ def show_wrong_img(dataset, ys, ypreds, indices=None, y=None, ypred=None):
         plt.title("real:{}  prediction:{}".format(
             dataset.label_list[y], dataset.label_list[ypred]))
         plt.show()
+        
+        
+# ネットワークで推論を行う
+# 戻り値：本物ラベル、予測ラベル
+# loaderの設定によってはシャッフルされているので本物ラベルも返す必要がある
+def eval_net(net, loader, device="cpu"):
+    net.eval()
+    ys = []
+    ypreds = []
+    
+    for x, y in loader:
+        x = x.to(device)
+        y = y.to(device)
+        with torch.no_grad():
+            ypred = net(x).argmax(1)
+        ys.append(y)
+        ypreds.append(ypred)
+    ys = torch.cat(ys)
+    ypreds = torch.cat(ypreds)
+    
+    return ys, ypreds
+
+
+# ネットワークの訓練を行う
+def train_net(net, train_loader, val_loader, optimizer,
+              loss_fn=nn.CrossEntropyLoss(), epochs=10, only_fc=True, device="cpu"):
+    
+    net = net.to(device)
+    
+    for epoch in range(epochs):
+        net.train()
+        train_loss = 0.0
+        train_acc = 0.0
+        
+        for (x, y) in tqdm(train_loader, total=len(train_loader)):
+            x = x.to(device)
+            y = y.to(device)
+            h = net(x)
+            loss = loss_fn(h, y)
+            
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            
+            # lossは1イテレーションの平均値なので、x.size(0)をかけて足し合わせると合計値になる
+            # len(dataset)/batch_sizeが割り切れないときのために必要
+            train_loss += loss.item() * x.size(0)
+            ypred = h.argmax(1)
+            train_acc += (y == ypred).sum()  # 予測があっている数を計算
+            
+        # len(train_loader)：イテレーション数
+        # len(train_loader.dataset)：データセット数
+        train_loss = train_loss / len(train_loader.dataset)
+        train_acc = train_acc / len(train_loader.dataset)
+        val_ys, val_ypreds = eval_net(net, val_loader, device=device)
+        val_acc = (val_ys == val_ypreds).sum().float() / len(val_loader.dataset)
+        
+        print("epoch:{}/{}  train_loss: {:.3f}  train_acc: {:.3f}  val_acc: {:.3f}".format(
+        epoch+1, epochs, train_loss, train_acc, val_acc), flush=True)
+        
+    torch.save(net.state_dict(), "weight/last_weight.pth")
+    
+    return net

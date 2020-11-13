@@ -12,6 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 from tqdm import tqdm
+from efficientnet_pytorch import EfficientNet
 
 
 # 与えられた角度をランダムに一つ選択する
@@ -153,14 +154,15 @@ class ArrangeNumDataset(Dataset):
         return weights
             
     
-    
 # img_pathの画像をそのまま・train変換・val変換で表示
 # 変換した画像を確認する
 def show_transform_img(img_path):
+    fig, ax = plt.subplots(ncols=3, figsize=(12, 4))
+    
     img = Image.open(img_path)
 
-    plt.imshow(img)
-    plt.show()
+    ax[0].imshow(img)
+    ax[0].set_title("original")
     
     transform = ImageTransform()
 
@@ -168,24 +170,25 @@ def show_transform_img(img_path):
     img_transform_train = img_transform_train.numpy().transpose((1, 2, 0))
 #     標準化で0より下の値になるため0~1にクリップ
     img_transform_train = np.clip(img_transform_train, 0, 1)
-    plt.imshow(img_transform_train)
-    plt.show()
+    ax[1].imshow(img_transform_train)
+    ax[1].set_title("train_transform")
 
     img_transform_val = transform(img, phase="val")
     img_transform_val = img_transform_val.numpy().transpose((1, 2, 0))
 #     標準化で0より下の値になるため0~1にクリップ
     img_transform_val = np.clip(img_transform_val, 0, 1)
-    plt.imshow(img_transform_val)
-    plt.show()
+    ax[2].imshow(img_transform_val)
+    ax[2].set_title("val_transform")
     
     
 # 初期化したネットワークを返却
-class InitNet():
+# set_gradとget_params_lrはもっといい描き方がある気がする
+class InitResNet():
     def __init__(self, only_fc=True, pretrained=True):
         self.only_fc = only_fc
     #     self.net = resnet18(pretrained=pretrained)
-        self.net = resnet50(pretrained=pretrained)
-#         self.net = resnet101(pretrained=pretrained)  # 性能良い
+#         self.net = resnet50(pretrained=pretrained)
+        self.net = resnet101(pretrained=pretrained)  # 性能良い
     #     self.net = resnet152(pretrained=pretrained)
 
         fc_input_dim = self.net.fc.in_features
@@ -223,8 +226,57 @@ class InitNet():
                     fc_params.append(param)
                 else:
                     not_fc_params.append(param)
-            params_lr.append({"params": fc_params, "lr": 5e-5})
-            params_lr.append({"params": not_fc_params, "lr": 1e-6})
+            params_lr.append({"params": fc_params, "lr": 1e-5})
+            params_lr.append({"params": not_fc_params, "lr": 5e-7})
+            
+        return params_lr
+    
+    
+class InitEfficientNet():
+    def __init__(self, only_fc=True, pretrained=True, model_name="efficientnet-b0"):
+        self.only_fc = only_fc
+        
+        if pretrained:
+            self.net = EfficientNet.from_pretrained(model_name)
+        else:
+            self.net = EfficientNet.from_name(model_name)
+
+        fc_input_dim = self.net._fc.in_features
+        self.net._fc = nn.Linear(fc_input_dim, 8)
+        self.set_grad()
+            
+    def __call__(self):
+        return self.net
+    
+    # 最終の全結合層のみ重みの計算をするか否か
+    # True：転移学習、False：FineTuning
+    def set_grad(self):
+        if self.only_fc:
+            for name, param in self.net.named_parameters():
+                # net.parameters()のrequires_gradの初期値はTrueだから
+                # 勾配を求めたくないパラメータだけFalseにする
+                if not("fc" in name):
+                    param.requires_grad = False
+                    
+    def get_params_lr(self):
+        fc_params = []
+        not_fc_params = []
+        params_lr = []
+        
+        if self.only_fc:
+            for name, param in self.net.named_parameters():
+                if "fc" in name:
+                    fc_params.append(param)
+            params_lr.append({"params": fc_params, "lr": 1e-4})
+                    
+        else:
+            for name, param in self.net.named_parameters():
+                if "fc" in name:
+                    fc_params.append(param)
+                else:
+                    not_fc_params.append(param)
+            params_lr.append({"params": fc_params, "lr": 1e-4})
+            params_lr.append({"params": not_fc_params, "lr": 1e-5})
             
         return params_lr
 
@@ -259,6 +311,7 @@ def show_wrong_img(dataset, ys, ypreds, indices=None, y=None, ypred=None):
 # 戻り値：本物ラベル、予測ラベル
 # loaderの設定によってはシャッフルされているので本物ラベルも返す必要がある
 def eval_net(net, loader, device="cpu"):
+    net = net.to(device)
     net.eval()
     ys = []
     ypreds = []

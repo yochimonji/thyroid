@@ -1,8 +1,6 @@
 data/
 material/
+.ipynb_checkpoints/
+.vscode/
+__pycache__/
 *.pth
-8_classification/weight/
-8_classification/data/
-8_classification/.ipynb_checkpoints/
-8_classification/.vscode/
-8_classification/__pycache__/

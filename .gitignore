@@ -1,0 +1,8 @@
+data/
+material/
+.ipynb_checkpoints/
+.vscode/
+__pycache__/
+logs/
+
+*.pth

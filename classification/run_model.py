@@ -6,9 +6,9 @@ from torch.utils.data import DataLoader
 import numpy as np
 from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
 
-from utils.utils import ImageTransform, make_datapath_list, show_wrong_img
+from utils.utils import ImageTransform, ImageTransformGray, make_datapath_list, show_wrong_img
 from utils.dataset import ArrangeNumDataset
-from model.model import InitResNet, InitEfficientNet, eval_net, train_net
+from model.model import InitResNet, InitResNetGray, InitEfficientNet, eval_net, train_net
 
 
 torch.manual_seed(1234)
@@ -24,15 +24,15 @@ test_list = make_datapath_list(data_path+"test")
 train_dataset = ArrangeNumDataset(train_list, 
                                   label_list,
                                   phase="train",
-                                  transform=ImageTransform(), 
+                                  transform=ImageTransformGray(), 
                                   arrange=None)
 test_dataset = ArrangeNumDataset(test_list, 
                                  label_list,
                                  phase="val",
-                                 transform=ImageTransform(), 
+                                 transform=ImageTransformGray(),
                                  arrange=None)
 
-batch_size =256
+batch_size = 32
 num_workers = 8
 only_fc = True    # 転移学習：True, FineTuning：False
 pretrained = True  # 事前学習の有無
@@ -51,7 +51,8 @@ weights = torch.tensor(train_dataset.weights).float().cuda()
 loss_fn=nn.CrossEntropyLoss(weight=weights)
 print(loss_fn.weight)
 
-net = InitResNet(only_fc=only_fc, pretrained=pretrained)
+# net = InitResNet(only_fc=only_fc, pretrained=pretrained)
+net = InitResNetGray()
 # net = InitEfficientNet(only_fc=only_fc, pretrained=pretrained,
 #                        model_name="efficientnet-b0")
 

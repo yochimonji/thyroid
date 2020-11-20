@@ -6,8 +6,7 @@ from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 
 
-    
-# 初期化したネットワークを返却
+
 # set_gradとget_params_lrはもっといい描き方がある気がする
 class InitResNet():
     def __init__(self, only_fc=True, pretrained=True):
@@ -57,7 +56,29 @@ class InitResNet():
             
         return params_lr
     
-    
+
+# ResNetのグレースケール用
+# set_gradとget_params_lrはもっといい描き方がある気がする
+class InitResNetGray():
+    def __init__(self):
+        self.only_fc = False
+        # self.net = resnet18(pretrained=False)
+        # self.net = resnet50(pretrained=False)
+        self.net = resnet101(pretrained=False)
+        # self.net = resnet152(pretrained=False)
+
+        self.net.conv1 = nn.Conv2d(1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+        fc_input_dim = self.net.fc.in_features
+        self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
+            
+    def __call__(self):
+        return self.net
+                    
+    def get_params_lr(self):
+        params_lr = [{"params": self.net.parameters(), "lr": 1e-3}]
+        return params_lr
+
+
 class InitEfficientNet():
     def __init__(self, only_fc=True, pretrained=True, model_name="efficientnet-b0"):
         self.only_fc = only_fc

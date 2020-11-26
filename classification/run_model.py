@@ -33,8 +33,8 @@ test_dataset = ArrangeNumDataset(test_list,
                                  arrange=None)
 
 batch_size = 32
-num_workers = 8
-only_fc = True    # 転移学習：True, FineTuning：False
+num_workers = 2
+only_fc = True  # 転移学習：True, FineTuning：False
 pretrained = True  # 事前学習の有無
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("使用デバイス：", device)
@@ -54,9 +54,10 @@ print(loss_fn.weight)
 # net = InitResNet(only_fc=only_fc, pretrained=pretrained)
 net = InitResNetGray()
 # net = InitEfficientNet(only_fc=only_fc, pretrained=pretrained,
-#                        model_name="efficientnet-b0")
+#                        model_name="efficientnet-b5")
 
 optimizer = optim.Adam(net.get_params_lr())
+# optimizer = optim.SGD(net.get_params_lr(), momentum=0.9, weight_decay=5e-5)
 
 train_net(net(), train_loader, test_loader, optimizer=optimizer,
           epochs=10, device=device, loss_fn=loss_fn)

@@ -54,7 +54,7 @@ class ImageTransform():
 # 画像に変換処理を行う(グレースケール化も行う)
 # ResNetで転移学習するとき、sizeは224×224、defaultのmean,stdで標準化する
 class ImageTransformGray():
-    def __init__(self, size=224, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
+    def __init__(self, size=224, mean=np.mean((0.485, 0.456, 0.406)), std=np.mean((0.229, 0.224, 0.225))):
         self.transform = {
             "train": transforms.Compose([  # 他の前処理をまとめる
                 transforms.Resize((size, size)),  # リサイズ
@@ -66,14 +66,14 @@ class ImageTransformGray():
                 transforms.RandomVerticalFlip(),  # 50%の確率で上下対象に変換
                 MyRotationTransform([0, 90, 180, 270]),  # [0, 90, 180, 270]度で回転
                 transforms.ToTensor(),  # ndarrayをTensorに変換
-                # transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
+                transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
             ]),
             "val": transforms.Compose([  # 他の前処理をまとめる
                 transforms.Resize((size, size)),
                 transforms.Grayscale(),  # グレースケール画像に変換
 #                 transforms.CenterCrop(size),
                 transforms.ToTensor(),  # ndarrayをTensorに変換
-                # transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
+                transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
             ])
         }
         
@@ -96,18 +96,18 @@ def make_datapath_list(path):
     
 # img_pathの画像をそのまま・train変換・val変換で表示
 # 変換した画像を確認する
-def show_transform_img(img_path):
+def show_transform_img(img_path, transform=ImageTransform()):
     fig, ax = plt.subplots(ncols=3, figsize=(12, 4))
     
     img = Image.open(img_path)
+    print("original_img\tmax: {}\tmin: {}".format(np.max(img), np.min(img)))
 
     ax[0].imshow(img)
     ax[0].set_title("original")
-    
-    transform = ImageTransform()
 
     img_transform_train = transform(img, phase="train")
     img_transform_train = img_transform_train.numpy().transpose((1, 2, 0))
+    print("train_img\tmax: {}\tmin: {}".format(np.max(img_transform_train), np.min(img_transform_train)))
 #     標準化で0より下の値になるため0~1にクリップ
     img_transform_train = np.clip(img_transform_train, 0, 1)
     ax[1].imshow(img_transform_train)

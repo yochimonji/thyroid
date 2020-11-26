@@ -14,10 +14,11 @@ class InitResNet():
     #     self.net = resnet18(pretrained=pretrained)
 #         self.net = resnet50(pretrained=pretrained)
         self.net = resnet101(pretrained=pretrained)  # 性能良い
-    #     self.net = resnet152(pretrained=pretrained)
+        # self.net = resnet152(pretrained=pretrained)
 
         fc_input_dim = self.net.fc.in_features
-        self.net.fc = nn.Linear(fc_input_dim, 8)
+        # self.net.fc = nn.Linear(fc_input_dim, 8)
+        self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
         
         self.set_grad()
             
@@ -69,7 +70,8 @@ class InitResNetGray():
 
         self.net.conv1 = nn.Conv2d(1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
         fc_input_dim = self.net.fc.in_features
-        self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
+        self.net.fc = nn.Linear(fc_input_dim, 8)
+        # self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
             
     def __call__(self):
         return self.net
@@ -89,7 +91,8 @@ class InitEfficientNet():
             self.net = EfficientNet.from_name(model_name)
 
         fc_input_dim = self.net._fc.in_features
-        self.net._fc = nn.Linear(fc_input_dim, 8)
+        # self.net._fc = nn.Linear(fc_input_dim, 8)
+        self.net._fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
         self.set_grad()
             
     def __call__(self):

@@ -9,8 +9,42 @@
         "poor",
         "und"
     ],
+    
     "dataset_params":{
         "grayscale_flag": false,
         "arrange": null
+    },
+
+    "batch_size": 256,
+
+    "net_name": "resnet",
+    "resnet_params": {
+        "only_fc": true,
+        "pretrained": true,
+        "model_name": "resnet101"
+    },
+    "efficientnet_params": {
+        "only_fc": true,
+        "pretrained": true,
+        "model_name": "efficientnet-b5"
+    },
+
+    "loss_weight_flag": true,
+    
+    "optimizer_name": "adam",
+    "resnet_lr": {
+        "fc": 1e-3,
+        "not_fc": 1e-4
+    },
+    "efficientnet_lr": {
+        "fc": 1e-3,
+        "not_fc": 1e-4
+    },
+    "adam_params": {
+        "wegiht_decay": 0
+    },
+    "sgd_params": {
+        "momentum": 0.9,
+        "weight_decay": 1e-4
     }
 }

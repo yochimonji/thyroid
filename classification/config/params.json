@@ -8,5 +8,9 @@
         "med",
         "poor",
         "und"
-    ]
+    ],
+    "dataset_params":{
+        "grayscale_flag": false,
+        "arrange": null
+    }
 }

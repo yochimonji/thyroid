@@ -22,6 +22,7 @@ f = open("./config/params.json", "r")
 json_data = json.load(f)
 
 labels = json_data["labels"]
+dataset_params = json_data["dataset_params"]
 
 train_list = make_datapath_list(data_path+"train")
 test_list = make_datapath_list(data_path+"test")
@@ -30,12 +31,12 @@ train_dataset = ArrangeNumDataset(train_list,
                                   labels,
                                   phase="train",
                                   transform=ImageTransform(), 
-                                  arrange=None)
+                                  arrange=dataset_params["arrange"])
 test_dataset = ArrangeNumDataset(test_list, 
                                  labels,
                                  phase="val",
                                  transform=ImageTransform(),
-                                 arrange=None)
+                                 arrange=dataset_params["arrange"])
 
 batch_size = 256
 num_workers = 2

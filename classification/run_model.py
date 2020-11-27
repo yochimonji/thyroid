@@ -1,4 +1,5 @@
 import random
+import json
 
 import torch
 from torch import nn, optim
@@ -16,23 +17,27 @@ np.random.seed(1234)
 random.seed(1234)
 
 data_path = "./data/"
-label_list = ["Normal", "PTC HE", "UN", "fvptc", "FTC", "med", "poor", "und"]
+
+f = open("./config/params.json", "r")
+json_data = json.load(f)
+
+labels = json_data["labels"]
 
 train_list = make_datapath_list(data_path+"train")
 test_list = make_datapath_list(data_path+"test")
 
 train_dataset = ArrangeNumDataset(train_list, 
-                                  label_list,
+                                  labels,
                                   phase="train",
-                                  transform=ImageTransformGray(), 
+                                  transform=ImageTransform(), 
                                   arrange=None)
 test_dataset = ArrangeNumDataset(test_list, 
-                                 label_list,
+                                 labels,
                                  phase="val",
-                                 transform=ImageTransformGray(),
+                                 transform=ImageTransform(),
                                  arrange=None)
 
-batch_size = 32
+batch_size = 256
 num_workers = 2
 only_fc = True  # 転移学習：True, FineTuning：False
 pretrained = True  # 事前学習の有無
@@ -51,8 +56,8 @@ weights = torch.tensor(train_dataset.weights).float().cuda()
 loss_fn=nn.CrossEntropyLoss(weight=weights)
 print(loss_fn.weight)
 
-# net = InitResNet(only_fc=only_fc, pretrained=pretrained)
-net = InitResNetGray()
+net = InitResNet(only_fc=only_fc, pretrained=pretrained)
+# net = InitResNetGray()
 # net = InitEfficientNet(only_fc=only_fc, pretrained=pretrained,
 #                        model_name="efficientnet-b5")
 
@@ -68,8 +73,8 @@ ypreds = ypreds.cpu().numpy()
 print(accuracy_score(ys, ypreds))
 print(confusion_matrix(ys, ypreds))
 print(classification_report(ys, ypreds,
-                            target_names=label_list,
+                            target_names=labels,
                             digits=3))
 
-# original_test_dataset = ArrangeNumDataset(test_list, label_list, phase="val")
+# original_test_dataset = ArrangeNumDataset(test_list, labels, phase="val")
 # show_wrong_img(original_test_dataset, ys, ypreds, indices=None, y=0, ypred=None)

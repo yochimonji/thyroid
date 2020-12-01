@@ -27,6 +27,7 @@ data_path = params["data_path"]
 labels = params["labels"]
 dataset_params = params["dataset_params"]
 batch_size = params["batch_size"]
+epochs = params["epochs"]
 net_params = params["net_params"]
 loss_weight_flag = params["loss_weight_flag"]
 optim_params = params["optim_params"]
@@ -94,7 +95,7 @@ print("optimizer:", optimizer)
 
 # 学習
 train_net(net(), train_loader, test_loader, optimizer=optimizer,
-          loss_fn=loss_fn, epochs=10, device=device)
+          loss_fn=loss_fn, epochs=epochs, device=device)
 
 # 推論
 ys, ypreds = eval_net(net(), test_loader, device=device)

@@ -1,13 +1,16 @@
+# 標準ライブラリ
 import random
 import json
 import sys
 
+# 外部ライブラリ
 import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
 import numpy as np
 from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
 
+# 自作ライブラリ
 from utils.utils import ImageTransform, make_datapath_list, show_wrong_img
 from utils.dataset import ArrangeNumDataset
 from model.model import InitResNet, InitEfficientNet, eval_net, train_net

@@ -37,6 +37,7 @@ class InitResNet():
                 if not("fc" in name):
                     param.requires_grad = False
                     
+    # optimizerのためのparams,lrのdictのlistを生成する
     def get_params_lr(self, lr_fc=1e-3, lr_not_fc=1e-4):
         fc_params = []
         not_fc_params = []
@@ -92,6 +93,7 @@ class InitEfficientNet():
                 if not("fc" in name):
                     param.requires_grad = False
                     
+    # optimizerのためのparams,lrのdictのlistを生成する
     def get_params_lr(self, lr_fc=1e-3, lr_not_fc=1e-4):
         fc_params = []
         not_fc_params = []

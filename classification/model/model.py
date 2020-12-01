@@ -19,23 +19,12 @@ class InitResNet():
 
         self.only_fc = only_fc
 
-        if "resnet18" == model_name:
-            self.net = resnet18(pretrained=pretrained)
-        elif "resnet50" == model_name:
-            self.net = resnet50(pretrained=pretrained)
-        elif "resnet101" == model_name:
-            self.net = resnet101(pretrained=pretrained)  # 性能良い
-        elif "resnet152" == model_name:
-            self.net = resnet152(pretrained=pretrained)
-        else:
-            print("model_name=={} : 定義されていないmodel_nameです".format(model_name))
-            sys.exit()
-
+        self.net = getattr(models, model_name)(pretrained=pretrained)
         fc_input_dim = self.net.fc.in_features
         # self.net.fc = nn.Linear(fc_input_dim, 8)
         self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
-        
         self.set_grad()
+        print("使用モデル:{}\tonly_fc:{}\tpretrained:{}".format(model_name, only_fc, pretrained))
             
     def __call__(self):
         return self.net
@@ -113,6 +102,7 @@ class InitEfficientNet():
         # self.net._fc = nn.Linear(fc_input_dim, 8)
         self.net._fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
         self.set_grad()
+        print("使用モデル:{}\tonly_fc:{}\tpretrained:{}".format(model_name, only_fc, pretrained))
             
     def __call__(self):
         return self.net

@@ -2,6 +2,7 @@ import sys
 
 import torch
 from torch import nn
+from torchvision import models
 from torchvision.models import resnet18, resnet50, resnet101, resnet152
 from efficientnet_pytorch import EfficientNet
 from tqdm import tqdm
@@ -49,7 +50,7 @@ class InitResNet():
                 if not("fc" in name):
                     param.requires_grad = False
                     
-    def get_params_lr(self):
+    def get_params_lr(self, lr_fc=1e-3, lr_not_fc=1e-4):
         fc_params = []
         not_fc_params = []
         params_lr = []
@@ -58,7 +59,7 @@ class InitResNet():
             for name, param in self.net.named_parameters():
                 if "fc" in name:
                     fc_params.append(param)
-            params_lr.append({"params": fc_params, "lr": 1e-3})
+            params_lr.append({"params": fc_params, "lr": lr_fc})
                     
         else:
             for name, param in self.net.named_parameters():
@@ -66,8 +67,8 @@ class InitResNet():
                     fc_params.append(param)
                 else:
                     not_fc_params.append(param)
-            params_lr.append({"params": fc_params, "lr": 1e-3})
-            params_lr.append({"params": not_fc_params, "lr": 1e-4})
+            params_lr.append({"params": fc_params, "lr": lr_fc})
+            params_lr.append({"params": not_fc_params, "lr": lr_not_fc})
             
         return params_lr
     
@@ -126,7 +127,7 @@ class InitEfficientNet():
                 if not("fc" in name):
                     param.requires_grad = False
                     
-    def get_params_lr(self):
+    def get_params_lr(self, lr_fc=1e-3, lr_not_fc=1e-4):
         fc_params = []
         not_fc_params = []
         params_lr = []
@@ -135,7 +136,7 @@ class InitEfficientNet():
             for name, param in self.net.named_parameters():
                 if "fc" in name:
                     fc_params.append(param)
-            params_lr.append({"params": fc_params, "lr": 1e-3})
+            params_lr.append({"params": fc_params, "lr": lr_fc})
                     
         else:
             for name, param in self.net.named_parameters():
@@ -143,8 +144,8 @@ class InitEfficientNet():
                     fc_params.append(param)
                 else:
                     not_fc_params.append(param)
-            params_lr.append({"params": fc_params, "lr": 1e-3})
-            params_lr.append({"params": not_fc_params, "lr": 1e-4})
+            params_lr.append({"params": fc_params, "lr": lr_fc})
+            params_lr.append({"params": not_fc_params, "lr": lr_not_fc})
             
         return params_lr
 

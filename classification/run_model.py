@@ -82,10 +82,10 @@ print("loss_fn.weight:", loss_fn.weight)
 
 # 使用する最適化手法を設定する
 if "adam" == optim_params["name"]:
-    optimizer = optim.Adam(net.get_params_lr(),
+    optimizer = optim.Adam(net.get_params_lr(lr_fc=optim_params["lr_fc"], lr_not_fc=optim_params["lr_not_fc"]),
                            weight_decay=optim_params["weight_decay"])
 elif "sgd" == optim_params["name"]:
-    optimizer = optim.SGD(net.get_params_lr(),
+    optimizer = optim.SGD(net.get_params_lr(lr_fc=optim_params["lr_fc"], lr_not_fc=optim_params["lr_not_fc"]),
                           momentum=optim_params["momentum"],
                           weight_decay=optim_params["weight_decay"])
 else:  # 最適化手法の名前が間違えていたらエラー

@@ -3,7 +3,6 @@ import sys
 import torch
 from torch import nn
 from torchvision import models
-from torchvision.models import resnet18, resnet50, resnet101, resnet152
 from efficientnet_pytorch import EfficientNet
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter

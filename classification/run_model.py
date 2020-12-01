@@ -1,5 +1,6 @@
 import random
 import json
+import sys
 
 import torch
 from torch import nn, optim
@@ -51,34 +52,47 @@ test_dataset = ArrangeNumDataset(test_list,
                                  transform=ImageTransform(grayscale_flag=dataset_params["grayscale_flag"]),
                                  arrange=dataset_params["arrange"])
 
-batch_size = 256
-num_workers = 2
-only_fc = True  # 転移学習：True, FineTuning：False
-pretrained = True  # 事前学習の有無
+# only_fc = True  # 転移学習：True, FineTuning：False
+# pretrained = True  # 事前学習の有無
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("使用デバイス：", device)
 print("len(train_dataset)", len(train_dataset))
 print("len(test_dataset)", len(test_dataset))
 
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True,
-                          num_workers=num_workers)
+                          num_workers=2)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False,
-                         num_workers=num_workers)
+                         num_workers=2)
 
-net = InitResNet(only_fc=only_fc, pretrained=pretrained)
-# net = InitEfficientNet(only_fc=only_fc, pretrained=pretrained,
-#                        model_name="efficientnet-b5")
+if "resnet" == net_name:
+    net = InitResNet(only_fc=resnet_params["only_fc"],
+                     pretrained=resnet_params["pretrained"])
+elif "efficientnet" == net_name:
+    net = InitEfficientNet(only_fc=efficientnet_params["only_fc"],
+                           pretrained=efficientnet_params["pretrained"],
+                           model_name=efficientnet_params["model_name"])
+else:
+    print("定義されていないネットワーク名です")
+    sys.exit()
 
-weights = torch.tensor(train_dataset.weights).float().cuda()
-# weights = None
+if loss_weight_flag:
+    weights = torch.tensor(train_dataset.weights).float().cuda()
+else:
+    weights = None
 loss_fn=nn.CrossEntropyLoss(weight=weights)
-print(loss_fn.weight)
+print("loss_fn.weight:", loss_fn.weight)
 
-optimizer = optim.Adam(net.get_params_lr())
-# optimizer = optim.SGD(net.get_params_lr(), momentum=0.9, weight_decay=5e-5)
+if "adam" == optimizer_name:
+    optimizer = optim.Adam(net.get_params_lr(),
+                           weight_decay=adam_params["weight_decay"])
+elif "sgd" == optimizer_name:
+    optimizer = optim.SGD(net.get_params_lr(),
+                          momentum=sgd_params["momentum"],
+                          weight_decay=sgd_params["weight_decay"])
+print("optimizer:", optimizer)
 
 train_net(net(), train_loader, test_loader, optimizer=optimizer,
-          epochs=10, device=device, loss_fn=loss_fn)
+          loss_fn=loss_fn, epochs=10, device=device)
 
 ys, ypreds = eval_net(net(), test_loader, device=device)
 ys = ys.cpu().numpy()
@@ -88,6 +102,3 @@ print(confusion_matrix(ys, ypreds))
 print(classification_report(ys, ypreds,
                             target_names=labels,
                             digits=3))
-
-# original_test_dataset = ArrangeNumDataset(test_list, labels, phase="val")
-# show_wrong_img(original_test_dataset, ys, ypreds, indices=None, y=0, ypred=None)

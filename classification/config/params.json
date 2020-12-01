@@ -42,7 +42,7 @@
         "not_fc": 1e-4
     },
     "adam_params": {
-        "wegiht_decay": 0
+        "weight_decay": 0
     },
     "sgd_params": {
         "momentum": 0.9,

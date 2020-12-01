@@ -1,3 +1,5 @@
+import sys
+
 import torch
 from torch import nn
 from torchvision.models import resnet18, resnet50, resnet101, resnet152
@@ -9,12 +11,19 @@ from torch.utils.tensorboard import SummaryWriter
 
 # set_gradとget_params_lrはもっといい描き方がある気がする
 class InitResNet():
-    def __init__(self, only_fc=True, pretrained=True):
+    def __init__(self, only_fc=True, pretrained=True, model_name="resnet18"):
         self.only_fc = only_fc
-    #     self.net = resnet18(pretrained=pretrained)
-#         self.net = resnet50(pretrained=pretrained)
-        self.net = resnet101(pretrained=pretrained)  # 性能良い
-        # self.net = resnet152(pretrained=pretrained)
+        if "resnet18" == model_name:
+            self.net = resnet18(pretrained=pretrained)
+        elif "resnet50" == model_name:
+            self.net = resnet50(pretrained=pretrained)
+        elif "resnet101" == model_name:
+            self.net = resnet101(pretrained=pretrained)  # 性能良い
+        elif "resnet152" == model_name:
+            self.net = resnet152(pretrained=pretrained)
+        else:
+            print("model_name=={} : 定義されていないmodel_nameです".format(model_name))
+            sys.exit()
 
         fc_input_dim = self.net.fc.in_features
         # self.net.fc = nn.Linear(fc_input_dim, 8)

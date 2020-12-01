@@ -21,22 +21,16 @@ random.seed(1234)
 # jsonファイルを読み込んでパラメータを設定する
 # jsonから読み込むことでpyファイルの書き換えをしなくてよいのでGitが汚れない
 f = open("./config/params.json", "r")
-json_data = json.load(f)
+params = json.load(f)
 f.close()
 
-data_path = json_data["data_path"]
-labels = json_data["labels"]
-dataset_params = json_data["dataset_params"]
-batch_size = json_data["batch_size"]
-net_name = json_data["net_name"]
-resnet_params = json_data["resnet_params"]
-efficientnet_params = json_data["efficientnet_params"]
-loss_weight_flag = json_data["loss_weight_flag"]
-optimizer_name = json_data["optimizer_name"]
-resnet_lr = json_data["resnet_lr"]
-efficientnet_lr = json_data["efficientnet_lr"]
-adam_params = json_data["adam_params"]
-sgd_params = json_data["sgd_params"]
+data_path = params["data_path"]
+labels = params["labels"]
+dataset_params = params["dataset_params"]
+batch_size = params["batch_size"]
+net_params = params["net_params"]
+loss_weight_flag = params["loss_weight_flag"]
+optim_params = params["optim_params"]
 
 train_list = make_datapath_list(data_path+"train")
 test_list = make_datapath_list(data_path+"test")
@@ -64,15 +58,16 @@ train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True,
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False,
                          num_workers=2)
 
-if "resnet" == net_name:
-    net = InitResNet(only_fc=resnet_params["only_fc"],
-                     pretrained=resnet_params["pretrained"])
-elif "efficientnet" == net_name:
-    net = InitEfficientNet(only_fc=efficientnet_params["only_fc"],
-                           pretrained=efficientnet_params["pretrained"],
-                           model_name=efficientnet_params["model_name"])
+if "resnet" in net_params["name"]:
+    net = InitResNet(only_fc=net_params["only_fc"],
+                     pretrained=net_params["pretrained"],
+                     model_name=net_params["name"])
+elif "efficientnet" in net_params["name"]:
+    net = InitEfficientNet(only_fc=net_params["only_fc"],
+                           pretrained=net_params["pretrained"],
+                           model_name=net_params["name"])
 else:
-    print("定義されていないネットワーク名です")
+    print("net_params['name']=={} : 定義されていないnameです".format(net_params['name']))
     sys.exit()
 
 if loss_weight_flag:
@@ -82,13 +77,16 @@ else:
 loss_fn=nn.CrossEntropyLoss(weight=weights)
 print("loss_fn.weight:", loss_fn.weight)
 
-if "adam" == optimizer_name:
+if "adam" == optim_params["name"]:
     optimizer = optim.Adam(net.get_params_lr(),
-                           weight_decay=adam_params["weight_decay"])
-elif "sgd" == optimizer_name:
+                           weight_decay=optim_params["weight_decay"])
+elif "sgd" == optim_params["name"]:
     optimizer = optim.SGD(net.get_params_lr(),
-                          momentum=sgd_params["momentum"],
-                          weight_decay=sgd_params["weight_decay"])
+                          momentum=optim_params["momentum"],
+                          weight_decay=optim_params["weight_decay"])
+else:
+    print("optim_params['name']=={} : 定義されていないnameです".format(optim_params['name']))
+    sys.exit()
 print("optimizer:", optimizer)
 
 train_net(net(), train_loader, test_loader, optimizer=optimizer,

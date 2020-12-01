@@ -12,7 +12,12 @@ from torch.utils.tensorboard import SummaryWriter
 # set_gradとget_params_lrはもっといい描き方がある気がする
 class InitResNet():
     def __init__(self, only_fc=True, pretrained=True, model_name="resnet18"):
+        if only_fc and (not pretrained):
+            print("only_fc==True, pretrained=Falseの組み合わせはできません")
+            sys.exit()
+
         self.only_fc = only_fc
+
         if "resnet18" == model_name:
             self.net = resnet18(pretrained=pretrained)
         elif "resnet50" == model_name:
@@ -92,6 +97,10 @@ class InitResNetGray():
 
 class InitEfficientNet():
     def __init__(self, only_fc=True, pretrained=True, model_name="efficientnet-b0"):
+        if only_fc and (not pretrained):
+            print("only_fc==True, pretrained=Falseの組み合わせはできません")
+            sys.exit()
+            
         self.only_fc = only_fc
         
         if pretrained:

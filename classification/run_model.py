@@ -47,12 +47,14 @@ test_list = make_datapath_list(data_path+"test")
 train_dataset = ArrangeNumDataset(train_list, 
                                   labels,
                                   phase="train",
-                                  transform=ImageTransform(grayscale_flag=dataset_params["grayscale_flag"]), 
+                                  transform=ImageTransform(grayscale_flag=dataset_params["grayscale_flag"],
+                                                           normalize_per_img=dataset_params["normalize_per_img"]), 
                                   arrange=dataset_params["arrange"])
 test_dataset = ArrangeNumDataset(test_list, 
                                  labels,
                                  phase="val",
-                                 transform=ImageTransform(grayscale_flag=dataset_params["grayscale_flag"]),
+                                 transform=ImageTransform(grayscale_flag=dataset_params["grayscale_flag"],
+                                                          normalize_per_img=dataset_params["normalize_per_img"]),
                                  arrange=dataset_params["arrange"])
 print("len(train_dataset)", len(train_dataset))
 print("len(test_dataset)", len(test_dataset))

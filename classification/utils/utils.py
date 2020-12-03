@@ -26,52 +26,61 @@ class MyRotationTransform():
 # 画像に変換処理を行う
 # ResNetで転移学習するとき、sizeは224×224、defaultのmean,stdで標準化する
 class ImageTransform():
-    def __init__(self, size=224, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], grayscale_flag=False):
+    def __init__(self, size=224, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225],
+                 grayscale_flag=False, normalize_per_img=False):
         if grayscale_flag:
             self.transform = {
                 "train": transforms.Compose([  # 他の前処理をまとめる
                     transforms.Resize((size, size)),  # リサイズ, 最初にしたほうが処理が軽い
                     transforms.Grayscale(num_output_channels=3),
-    #                 # scaleのサイズとratioのアスペクト比でクロップ後、sizeにリサイズ
-    #                 transforms.RandomResizedCrop(size, scale=(0.8, 1.0)),
-    #                 transforms.RandomCrop(size),  # ランダムにクロップ後、sizeにリサイズ
+                    # scaleのサイズとratioのアスペクト比でクロップ後、sizeにリサイズ
+                    # transforms.RandomResizedCrop(size, scale=(0.8, 1.0)),
+                    # transforms.RandomCrop(size),  # ランダムにクロップ後、sizeにリサイズ
                     transforms.RandomHorizontalFlip(),  # 50%の確率で左右対称に変換
                     transforms.RandomVerticalFlip(),  # 50%の確率で上下対象に変換
                     MyRotationTransform([0, 90, 180, 270]),  # [0, 90, 180, 270]度で回転
-                    transforms.ToTensor(),  # ndarrayをTensorに変換
-                    transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
+                    transforms.ToTensor()  # ndarrayをTensorに変換、0〜1に正規化
+                    # transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
                 ]),
                 "val": transforms.Compose([  # 他の前処理をまとめる
                     transforms.Resize((size, size)),
                     transforms.Grayscale(num_output_channels=3),
-    #                 transforms.CenterCrop(size),
-                    transforms.ToTensor(),  # ndarrayをTensorに変換
-                    transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
+                    # transforms.CenterCrop(size),
+                    transforms.ToTensor()  # ndarrayをTensorに変換
+                    # transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
                 ])
             }
         else:
             self.transform = {
                 "train": transforms.Compose([  # 他の前処理をまとめる
-                    transforms.Resize((size, size)),  # リサイズ
-    #                 # scaleのサイズとratioのアスペクト比でクロップ後、sizeにリサイズ
-    #                 transforms.RandomResizedCrop(size, scale=(0.8, 1.0)),
-    #                 transforms.RandomCrop(size),  # ランダムにクロップ後、sizeにリサイズ
+                    transforms.Resize((size, size)),  # リサイズ, 最初にしたほうが処理が軽い
+                    # scaleのサイズとratioのアスペクト比でクロップ後、sizeにリサイズ
+                    # transforms.RandomResizedCrop(size, scale=(0.8, 1.0)),
+                    # transforms.RandomCrop(size),  # ランダムにクロップ後、sizeにリサイズ
                     transforms.RandomHorizontalFlip(),  # 50%の確率で左右対称に変換
                     transforms.RandomVerticalFlip(),  # 50%の確率で上下対象に変換
                     MyRotationTransform([0, 90, 180, 270]),  # [0, 90, 180, 270]度で回転
-                    transforms.ToTensor(),  # ndarrayをTensorに変換
-                    transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
+                    transforms.ToTensor()  # ndarrayをTensorに変換、0〜1に正規化
+                    # transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
                 ]),
                 "val": transforms.Compose([  # 他の前処理をまとめる
                     transforms.Resize((size, size)),
-    #                 transforms.CenterCrop(size),
-                    transforms.ToTensor(),  # ndarrayをTensorに変換
-                    transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
+                    # transforms.CenterCrop(size),
+                    transforms.ToTensor()  # ndarrayをTensorに変換
+                    # transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
                 ])
             }
+        self.mean = mean
+        self.std = std
+        self.normalize_per_img = normalize_per_img
         
     def __call__(self, img, phase):
-        return self.transform[phase](img)
+        img = self.transform[phase](img)
+        if self.normalize_per_img:
+            self.mean = torch.mean(img, dim=(1,2))
+            self.std = torch.std(img, dim=(1,2))
+        normalize = transforms.Normalize(self.mean, self.std)
+        return normalize(img)
 
 
 # path以下にあるすべてのディレクトリからtifファイルのパスリスト取得

@@ -1,0 +1,39 @@
+{
+    "data_path": "./data/",
+    "labels":[
+        "Normal",
+        "PTC HE",
+        "UN",
+        "fvptc",
+        "FTC",
+        "med",
+        "poor",
+        "und"
+    ],
+    
+    "dataset_params":{
+        "grayscale_flag": false,
+        "normalize_per_img": false,
+        "arrange": null
+    },
+
+    "num_estimate": 3,
+    "batch_size": 128,
+    "epochs": 1,
+
+    "net_params": {
+        "name": "resnet18",
+        "only_fc": true,
+        "pretrained": true
+    },
+
+    "loss_weight_flag": true,
+    
+    "optim_params": {
+        "name": "adam",
+        "lr_fc": 1e-3,
+        "lr_not_fc": 1e-4,
+        "momentum": 0.9,
+        "weight_decay": 1e-4
+    }
+}

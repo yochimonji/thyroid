@@ -145,7 +145,7 @@ def eval_net(net, loader, device="cpu"):
 def train_net(net, train_loader, val_loader, optimizer,
               loss_fn=nn.CrossEntropyLoss(), epochs=10, device="cpu"):
     dt_now = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-    writer = SummaryWriter(log_dir=os.path.join("./logs", dt_now))
+    writer = SummaryWriter(log_dir=os.path.join("./logs/tensorboard", dt_now))
 
     net = net.to(device)
     

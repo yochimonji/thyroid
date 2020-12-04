@@ -5,7 +5,6 @@ from torch import nn
 from torchvision import models
 from efficientnet_pytorch import EfficientNet
 from tqdm import tqdm
-from torch.utils.tensorboard import SummaryWriter
 
 
 # set_gradとget_params_lrはもっといい描き方がある気がする
@@ -144,7 +143,6 @@ def train_net(net, train_loader, val_loader, optimizer,
               loss_fn=nn.CrossEntropyLoss(), epochs=10, device="cpu"):
     
     net = net.to(device)
-    writer = SummaryWriter(log_dir="./logs")
     
     for epoch in range(epochs):
         net.train()
@@ -176,9 +174,6 @@ def train_net(net, train_loader, val_loader, optimizer,
         
         print("epoch:{}/{}  train_loss: {:.3f}  train_acc: {:.3f}  val_acc: {:.3f}".format(
         epoch+1, epochs, train_loss, train_acc, val_acc), flush=True)
-        writer.add_scalar("train/loss", train_loss, epoch)
-        writer.add_scalar("train/acc", train_acc, epoch)
-        writer.add_scalar("val/acc", val_acc, epoch)
         
     torch.save(net.state_dict(), "weight/last_weight.pth")
     

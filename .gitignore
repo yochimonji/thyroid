@@ -4,6 +4,7 @@ material/
 .vscode/
 __pycache__/
 logs/
+config/*
 
 *.pth
-*.json
+!/config/params.json

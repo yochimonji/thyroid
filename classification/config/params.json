@@ -13,16 +13,16 @@
     
     "dataset_params":{
         "grayscale_flag": false,
-        "normalize_per_img": false,
+        "normalize_per_img": true,
         "arrange": null
     },
 
-    "num_estimate": 3,
+    "num_estimate": 10,
     "batch_size": 128,
-    "epochs": 1,
+    "epochs": 10,
 
     "net_params": {
-        "name": "resnet18",
+        "name": "resnet101",
         "only_fc": true,
         "pretrained": true
     },

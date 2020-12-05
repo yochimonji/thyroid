@@ -14,7 +14,7 @@ from sklearn.metrics import confusion_matrix, accuracy_score, classification_rep
 
 # 自作ライブラリ
 from utils.utils import ImageTransform, make_datapath_list, show_wrong_img
-from utils.dataset import ArrangeNumDataset
+from utils.dataset import ArrangeNumDataset, ConcatDataset
 from model.model import InitResNet, InitEfficientNet, eval_net, train_net
 
 # 乱数シード値を固定して再現性を確保
@@ -59,6 +59,7 @@ test_dataset = ArrangeNumDataset(test_list,
                                  transform=ImageTransform(grayscale_flag=dataset_params["grayscale_flag"],
                                                           normalize_per_img=dataset_params["normalize_per_img"]),
                                  arrange=dataset_params["arrange"])
+train_dataset = ConcatDataset(train_dataset, test_dataset)
 print("len(train_dataset)", len(train_dataset))
 print("len(test_dataset)", len(test_dataset))
 

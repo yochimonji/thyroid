@@ -92,3 +92,41 @@ class ArrangeNumDataset(Dataset):
         
         return weights
             
+
+# 複数のデータセットを結合し、1つのデータセットとするクラス
+class ConcatDataset(Dataset):
+    def __init__(self, *datasets):
+        self.datasets = datasets
+        self.labels = self.make_labels()
+        self.weights = self.calc_weights()
+    
+    def __len__(self):
+        length = 0
+        for dataset in self.datasets:
+            length += dataset.__len__()
+        return length
+
+    def __getitem__(self, index):
+        for dataset in self.datasets:
+            length = dataset.__len__()
+            if index < length:
+                img, label = dataset.__getitem__(index)
+                break
+            else:
+                index -= length
+        return img, label
+
+    def make_labels(self):
+        labels = []
+        for dataset in self.datasets:
+            labels.extend(dataset.make_labels())
+        return labels
+
+    def calc_weights(self):
+        data_num = np.bincount(np.array(self.labels))
+        data_num_sum = data_num.sum()
+        weights = []
+        for n in data_num:
+            weights.append(data_num_sum / n)
+        
+        return weights

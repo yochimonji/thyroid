@@ -13,8 +13,12 @@
     
     "dataset_params":{
         "grayscale_flag": false,
-        "normalize_per_img": true,
-        "arrange": null
+        "normalize_per_img": false,
+        "arrange": null,
+        "train_mean": [0.865, 0.555, 0.727],
+        "train_std": [0.153, 0.185, 0.122] ,
+        "test_mean": [0.854, 0.583, 0.747],
+        "test_std": [0.138, 0.184, 0.112]
     },
 
     "num_estimate": 10,

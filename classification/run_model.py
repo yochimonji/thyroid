@@ -44,22 +44,38 @@ print("使用デバイス：", device)
 
 # 訓練とテストのファイルリストを取得する
 train_list = make_datapath_list(data_path+"train")
+# tissue_list = make_datapath_list(data_path+"tissue array")
 test_list = make_datapath_list(data_path+"test")
 
 # 訓練とテストのデータセットを作成する
 train_dataset = ArrangeNumDataset(train_list, 
                                   labels,
                                   phase="train",
-                                  transform=ImageTransform(grayscale_flag=dataset_params["grayscale_flag"],
+                                  transform=ImageTransform(mean=dataset_params["train_mean"],
+                                                           std=dataset_params["train_std"],
+                                                           grayscale_flag=dataset_params["grayscale_flag"],
                                                            normalize_per_img=dataset_params["normalize_per_img"]), 
                                   arrange=dataset_params["arrange"])
 test_dataset = ArrangeNumDataset(test_list, 
                                  labels,
                                  phase="val",
-                                 transform=ImageTransform(grayscale_flag=dataset_params["grayscale_flag"],
+                                 transform=ImageTransform(mean=dataset_params["test_mean"],
+                                                          std=dataset_params["test_std"],
+                                                          grayscale_flag=dataset_params["grayscale_flag"],
                                                           normalize_per_img=dataset_params["normalize_per_img"]),
                                  arrange=dataset_params["arrange"])
-train_dataset = ConcatDataset(train_dataset, test_dataset)
+
+# if dataset_:
+
+#     tissue_dataset = ArrangeNumDataset(tissue_list,
+#                                     labels,
+#                                     phase="train",
+#                                     transform=ImageTransform(mean=(0.724, 0.580, 0.725),
+#                                                                 std=(0.187, 0.219, 0.152),
+#                                                                 grayscale_flag=dataset_params["grayscale_flag"],
+#                                                                 normalize_per_img=dataset_params["normalize_per_img"]),
+#                                     arrange=None)
+
 print("len(train_dataset)", len(train_dataset))
 print("len(test_dataset)", len(test_dataset))
 

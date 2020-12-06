@@ -31,6 +31,7 @@ f.close()
 data_path = params["data_path"]
 labels = params["labels"]
 dataset_params = params["dataset_params"]
+tissue_dataset_params = params["tissue_dataset_params"]
 num_estimate = params["num_estimate"]
 batch_size = params["batch_size"]
 epochs = params["epochs"]
@@ -44,7 +45,6 @@ print("使用デバイス：", device)
 
 # 訓練とテストのファイルリストを取得する
 train_list = make_datapath_list(data_path+"train")
-# tissue_list = make_datapath_list(data_path+"tissue array")
 test_list = make_datapath_list(data_path+"test")
 
 # 訓練とテストのデータセットを作成する
@@ -65,16 +65,23 @@ test_dataset = ArrangeNumDataset(test_list,
                                                           normalize_per_img=dataset_params["normalize_per_img"]),
                                  arrange=dataset_params["arrange"])
 
-# if dataset_:
-
-#     tissue_dataset = ArrangeNumDataset(tissue_list,
-#                                     labels,
-#                                     phase="train",
-#                                     transform=ImageTransform(mean=(0.724, 0.580, 0.725),
-#                                                                 std=(0.187, 0.219, 0.152),
-#                                                                 grayscale_flag=dataset_params["grayscale_flag"],
-#                                                                 normalize_per_img=dataset_params["normalize_per_img"]),
-#                                     arrange=None)
+if tissue_dataset_params["use"]:
+    tissue_list = make_datapath_list(data_path+"tissue array")
+    tissue_dataset = ArrangeNumDataset(tissue_list,
+                                       labels,
+                                       phase=tissue_dataset_params["phase"],
+                                       transform=ImageTransform(mean=tissue_dataset_params["mean"],
+                                                                std=tissue_dataset_params["std"],
+                                                                grayscale_flag=dataset_params["grayscale_flag"],
+                                                                normalize_per_img=dataset_params["normalize_per_img"]),
+                                       arrange=dataset_params["arrange"])
+    if tissue_dataset_params["phase"] == "train":
+        train_dataset = ConcatDataset(train_dataset, tissue_dataset)
+    elif tissue_dataset_params["phase"] == "val":
+        test_dataset = ConcatDataset(test_dataset, tissue_dataset)
+    else:
+        print("ValueError:tissue_dataset_params['phase']=={}は正しくありません。".format(tissue_dataset_params["phase"]))
+        sys.exit()
 
 print("len(train_dataset)", len(train_dataset))
 print("len(test_dataset)", len(test_dataset))

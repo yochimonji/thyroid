@@ -21,13 +21,20 @@
         "test_std": [0.138, 0.184, 0.112]
     },
 
+    "tissue_dataset_params": {
+        "use": true,
+        "phase": "val",
+        "mean": [0.724, 0.580, 0.725],
+        "std": [0.187, 0.219, 0.152]
+    },
+
     "num_estimate": 10,
-    "batch_size": 128,
+    "batch_size": 32,
     "epochs": 10,
 
     "net_params": {
         "name": "resnet101",
-        "only_fc": true,
+        "only_fc": false,
         "pretrained": true
     },
 
@@ -35,8 +42,8 @@
     
     "optim_params": {
         "name": "adam",
-        "lr_fc": 1e-3,
-        "lr_not_fc": 1e-4,
+        "lr_fc": 5e-4,
+        "lr_not_fc": 5e-5,
         "momentum": 0.9,
         "weight_decay": 1e-4
     }

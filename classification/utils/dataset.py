@@ -57,7 +57,7 @@ class ArrangeNumDataset(Dataset):
             img = self.transform(img, self.phase)
         
         label = self.labels[index]
-            
+        
         return img, label
     
     # key:ラベル、value:ファイルパスリストの辞書を作成

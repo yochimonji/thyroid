@@ -29,12 +29,12 @@
     },
 
     "num_estimate": 10,
-    "batch_size": 32,
+    "batch_size": 128,
     "epochs": 10,
 
     "net_params": {
         "name": "resnet101",
-        "only_fc": false,
+        "only_fc": true,
         "pretrained": true
     },
 
@@ -42,8 +42,8 @@
     
     "optim_params": {
         "name": "adam",
-        "lr_fc": 5e-4,
-        "lr_not_fc": 5e-5,
+        "lr_fc": 1e-3,
+        "lr_not_fc": 1e-4,
         "momentum": 0.9,
         "weight_decay": 1e-4
     }

@@ -7,4 +7,4 @@ logs/
 /classification/config/*
 
 *.pth
-!/classification/config/params.json
+!/classification/config/default.json

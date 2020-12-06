@@ -13,7 +13,7 @@
     
     "dataset_params":{
         "grayscale_flag": false,
-        "normalize_per_img": false,
+        "normalize_per_img": true,
         "arrange": null,
         "train_mean": [0.865, 0.555, 0.727],
         "train_std": [0.153, 0.185, 0.122] ,
@@ -23,7 +23,7 @@
 
     "tissue_dataset_params": {
         "use": true,
-        "phase": "val",
+        "phase": "train",
         "mean": [0.724, 0.580, 0.725],
         "std": [0.187, 0.219, 0.152]
     },

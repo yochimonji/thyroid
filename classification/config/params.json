@@ -12,20 +12,20 @@
     ],
     
     "dataset_params":{
-        "grayscale_flag": false,
-        "normalize_per_img": true,
+        "grayscale_flag": true,
+        "normalize_per_img": false,
         "arrange": null,
-        "train_mean": [0.865, 0.555, 0.727],
-        "train_std": [0.153, 0.185, 0.122] ,
-        "test_mean": [0.854, 0.583, 0.747],
-        "test_std": [0.138, 0.184, 0.112]
+        "train_mean": [0.668, 0.668, 0.668],
+        "train_std": [0.156, 0.156, 0.156] ,
+        "test_mean": [0.683, 0.683, 0.683],
+        "test_std": [0.152, 0.152, 0.152]
     },
 
     "tissue_dataset_params": {
         "use": true,
         "phase": "train",
-        "mean": [0.724, 0.580, 0.725],
-        "std": [0.187, 0.219, 0.152]
+        "mean": [0.639, 0.639, 0.639],
+        "std": [0.198, 0.198, 0.198]
     },
 
     "num_estimate": 10,

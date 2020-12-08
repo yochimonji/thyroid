@@ -12,19 +12,19 @@ from torch.utils.tensorboard import SummaryWriter
 
 # set_gradとget_params_lrはもっといい描き方がある気がする
 class CustomResNet():
-    def __init__(self, grad_fc=True, pretrained=True, model_name="resnet18"):
-        if grad_fc and (not pretrained):
-            print("grad_fc==True, pretrained=Falseの組み合わせはできません")
+    def __init__(self, transfer_learning=True, pretrained=True, model_name="resnet18"):
+        if transfer_learning and (not pretrained):
+            print("transfer_learning==True, pretrained=Falseの組み合わせはできません")
             sys.exit()
 
-        self.grad_fc = grad_fc
+        self.transfer_learning = transfer_learning
 
         self.net = getattr(models, model_name)(pretrained=pretrained)
         fc_input_dim = self.net.fc.in_features
         # self.net.fc = nn.Linear(fc_input_dim, 8)
         self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
         self.set_grad()
-        print("使用モデル:{}\tgrad_fc:{}\tpretrained:{}".format(model_name, grad_fc, pretrained))
+        print("使用モデル:{}\ttransfer_learning:{}\tpretrained:{}".format(model_name, transfer_learning, pretrained))
             
     def __call__(self):
         return self.net
@@ -32,7 +32,7 @@ class CustomResNet():
     # 最終の全結合層のみ重みの計算をするか否か
     # True：転移学習、False：FineTuning
     def set_grad(self):
-        if self.grad_fc:
+        if self.transfer_learning:
             for name, param in self.net.named_parameters():
                 # net.parameters()のrequires_gradの初期値はTrueだから
                 # 勾配を求めたくないパラメータだけFalseにする
@@ -40,36 +40,37 @@ class CustomResNet():
                     param.requires_grad = False
                     
     # optimizerのためのparams,lrのdictのlistを生成する
-    def get_params_lr(self, lr_fc=1e-3, lr_not_fc=1e-4):
-        fc_params = []
-        not_fc_params = []
+    def get_params_lr(self, lr_not_pretrained=1e-3, lr_pretrained=1e-4):
+        not_pretrained_params = []
+        pretrained_params = []
         params_lr = []
         
-        if self.grad_fc:
+        if self.transfer_learning:
             for name, param in self.net.named_parameters():
                 if "fc" in name:
-                    fc_params.append(param)
-            params_lr.append({"params": fc_params, "lr": lr_fc})
+                    not_pretrained_params.append(param)
+            params_lr.append({"params": not_pretrained_params, "lr": lr_not_pretrained})
                     
         else:
             for name, param in self.net.named_parameters():
+                print(name)
                 if "fc" in name:
-                    fc_params.append(param)
+                    not_pretrained_params.append(param)
                 else:
-                    not_fc_params.append(param)
-            params_lr.append({"params": fc_params, "lr": lr_fc})
-            params_lr.append({"params": not_fc_params, "lr": lr_not_fc})
+                    pretrained_params.append(param)
+            params_lr.append({"params": not_pretrained_params, "lr": lr_not_pretrained})
+            params_lr.append({"params": pretrained_params, "lr": lr_pretrained})
             
         return params_lr
 
 
 class CustomEfficientNet():
-    def __init__(self, grad_fc=True, pretrained=True, model_name="efficientnet-b0"):
-        if grad_fc and (not pretrained):
-            print("grad_fc==True, pretrained=Falseの組み合わせはできません")
+    def __init__(self, transfer_learning=True, pretrained=True, model_name="efficientnet-b0"):
+        if transfer_learning and (not pretrained):
+            print("transfer_learning==True, pretrained=Falseの組み合わせはできません")
             sys.exit()
             
-        self.grad_fc = grad_fc
+        self.transfer_learning = transfer_learning
         
         if pretrained:
             self.net = EfficientNet.from_pretrained(model_name)
@@ -80,7 +81,7 @@ class CustomEfficientNet():
         # self.net._fc = nn.Linear(fc_input_dim, 8)
         self.net._fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
         self.set_grad()
-        print("使用モデル:{}\tgrad_fc:{}\tpretrained:{}".format(model_name, grad_fc, pretrained))
+        print("使用モデル:{}\ttransfer_learning:{}\tpretrained:{}".format(model_name, transfer_learning, pretrained))
             
     def __call__(self):
         return self.net
@@ -88,7 +89,7 @@ class CustomEfficientNet():
     # 最終の全結合層のみ重みの計算をするか否か
     # True：転移学習、False：FineTuning
     def set_grad(self):
-        if self.grad_fc:
+        if self.transfer_learning:
             for name, param in self.net.named_parameters():
                 # net.parameters()のrequires_gradの初期値はTrueだから
                 # 勾配を求めたくないパラメータだけFalseにする
@@ -96,25 +97,25 @@ class CustomEfficientNet():
                     param.requires_grad = False
                     
     # optimizerのためのparams,lrのdictのlistを生成する
-    def get_params_lr(self, lr_fc=1e-3, lr_not_fc=1e-4):
-        fc_params = []
-        not_fc_params = []
+    def get_params_lr(self, lr_not_pretrained=1e-3, lr_pretrained=1e-4):
+        not_pretrained_params = []
+        pretrained_params = []
         params_lr = []
         
-        if self.grad_fc:
+        if self.transfer_learning:
             for name, param in self.net.named_parameters():
                 if "fc" in name:
-                    fc_params.append(param)
-            params_lr.append({"params": fc_params, "lr": lr_fc})
+                    not_pretrained_params.append(param)
+            params_lr.append({"params": not_pretrained_params, "lr": lr_not_pretrained})
                     
         else:
             for name, param in self.net.named_parameters():
                 if "fc" in name:
-                    fc_params.append(param)
+                    not_pretrained_params.append(param)
                 else:
-                    not_fc_params.append(param)
-            params_lr.append({"params": fc_params, "lr": lr_fc})
-            params_lr.append({"params": not_fc_params, "lr": lr_not_fc})
+                    pretrained_params.append(param)
+            params_lr.append({"params": not_pretrained_params, "lr": lr_not_pretrained})
+            params_lr.append({"params": pretrained_params, "lr": lr_pretrained})
             
         return params_lr
 

@@ -14,7 +14,7 @@
     "num_estimate": 10,
     "batch_size": 128,
     "epochs": 10,
-    "img_size": 224,
+    "img_resize": 224,
 
     "dataset_params":{
         "grayscale_flag": false,
@@ -35,7 +35,7 @@
 
     "net_params": {
         "name": "resnet101",
-        "grad_fc": true,
+        "transfer_learning": true,
         "pretrained": true
     },
 
@@ -43,7 +43,7 @@
     
     "optim_params": {
         "name": "adam",
-        "lr_fc": 1e-3,
+        "lr_not_pretrained": 1e-3,
         "lr_not_fc": 1e-4,
         "momentum": 0.9,
         "weight_decay": 1e-4

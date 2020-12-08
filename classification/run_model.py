@@ -33,7 +33,7 @@ labels = params["labels"]
 num_estimate = params["num_estimate"]
 batch_size = params["batch_size"]
 epochs = params["epochs"]
-img_size = params["img_size"]
+img_resize = params["img_resize"]
 dataset_params = params["dataset_params"]
 tissue_dataset_params = params["tissue_dataset_params"]
 net_params = params["net_params"]
@@ -52,7 +52,7 @@ test_list = make_datapath_list(data_path+"test")
 train_dataset = ArrangeNumDataset(train_list, 
                                   labels,
                                   phase="train",
-                                  transform=ImageTransform(size=img_size,
+                                  transform=ImageTransform(size=img_resize,
                                                            mean=dataset_params["train_mean"],
                                                            std=dataset_params["train_std"],
                                                            grayscale_flag=dataset_params["grayscale_flag"],
@@ -61,7 +61,7 @@ train_dataset = ArrangeNumDataset(train_list,
 test_dataset = ArrangeNumDataset(test_list, 
                                  labels,
                                  phase="val",
-                                 transform=ImageTransform(size=img_size,
+                                 transform=ImageTransform(size=img_resize,
                                                           mean=dataset_params["test_mean"],
                                                           std=dataset_params["test_std"],
                                                           grayscale_flag=dataset_params["grayscale_flag"],
@@ -73,7 +73,7 @@ if tissue_dataset_params["use"]:
     tissue_dataset = ArrangeNumDataset(tissue_list,
                                        labels,
                                        phase=tissue_dataset_params["phase"],
-                                       transform=ImageTransform(size=img_size,
+                                       transform=ImageTransform(size=img_resize,
                                                                 mean=tissue_dataset_params["mean"],
                                                                 std=tissue_dataset_params["std"],
                                                                 grayscale_flag=dataset_params["grayscale_flag"],
@@ -102,11 +102,11 @@ for i in range(num_estimate):
     print("学習・推論：{}/{}".format(i+1, num_estimate))
     # 使用するネットワークを設定する
     if "resnet" in net_params["name"]:
-        net = CustomResNet(grad_fc=net_params["grad_fc"],
+        net = CustomResNet(transfer_learning=net_params["transfer_learning"],
                            pretrained=net_params["pretrained"],
                            model_name=net_params["name"])
     elif "efficientnet" in net_params["name"]:
-        net = CustomEfficientNet(grad_fc=net_params["grad_fc"],
+        net = CustomEfficientNet(transfer_learning=net_params["transfer_learning"],
                                  pretrained=net_params["pretrained"],
                                  model_name=net_params["name"])
     else:  # ネットワーク名が間違っていたらエラー
@@ -123,10 +123,10 @@ for i in range(num_estimate):
 
     # 使用する最適化手法を設定する
     if "adam" == optim_params["name"]:
-        optimizer = optim.Adam(net.get_params_lr(lr_fc=optim_params["lr_fc"], lr_not_fc=optim_params["lr_not_fc"]),
+        optimizer = optim.Adam(net.get_params_lr(lr_not_pretrained=optim_params["lr_not_pretrained"], lr_pretrained=optim_params["lr_pretrained"]),
                             weight_decay=optim_params["weight_decay"])
     elif "sgd" == optim_params["name"]:
-        optimizer = optim.SGD(net.get_params_lr(lr_fc=optim_params["lr_fc"], lr_not_fc=optim_params["lr_not_fc"]),
+        optimizer = optim.SGD(net.get_params_lr(lr_not_pretrained=optim_params["lr_not_pretrained"], lr_pretrained=optim_params["lr_pretrained"]),
                             momentum=optim_params["momentum"],
                             weight_decay=optim_params["weight_decay"])
     else:  # 最適化手法の名前が間違えていたらエラー

@@ -30,11 +30,12 @@ params = json.load(f)
 f.close()
 data_path = params["data_path"]
 labels = params["labels"]
-dataset_params = params["dataset_params"]
-tissue_dataset_params = params["tissue_dataset_params"]
 num_estimate = params["num_estimate"]
 batch_size = params["batch_size"]
 epochs = params["epochs"]
+img_size = params["img_size"]
+dataset_params = params["dataset_params"]
+tissue_dataset_params = params["tissue_dataset_params"]
 net_params = params["net_params"]
 loss_weight_flag = params["loss_weight_flag"]
 optim_params = params["optim_params"]
@@ -51,7 +52,8 @@ test_list = make_datapath_list(data_path+"test")
 train_dataset = ArrangeNumDataset(train_list, 
                                   labels,
                                   phase="train",
-                                  transform=ImageTransform(mean=dataset_params["train_mean"],
+                                  transform=ImageTransform(size=img_size,
+                                                           mean=dataset_params["train_mean"],
                                                            std=dataset_params["train_std"],
                                                            grayscale_flag=dataset_params["grayscale_flag"],
                                                            normalize_per_img=dataset_params["normalize_per_img"]), 
@@ -59,7 +61,8 @@ train_dataset = ArrangeNumDataset(train_list,
 test_dataset = ArrangeNumDataset(test_list, 
                                  labels,
                                  phase="val",
-                                 transform=ImageTransform(mean=dataset_params["test_mean"],
+                                 transform=ImageTransform(size=img_size,
+                                                          mean=dataset_params["test_mean"],
                                                           std=dataset_params["test_std"],
                                                           grayscale_flag=dataset_params["grayscale_flag"],
                                                           normalize_per_img=dataset_params["normalize_per_img"]),
@@ -70,7 +73,8 @@ if tissue_dataset_params["use"]:
     tissue_dataset = ArrangeNumDataset(tissue_list,
                                        labels,
                                        phase=tissue_dataset_params["phase"],
-                                       transform=ImageTransform(mean=tissue_dataset_params["mean"],
+                                       transform=ImageTransform(size=img_size,
+                                                                mean=tissue_dataset_params["mean"],
                                                                 std=tissue_dataset_params["std"],
                                                                 grayscale_flag=dataset_params["grayscale_flag"],
                                                                 normalize_per_img=dataset_params["normalize_per_img"]),
@@ -98,13 +102,13 @@ for i in range(num_estimate):
     print("学習・推論：{}/{}".format(i+1, num_estimate))
     # 使用するネットワークを設定する
     if "resnet" in net_params["name"]:
-        net = CustomResNet(only_fc=net_params["only_fc"],
-                        pretrained=net_params["pretrained"],
-                        model_name=net_params["name"])
+        net = CustomResNet(grad_fc=net_params["grad_fc"],
+                           pretrained=net_params["pretrained"],
+                           model_name=net_params["name"])
     elif "efficientnet" in net_params["name"]:
-        net = CustomEfficientNet(only_fc=net_params["only_fc"],
-                            pretrained=net_params["pretrained"],
-                            model_name=net_params["name"])
+        net = CustomEfficientNet(grad_fc=net_params["grad_fc"],
+                                 pretrained=net_params["pretrained"],
+                                 model_name=net_params["name"])
     else:  # ネットワーク名が間違っていたらエラー
         print("net_params['name']=={} : 定義されていないnameです".format(net_params['name']))
         sys.exit()

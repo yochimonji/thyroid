@@ -12,19 +12,19 @@ from torch.utils.tensorboard import SummaryWriter
 
 # set_gradとget_params_lrはもっといい描き方がある気がする
 class CustomResNet():
-    def __init__(self, only_fc=True, pretrained=True, model_name="resnet18"):
-        if only_fc and (not pretrained):
-            print("only_fc==True, pretrained=Falseの組み合わせはできません")
+    def __init__(self, grad_fc=True, pretrained=True, model_name="resnet18"):
+        if grad_fc and (not pretrained):
+            print("grad_fc==True, pretrained=Falseの組み合わせはできません")
             sys.exit()
 
-        self.only_fc = only_fc
+        self.grad_fc = grad_fc
 
         self.net = getattr(models, model_name)(pretrained=pretrained)
         fc_input_dim = self.net.fc.in_features
         # self.net.fc = nn.Linear(fc_input_dim, 8)
         self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
         self.set_grad()
-        print("使用モデル:{}\tonly_fc:{}\tpretrained:{}".format(model_name, only_fc, pretrained))
+        print("使用モデル:{}\tgrad_fc:{}\tpretrained:{}".format(model_name, grad_fc, pretrained))
             
     def __call__(self):
         return self.net
@@ -32,7 +32,7 @@ class CustomResNet():
     # 最終の全結合層のみ重みの計算をするか否か
     # True：転移学習、False：FineTuning
     def set_grad(self):
-        if self.only_fc:
+        if self.grad_fc:
             for name, param in self.net.named_parameters():
                 # net.parameters()のrequires_gradの初期値はTrueだから
                 # 勾配を求めたくないパラメータだけFalseにする
@@ -45,7 +45,7 @@ class CustomResNet():
         not_fc_params = []
         params_lr = []
         
-        if self.only_fc:
+        if self.grad_fc:
             for name, param in self.net.named_parameters():
                 if "fc" in name:
                     fc_params.append(param)
@@ -64,12 +64,12 @@ class CustomResNet():
 
 
 class CustomEfficientNet():
-    def __init__(self, only_fc=True, pretrained=True, model_name="efficientnet-b0"):
-        if only_fc and (not pretrained):
-            print("only_fc==True, pretrained=Falseの組み合わせはできません")
+    def __init__(self, grad_fc=True, pretrained=True, model_name="efficientnet-b0"):
+        if grad_fc and (not pretrained):
+            print("grad_fc==True, pretrained=Falseの組み合わせはできません")
             sys.exit()
             
-        self.only_fc = only_fc
+        self.grad_fc = grad_fc
         
         if pretrained:
             self.net = EfficientNet.from_pretrained(model_name)
@@ -80,7 +80,7 @@ class CustomEfficientNet():
         # self.net._fc = nn.Linear(fc_input_dim, 8)
         self.net._fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
         self.set_grad()
-        print("使用モデル:{}\tonly_fc:{}\tpretrained:{}".format(model_name, only_fc, pretrained))
+        print("使用モデル:{}\tgrad_fc:{}\tpretrained:{}".format(model_name, grad_fc, pretrained))
             
     def __call__(self):
         return self.net
@@ -88,7 +88,7 @@ class CustomEfficientNet():
     # 最終の全結合層のみ重みの計算をするか否か
     # True：転移学習、False：FineTuning
     def set_grad(self):
-        if self.only_fc:
+        if self.grad_fc:
             for name, param in self.net.named_parameters():
                 # net.parameters()のrequires_gradの初期値はTrueだから
                 # 勾配を求めたくないパラメータだけFalseにする
@@ -101,7 +101,7 @@ class CustomEfficientNet():
         not_fc_params = []
         params_lr = []
         
-        if self.only_fc:
+        if self.grad_fc:
             for name, param in self.net.named_parameters():
                 if "fc" in name:
                     fc_params.append(param)

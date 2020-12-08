@@ -4,7 +4,7 @@ from sklearn.metrics import confusion_matrix, accuracy_score, classification_rep
 
 from utils.utils import ImageTransform, make_datapath_list, show_wrong_img
 from utils.dataset import ArrangeNumDataset
-from model.model import InitResNet, InitEfficientNet, eval_net, train_net
+from model.model import CustomResNet, CustomEfficientNet, eval_net, train_net
 
 
 data_path = "./data/"
@@ -27,7 +27,7 @@ print("len(test_dataset)", len(test_dataset))
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False,
                          num_workers=num_workers)
 
-net = InitEfficientNet(model_name="efficientnet-b0")
+net = CustomEfficientNet(model_name="efficientnet-b0")
 load_path = "weight/last_weight.pth"
 load_weights = torch.load(load_path)
 net().load_state_dict(load_weights)

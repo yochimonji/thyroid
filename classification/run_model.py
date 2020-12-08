@@ -15,7 +15,7 @@ from sklearn.metrics import confusion_matrix, accuracy_score, classification_rep
 # 自作ライブラリ
 from utils.utils import ImageTransform, make_datapath_list, show_wrong_img
 from utils.dataset import ArrangeNumDataset, ConcatDataset
-from model.model import InitResNet, InitEfficientNet, eval_net, train_net
+from model.model import CustomResNet, CustomEfficientNet, eval_net, train_net
 
 # 乱数シード値を固定して再現性を確保
 torch.manual_seed(1234)
@@ -98,11 +98,11 @@ for i in range(num_estimate):
     print("学習・推論：{}/{}".format(i+1, num_estimate))
     # 使用するネットワークを設定する
     if "resnet" in net_params["name"]:
-        net = InitResNet(only_fc=net_params["only_fc"],
+        net = CustomResNet(only_fc=net_params["only_fc"],
                         pretrained=net_params["pretrained"],
                         model_name=net_params["name"])
     elif "efficientnet" in net_params["name"]:
-        net = InitEfficientNet(only_fc=net_params["only_fc"],
+        net = CustomEfficientNet(only_fc=net_params["only_fc"],
                             pretrained=net_params["pretrained"],
                             model_name=net_params["name"])
     else:  # ネットワーク名が間違っていたらエラー

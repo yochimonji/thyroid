@@ -11,6 +11,11 @@
         "und"
     ],
     
+    "num_estimate": 10,
+    "batch_size": 32,
+    "epochs": 10,
+    "img_size": 224,
+
     "dataset_params":{
         "grayscale_flag": false,
         "normalize_per_img": false,
@@ -27,10 +32,6 @@
         "mean": [0.485, 0.456, 0.406],
         "std": [0.229, 0.224, 0.225]
     },
-
-    "num_estimate": 10,
-    "batch_size": 32,
-    "epochs": 10,
 
     "net_params": {
         "name": "resnet101",

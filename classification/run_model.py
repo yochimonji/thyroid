@@ -162,7 +162,7 @@ print(classification_report(ys, ypreds,
 
 # ネットワークとjsonのパラメータを保存
 dt_now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-torch.save(net_weight_median, "weight/wegiht_{}_{}.pth".format(dt_now, int(acc_median*100)))
+torch.save(net_weight_median, "weight/weight_{}_{}.pth".format(dt_now, int(acc_median*100)))
 f = open("config/params_{}_{}.json".format(dt_now, int(acc_median*100)), "w")
 json.dump(params, f)
 f.close()

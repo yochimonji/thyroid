@@ -44,7 +44,7 @@
     "optim_params": {
         "name": "adam",
         "lr_not_pretrained": 1e-3,
-        "lr_not_fc": 1e-4,
+        "lr_pretrained": 1e-4,
         "momentum": 0.9,
         "weight_decay": 1e-4
     }

@@ -53,7 +53,6 @@ class CustomResNet():
                     
         else:
             for name, param in self.net.named_parameters():
-                print(name)
                 if "fc" in name:
                     not_pretrained_params.append(param)
                 else:

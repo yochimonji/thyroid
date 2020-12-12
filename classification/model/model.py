@@ -45,19 +45,14 @@ class CustomResNet():
         pretrained_params = []
         params_lr = []
         
-        if self.transfer_learning:
-            for name, param in self.net.named_parameters():
-                if "fc" in name:
-                    not_pretrained_params.append(param)
-            params_lr.append({"params": not_pretrained_params, "lr": lr_not_pretrained})
-                    
-        else:
-            for name, param in self.net.named_parameters():
-                if "fc" in name:
-                    not_pretrained_params.append(param)
-                else:
-                    pretrained_params.append(param)
-            params_lr.append({"params": not_pretrained_params, "lr": lr_not_pretrained})
+        for name, param in self.net.named_parameters():
+            if ("fc" in name) or ("conv1.weight" == name):
+                not_pretrained_params.append(param)
+            else:
+                pretrained_params.append(param)
+        
+        params_lr.append({"params": not_pretrained_params, "lr": lr_not_pretrained})
+        if not self.transfer_learning:
             params_lr.append({"params": pretrained_params, "lr": lr_pretrained})
             
         return params_lr
@@ -66,23 +61,49 @@ class CustomResNet():
 # ResNetの1チャネルのグレースケール用
 # CustomResNetは3チャネル用
 class CustomResNetGray():
-    def __init__(self):
-        self.only_fc = False
-        # self.net = resnet18(pretrained=False)
-        # self.net = resnet50(pretrained=False)
-        self.net = resnet101(pretrained=False)
-        # self.net = resnet152(pretrained=False)
+    def __init__(self, transfer_learning=True, pretrained=True, model_name="resnet18"):
+        if transfer_learning and (not pretrained):
+            print("transfer_learning==True, pretrained=Falseの組み合わせはできません")
+            sys.exit()
 
-        self.net.conv1 = nn.Conv2d(1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+        self.transfer_learning = transfer_learning
+
+        self.net = getattr(models, model_name)(pretrained=pretrained)
+        self.net.conv1 = nn.Conv2d(1, 64, kernel_size=(7,7), stride=(2,2), padding=(3,3), bias=False)
         fc_input_dim = self.net.fc.in_features
-        self.net.fc = nn.Linear(fc_input_dim, 8)
-        # self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
+        # self.net.fc = nn.Linear(fc_input_dim, 8)
+        self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
+        self.set_grad()
+        print("使用モデル:{}\ttransfer_learning:{}\tpretrained:{}".format(model_name, transfer_learning, pretrained))
             
     def __call__(self):
         return self.net
+
+    # 最終の全結合層のみ重みの計算をするか否か
+    # True：転移学習、False：FineTuning
+    def set_grad(self):
+        if self.transfer_learning:
+            for name, param in self.net.named_parameters():
+                # net.parameters()のrequires_gradの初期値はTrueだから
+                # 勾配を求めたくないパラメータだけFalseにする
+                if not(("fc" in name) or ("conv1.weight" == name)):
+                    param.requires_grad = False
                     
-    def get_params_lr(self):
-        params_lr = [{"params": self.net.parameters(), "lr": 1e-3}]
+    def get_params_lr(self, lr_not_pretrained=1e-3, lr_pretrained=1e-4):
+        not_pretrained_params = []
+        pretrained_params = []
+        params_lr = []
+        
+        for name, param in self.net.named_parameters():
+            if ("fc" in name) or ("conv1.weight" == name):
+                not_pretrained_params.append(param)
+            else:
+                pretrained_params.append(param)
+        
+        params_lr.append({"params": not_pretrained_params, "lr": lr_not_pretrained})
+        if not self.transfer_learning:
+            params_lr.append({"params": pretrained_params, "lr": lr_pretrained})
+            
         return params_lr
 
 

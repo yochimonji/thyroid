@@ -17,7 +17,7 @@
     "img_resize": 224,
 
     "dataset_params":{
-        "grayscale_flag": false,
+        "grayscale_flag": true,
         "normalize_per_img": false,
         "arrange": null,
         "train_mean": [0.485, 0.456, 0.406],

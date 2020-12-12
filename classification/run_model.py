@@ -15,7 +15,7 @@ from sklearn.metrics import confusion_matrix, accuracy_score, classification_rep
 # 自作ライブラリ
 from utils.utils import ImageTransform, make_datapath_list, show_wrong_img
 from utils.dataset import ArrangeNumDataset, ConcatDataset
-from model.model import CustomResNet, CustomEfficientNet, eval_net, train_net
+from model.model import CustomResNet, CustomResNetGray, CustomEfficientNet, eval_net, train_net
 
 # 乱数シード値を固定して再現性を確保
 torch.manual_seed(1234)
@@ -101,17 +101,20 @@ net_weights = []  # estimateごとのネットワークの重みリスト
 for i in range(num_estimate):
     print("学習・推論：{}/{}".format(i+1, num_estimate))
     # 使用するネットワークを設定する
-    if "resnet" in net_params["name"]:
-        net = CustomResNet(transfer_learning=net_params["transfer_learning"],
+    # if "resnet" in net_params["name"]:
+    #     net = CustomResNet(transfer_learning=net_params["transfer_learning"],
+    #                        pretrained=net_params["pretrained"],
+    #                        model_name=net_params["name"])
+    # elif "efficientnet" in net_params["name"]:
+    #     net = CustomEfficientNet(transfer_learning=net_params["transfer_learning"],
+    #                              pretrained=net_params["pretrained"],
+    #                              model_name=net_params["name"])
+    # else:  # ネットワーク名が間違っていたらエラー
+    #     print("net_params['name']=={} : 定義されていないnameです".format(net_params['name']))
+    #     sys.exit()
+    net = CustomResNetGray(transfer_learning=net_params["transfer_learning"],
                            pretrained=net_params["pretrained"],
                            model_name=net_params["name"])
-    elif "efficientnet" in net_params["name"]:
-        net = CustomEfficientNet(transfer_learning=net_params["transfer_learning"],
-                                 pretrained=net_params["pretrained"],
-                                 model_name=net_params["name"])
-    else:  # ネットワーク名が間違っていたらエラー
-        print("net_params['name']=={} : 定義されていないnameです".format(net_params['name']))
-        sys.exit()
 
     # 損失関数のクラス数に合わせてweightをかけるか決める
     if loss_weight_flag:

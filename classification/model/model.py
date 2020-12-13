@@ -10,8 +10,9 @@ from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 
 
-class CustomResNet():
+class CustomResNet(nn.Module):
     def __init__(self, transfer_learning=True, pretrained=True, model_name="resnet18"):
+        super().__init__()
         if transfer_learning and (not pretrained):
             print("transfer_learning==True, pretrained=Falseの組み合わせはできません")
             sys.exit()
@@ -24,9 +25,9 @@ class CustomResNet():
         self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
         self.set_grad()
         print("使用モデル:{}\ttransfer_learning:{}\tpretrained:{}".format(model_name, transfer_learning, pretrained))
-            
-    def __call__(self):
-        return self.net
+        
+    def forward(self, x):
+        return self.net(x)
     
     # 最終の全結合層のみ重みの計算をするか否か
     # True：転移学習、False：FineTuning
@@ -59,8 +60,9 @@ class CustomResNet():
 
 # ResNetの1チャネルのグレースケール用
 # CustomResNetは3チャネル用
-class CustomResNetGray():
+class CustomResNetGray(nn.Module):
     def __init__(self, transfer_learning=True, pretrained=True, model_name="resnet18"):
+        super().__init__()
         if transfer_learning and (not pretrained):
             print("transfer_learning==True, pretrained=Falseの組み合わせはできません")
             sys.exit()
@@ -74,9 +76,9 @@ class CustomResNetGray():
         self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
         self.set_grad()
         print("使用モデル:{}\ttransfer_learning:{}\tpretrained:{}".format(model_name, transfer_learning, pretrained))
-            
-    def __call__(self):
-        return self.net
+        
+    def forward(self, x):
+        return self.net(x)
 
     # 最終の全結合層のみ重みの計算をするか否か
     # True：転移学習、False：FineTuning
@@ -106,8 +108,9 @@ class CustomResNetGray():
         return params_lr
 
 
-class CustomEfficientNet():
+class CustomEfficientNet(nn.Module):
     def __init__(self, transfer_learning=True, pretrained=True, model_name="efficientnet-b0"):
+        super().__init__()
         if transfer_learning and (not pretrained):
             print("transfer_learning==True, pretrained=Falseの組み合わせはできません")
             sys.exit()
@@ -124,9 +127,9 @@ class CustomEfficientNet():
         self.net._fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
         self.set_grad()
         print("使用モデル:{}\ttransfer_learning:{}\tpretrained:{}".format(model_name, transfer_learning, pretrained))
-            
-    def __call__(self):
-        return self.net
+        
+    def forward(self, x):
+        return self.net(x)
     
     # 最終の全結合層のみ重みの計算をするか否か
     # True：転移学習、False：FineTuning

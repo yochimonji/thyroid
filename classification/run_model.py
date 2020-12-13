@@ -138,16 +138,16 @@ for i in range(num_estimate):
     print("optimizer:", optimizer)
 
     # 学習
-    train_net(net(), train_loader, test_loader, optimizer=optimizer,
+    train_net(net, train_loader, test_loader, optimizer=optimizer,
             loss_fn=loss_fn, epochs=epochs, device=device)
     # 推論
-    ys, ypreds = eval_net(net(), test_loader, device=device)
+    ys, ypreds = eval_net(net, test_loader, device=device)
 
     # 正答率とネットワークの重みをリストに追加
     ys = ys.cpu().numpy()
     ypreds = ypreds.cpu().numpy()
     eval_accs.append(accuracy_score(ys, ypreds))
-    net_weights.append(net().state_dict())
+    net_weights.append(net.state_dict())
 
 # eval_accの中央値のインデックスを求める
 acc_median = np.median(eval_accs)
@@ -158,8 +158,8 @@ print("acc_median_index:", acc_median_index)
 
 # 推論結果表示
 net_weight_median = net_weights[acc_median_index]
-net().load_state_dict(net_weight_median)
-ys, ypreds = eval_net(net(), test_loader, device=device)
+net.load_state_dict(net_weight_median)
+ys, ypreds = eval_net(net, test_loader, device=device)
 ys = ys.cpu().numpy()
 ypreds = ypreds.cpu().numpy()
 print(confusion_matrix(ys, ypreds))

@@ -32,7 +32,7 @@ class ImageTransform():
             self.transform = {
                 "train": transforms.Compose([  # 他の前処理をまとめる
                     transforms.Resize((size, size)),  # リサイズ, 最初にしたほうが処理が軽い
-                    transforms.Grayscale(num_output_channels=1),
+                    transforms.Grayscale(num_output_channels=3),
                     # scaleのサイズとratioのアスペクト比でクロップ後、sizeにリサイズ
                     # transforms.RandomResizedCrop(size, scale=(0.8, 1.0)),
                     # transforms.RandomCrop(size),  # ランダムにクロップ後、sizeにリサイズ
@@ -44,7 +44,7 @@ class ImageTransform():
                 ]),
                 "val": transforms.Compose([  # 他の前処理をまとめる
                     transforms.Resize((size, size)),
-                    transforms.Grayscale(num_output_channels=1),
+                    transforms.Grayscale(num_output_channels=3),
                     # transforms.CenterCrop(size),
                     transforms.ToTensor()  # ndarrayをTensorに変換
                     # transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
@@ -70,10 +70,8 @@ class ImageTransform():
                     # transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
                 ])
             }
-        # self.mean = np.mean(mean)
-        # self.std = np.mean(std)
-        self.mean = 0.2126*mean[0] + 0.7152*mean[1] + 0.0722*mean[2]
-        self.std = 0.2126*std[0] + 0.7152*std[1] + 0.0722*std[2]
+        self.mean = mean
+        self.std = std
         self.normalize_per_img = normalize_per_img
         
     def __call__(self, img, phase):

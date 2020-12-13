@@ -10,7 +10,6 @@ from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 
 
-# set_gradとget_params_lrはもっといい描き方がある気がする
 class CustomResNet():
     def __init__(self, transfer_learning=True, pretrained=True, model_name="resnet18"):
         if transfer_learning and (not pretrained):
@@ -46,7 +45,7 @@ class CustomResNet():
         params_lr = []
         
         for name, param in self.net.named_parameters():
-            if ("fc" in name) or ("conv1.weight" == name):
+            if "fc" in name:
                 params_not_pretrained.append(param)
             else:
                 params_pretrained.append(param)
@@ -145,19 +144,14 @@ class CustomEfficientNet():
         params_pretrained = []
         params_lr = []
         
-        if self.transfer_learning:
-            for name, param in self.net.named_parameters():
-                if "fc" in name:
-                    params_not_pretrained.append(param)
-            params_lr.append({"params": params_not_pretrained, "lr": lr_not_pretrained})
-                    
-        else:
-            for name, param in self.net.named_parameters():
-                if "fc" in name:
-                    params_not_pretrained.append(param)
-                else:
-                    params_pretrained.append(param)
-            params_lr.append({"params": not_params_pretrained, "lr": lr_not_pretrained})
+        for name, param in self.net.named_parameters():
+            if "fc" in name:
+                params_not_pretrained.append(param)
+            else:
+                params_pretrained.append(param)
+        
+        params_lr.append({"params": params_not_pretrained, "lr": lr_not_pretrained})
+        if not self.transfer_learning:
             params_lr.append({"params": params_pretrained, "lr": lr_pretrained})
             
         return params_lr

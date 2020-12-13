@@ -41,19 +41,19 @@ class CustomResNet():
                     
     # optimizerのためのparams,lrのdictのlistを生成する
     def get_params_lr(self, lr_not_pretrained=1e-3, lr_pretrained=1e-4):
-        not_pretrained_params = []
-        pretrained_params = []
+        params_not_pretrained = []
+        params_pretrained = []
         params_lr = []
         
         for name, param in self.net.named_parameters():
             if ("fc" in name) or ("conv1.weight" == name):
-                not_pretrained_params.append(param)
+                params_not_pretrained.append(param)
             else:
-                pretrained_params.append(param)
+                params_pretrained.append(param)
         
-        params_lr.append({"params": not_pretrained_params, "lr": lr_not_pretrained})
+        params_lr.append({"params": params_not_pretrained, "lr": lr_not_pretrained})
         if not self.transfer_learning:
-            params_lr.append({"params": pretrained_params, "lr": lr_pretrained})
+            params_lr.append({"params": params_pretrained, "lr": lr_pretrained})
             
         return params_lr
 
@@ -90,19 +90,19 @@ class CustomResNetGray():
                     param.requires_grad = False
                     
     def get_params_lr(self, lr_not_pretrained=1e-3, lr_pretrained=1e-4):
-        not_pretrained_params = []
-        pretrained_params = []
+        params_not_pretrained = []
+        params_pretrained = []
         params_lr = []
         
         for name, param in self.net.named_parameters():
             if ("fc" in name) or ("conv1.weight" == name):
-                not_pretrained_params.append(param)
+                params_not_pretrained.append(param)
             else:
-                pretrained_params.append(param)
+                params_pretrained.append(param)
         
-        params_lr.append({"params": not_pretrained_params, "lr": lr_not_pretrained})
+        params_lr.append({"params": params_not_pretrained, "lr": lr_not_pretrained})
         if not self.transfer_learning:
-            params_lr.append({"params": pretrained_params, "lr": lr_pretrained})
+            params_lr.append({"params": params_pretrained, "lr": lr_pretrained})
             
         return params_lr
 
@@ -141,24 +141,24 @@ class CustomEfficientNet():
                     
     # optimizerのためのparams,lrのdictのlistを生成する
     def get_params_lr(self, lr_not_pretrained=1e-3, lr_pretrained=1e-4):
-        not_pretrained_params = []
-        pretrained_params = []
+        params_not_pretrained = []
+        params_pretrained = []
         params_lr = []
         
         if self.transfer_learning:
             for name, param in self.net.named_parameters():
                 if "fc" in name:
-                    not_pretrained_params.append(param)
-            params_lr.append({"params": not_pretrained_params, "lr": lr_not_pretrained})
+                    params_not_pretrained.append(param)
+            params_lr.append({"params": params_not_pretrained, "lr": lr_not_pretrained})
                     
         else:
             for name, param in self.net.named_parameters():
                 if "fc" in name:
-                    not_pretrained_params.append(param)
+                    params_not_pretrained.append(param)
                 else:
-                    pretrained_params.append(param)
-            params_lr.append({"params": not_pretrained_params, "lr": lr_not_pretrained})
-            params_lr.append({"params": pretrained_params, "lr": lr_pretrained})
+                    params_pretrained.append(param)
+            params_lr.append({"params": not_params_pretrained, "lr": lr_not_pretrained})
+            params_lr.append({"params": params_pretrained, "lr": lr_pretrained})
             
         return params_lr
 

@@ -126,7 +126,7 @@ class ConcatMultiResNet(nn.Module):
         self.gray_feature_net = copy.deepcopy(net)
         self.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
 
-        # self.set_grad()
+        self.set_grad()
         print("使用モデル:{}\ttransfer_learning:{}\tpretrained:{}".format(model_name, transfer_learning, pretrained))
         
     def forward(self, x):
@@ -140,23 +140,23 @@ class ConcatMultiResNet(nn.Module):
     # True：転移学習、False：FineTuning
     def set_grad(self):
         if self.transfer_learning:
-            for name, param in self.net.named_parameters():
-                # net.parameters()のrequires_gradの初期値はTrueだから
-                # 勾配を求めたくないパラメータだけFalseにする
-                if not("fc" in name):
+            # .parameters()のrequires_gradの初期値はTrueだから
+            # 勾配を求めたくないパラメータだけFalseにする
+            for net in (self.rgb_feature_net, self.gray_feature_net):
+                for param in net.parameters():
                     param.requires_grad = False
-                    
+    
     # optimizerのためのparams,lrのdictのlistを生成する
     def get_params_lr(self, lr_not_pretrained=1e-3, lr_pretrained=1e-4):
         params_not_pretrained = []
         params_pretrained = []
         params_lr = []
         
-        for name, param in self.net.named_parameters():
-            if "fc" in name:
-                params_not_pretrained.append(param)
-            else:
+        for net in (self.rgb_feature_net, self.gray_feature_net):
+            for param in net.parameters():
                 params_pretrained.append(param)
+        for param in self.fc.parameters():
+            params_not_pretrained.append(param)
         
         params_lr.append({"params": params_not_pretrained, "lr": lr_not_pretrained})
         if not self.transfer_learning:

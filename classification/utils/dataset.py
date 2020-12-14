@@ -57,6 +57,7 @@ class ArrangeNumDataset(Dataset):
             img = self.transform(img, self.phase)
         
         label = self.labels[index]
+        img = np.concatenate((img, img), axis=0)
         
         return img, label
     

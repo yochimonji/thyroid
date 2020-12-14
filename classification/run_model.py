@@ -79,7 +79,8 @@ if tissue_dataset_params["use"]:
                                                                 mean=tissue_dataset_params["mean"],
                                                                 std=tissue_dataset_params["std"],
                                                                 grayscale_flag=dataset_params["grayscale_flag"],
-                                                                normalize_per_img=dataset_params["normalize_per_img"]),
+                                                                normalize_per_img=dataset_params["normalize_per_img"],
+                                                                multi_net=net_params["multi_net"]),
                                        arrange=dataset_params["arrange"])
     if tissue_dataset_params["phase"] == "train":
         train_dataset = ConcatDataset(train_dataset, tissue_dataset)

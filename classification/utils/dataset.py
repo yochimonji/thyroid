@@ -42,8 +42,8 @@ class ArrangeNumDataset(Dataset):
             self.file_list = list(itertools.chain.from_iterable(self.file_list))
             
         self.label_list = label_list
-        self.transform = transform
         self.phase = phase
+        self.transform = transform
         self.labels = self.make_labels()  # self.fileリストと対になるラベルのリスト
         self.weights = self.calc_weights()  # ラベルリストからweightのリストを生成
         

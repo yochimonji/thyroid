@@ -27,7 +27,7 @@ class MyRotationTransform():
 # ResNetで転移学習するとき、sizeは224×224、defaultのmean,stdで標準化する
 class ImageTransform():
     def __init__(self, size=224, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225],
-                 grayscale_flag=False, normalize_per_img=False):
+                 grayscale_flag=False, normalize_per_img=False, multi_net=False):
         if grayscale_flag:
             self.transform = {
                 "train": transforms.Compose([  # 他の前処理をまとめる

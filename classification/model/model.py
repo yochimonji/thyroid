@@ -118,11 +118,10 @@ class ConcatMultiResNet(nn.Module):
 
         self.transfer_learning = transfer_learning
 
-        net = getattr(models, model_name)(pretrained=pretrained)
-        fc_input_dim = net.fc.in_features * 2
-        net.fc = nn.Identity()  # 恒等関数に変更
-        self.rgb_feature_net = copy.deepcopy(net)
-        self.gray_feature_net = copy.deepcopy(net)
+        self.rgb_feature_net = getattr(models, model_name)(pretrained=pretrained)
+        fc_input_dim = self.rgb_feature_net.fc.in_features * 2
+        self.rgb_feature_net.fc = nn.Identity()  # 恒等関数に変更
+        self.gray_feature_net = copy.deepcopy(self.rgb_feature_net)
         self.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
 
         self.set_grad()

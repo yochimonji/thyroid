@@ -56,7 +56,8 @@ train_dataset = ArrangeNumDataset(train_list,
                                                            mean=dataset_params["train_mean"],
                                                            std=dataset_params["train_std"],
                                                            grayscale_flag=dataset_params["grayscale_flag"],
-                                                           normalize_per_img=dataset_params["normalize_per_img"]), 
+                                                           normalize_per_img=dataset_params["normalize_per_img"],
+                                                           multi_net=net_params["multi_net"]), 
                                   arrange=dataset_params["arrange"])
 test_dataset = ArrangeNumDataset(test_list, 
                                  labels,
@@ -65,7 +66,8 @@ test_dataset = ArrangeNumDataset(test_list,
                                                           mean=dataset_params["test_mean"],
                                                           std=dataset_params["test_std"],
                                                           grayscale_flag=dataset_params["grayscale_flag"],
-                                                          normalize_per_img=dataset_params["normalize_per_img"]),
+                                                          normalize_per_img=dataset_params["normalize_per_img"],
+                                                          multi_net=net_params["multi_net"]),
                                  arrange=dataset_params["arrange"])
 
 if tissue_dataset_params["use"]:
@@ -102,7 +104,7 @@ for i in range(num_estimate):
     print("学習・推論：{}/{}".format(i+1, num_estimate))
     # 使用するネットワークを設定する
     if "resnet" in net_params["name"]:
-        if net_params["multi"]:
+        if net_params["multi_net"]:
             net = ConcatMultiResNet(transfer_learning=net_params["transfer_learning"],
                                     pretrained=net_params["pretrained"],
                                     model_name=net_params["name"])

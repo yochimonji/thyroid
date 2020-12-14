@@ -1,6 +1,7 @@
 import sys
 import os
 from datetime import datetime
+import copy
 
 import torch
 from torch import nn
@@ -97,6 +98,62 @@ class CustomResNetGray(nn.Module):
         
         for name, param in self.net.named_parameters():
             if ("fc" in name) or ("conv1.weight" == name):
+                params_not_pretrained.append(param)
+            else:
+                params_pretrained.append(param)
+        
+        params_lr.append({"params": params_not_pretrained, "lr": lr_not_pretrained})
+        if not self.transfer_learning:
+            params_lr.append({"params": params_pretrained, "lr": lr_pretrained})
+            
+        return params_lr
+
+
+class ConcatMultiResNet(nn.Module):
+    def __init__(self, transfer_learning=True, pretrained=True, model_name="multi-resnet18"):
+        super().__init__()
+        if transfer_learning and (not pretrained):
+            print("transfer_learning==True, pretrained=Falseの組み合わせはできません")
+            sys.exit()
+
+        self.transfer_learning = transfer_learning
+
+        model_rename = model_name.replace("multi-", "")
+        net = getattr(models, model_rename)(pretrained=pretrained)
+        fc_input_dim = net.fc.in_features * 2
+        net.fc = nn.Identity()  # 恒等関数に変更
+        self.rgb_feature_net = copy.deepcopy(net)
+        self.gray_feature_net = copy.deepcopy(net)
+        self.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
+
+        # self.set_grad()
+        print("使用モデル:{}\ttransfer_learning:{}\tpretrained:{}".format(model_name, transfer_learning, pretrained))
+        
+    def forward(self, x):
+        x_rgb = self.rgb_feature_net(x[:, :3, :, :])
+        x_gray = self.gray_feature_net(x[:, 3:, :, :])
+        x = torch.cat((x_rgb, x_gray), 1)
+        x = self.fc(x)
+        return x
+    
+    # 最終の全結合層のみ重みの計算をするか否か
+    # True：転移学習、False：FineTuning
+    def set_grad(self):
+        if self.transfer_learning:
+            for name, param in self.net.named_parameters():
+                # net.parameters()のrequires_gradの初期値はTrueだから
+                # 勾配を求めたくないパラメータだけFalseにする
+                if not("fc" in name):
+                    param.requires_grad = False
+                    
+    # optimizerのためのparams,lrのdictのlistを生成する
+    def get_params_lr(self, lr_not_pretrained=1e-3, lr_pretrained=1e-4):
+        params_not_pretrained = []
+        params_pretrained = []
+        params_lr = []
+        
+        for name, param in self.net.named_parameters():
+            if "fc" in name:
                 params_not_pretrained.append(param)
             else:
                 params_pretrained.append(param)

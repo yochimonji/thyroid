@@ -101,14 +101,15 @@ net_weights = []  # estimateごとのネットワークの重みリスト
 for i in range(num_estimate):
     print("学習・推論：{}/{}".format(i+1, num_estimate))
     # 使用するネットワークを設定する
-    if "multi-resnet" in net_params["name"]:
-        net = ConcatMultiResNet(transfer_learning=net_params["transfer_learning"],
-                                pretrained=net_params["pretrained"],
-                                model_name=net_params["name"])
-    elif "resnet" in net_params["name"]:
-        net = CustomResNet(transfer_learning=net_params["transfer_learning"],
-                           pretrained=net_params["pretrained"],
-                           model_name=net_params["name"])
+    if "resnet" in net_params["name"]:
+        if net_params["multi"]:
+            net = ConcatMultiResNet(transfer_learning=net_params["transfer_learning"],
+                                    pretrained=net_params["pretrained"],
+                                    model_name=net_params["name"])
+        else:
+            net = CustomResNet(transfer_learning=net_params["transfer_learning"],
+                            pretrained=net_params["pretrained"],
+                            model_name=net_params["name"])
     elif "efficientnet" in net_params["name"]:
         net = CustomEfficientNet(transfer_learning=net_params["transfer_learning"],
                                  pretrained=net_params["pretrained"],

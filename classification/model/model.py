@@ -118,8 +118,7 @@ class ConcatMultiResNet(nn.Module):
 
         self.transfer_learning = transfer_learning
 
-        model_rename = model_name.replace("multi-", "")
-        net = getattr(models, model_rename)(pretrained=pretrained)
+        net = getattr(models, model_name)(pretrained=pretrained)
         fc_input_dim = net.fc.in_features * 2
         net.fc = nn.Identity()  # 恒等関数に変更
         self.rgb_feature_net = copy.deepcopy(net)
@@ -127,7 +126,7 @@ class ConcatMultiResNet(nn.Module):
         self.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
 
         self.set_grad()
-        print("使用モデル:{}\ttransfer_learning:{}\tpretrained:{}".format(model_name, transfer_learning, pretrained))
+        print("使用モデル:multi-{}\ttransfer_learning:{}\tpretrained:{}".format(model_name, transfer_learning, pretrained))
         
     def forward(self, x):
         x_rgb = self.rgb_feature_net(x[:, :3, :, :])

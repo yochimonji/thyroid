@@ -35,6 +35,7 @@
 
     "net_params": {
         "name": "resnet101",
+        "multi": true,
         "transfer_learning": true,
         "pretrained": true
     },

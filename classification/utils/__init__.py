@@ -102,15 +102,18 @@ class ImageTransform():
         return normalize(transform_img)
 
 
-# path以下にあるすべてのディレクトリからtifファイルのパスリスト取得
-def make_datapath_list(path):
-    target_path = os.path.join(path+'/**/*.tif')
-    print(target_path)
+# path以下にあり、labelsと一致するすべてのディレクトリからtifファイルのパスリスト取得
+def make_datapath_list(path, labels):
+    search_path_list = []
+    for label in labels:
+        search_path_list.append(os.path.join(path+'/*'+label+'*/**/*.tif'))
+    print(search_path_list)
+
     path_list = []
-    
     # recursive=True:子ディレクトリも再帰的に探索する
-    for path in glob.glob(target_path, recursive=True):
-        path_list.append(path)
+    for search_path in search_path_list:
+        for path in glob.glob(search_path, recursive=True):
+            path_list.append(path)
     
     return path_list
 

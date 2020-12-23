@@ -48,8 +48,8 @@ print("使用デバイス：", device)
 print(labels)
 
 # 訓練とテストのファイルリストを取得する
-train_list = make_datapath_list(data_path+"train")
-test_list = make_datapath_list(data_path+"test")
+train_list = make_datapath_list(data_path+"train", labels=labels)
+test_list = make_datapath_list(data_path+"test", labels=labels)
 
 # 訓練とテストのデータセットを作成する
 train_dataset = ArrangeNumDataset(train_list, 
@@ -74,7 +74,7 @@ test_dataset = ArrangeNumDataset(test_list,
                                  arrange=dataset_params["arrange"])
 
 if tissue_dataset_params["use"]:
-    tissue_list = make_datapath_list(data_path+"tissue array")
+    tissue_list = make_datapath_list(data_path+"tissue array", labels=labels)
     tissue_dataset = ArrangeNumDataset(tissue_list,
                                        labels,
                                        phase=tissue_dataset_params["phase"],

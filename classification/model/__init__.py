@@ -12,7 +12,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 
 class CustomResNet(nn.Module):
-    def __init__(self, transfer_learning=True, pretrained=True, model_name="resnet18"):
+    def __init__(self, transfer_learning=True, pretrained=True, model_name="resnet18", out_features=8):
         super().__init__()
         if transfer_learning and (not pretrained):
             print("transfer_learning==True, pretrained=Falseの組み合わせはできません")
@@ -22,8 +22,7 @@ class CustomResNet(nn.Module):
 
         self.net = getattr(models, model_name)(pretrained=pretrained)
         fc_input_dim = self.net.fc.in_features
-        # self.net.fc = nn.Linear(fc_input_dim, 8)
-        self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
+        self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, out_features))
         self.set_grad()
         print("使用モデル:{}\ttransfer_learning:{}\tpretrained:{}".format(model_name, transfer_learning, pretrained))
         
@@ -62,7 +61,7 @@ class CustomResNet(nn.Module):
 # ResNetの1チャネルのグレースケール用
 # CustomResNetは3チャネル用
 class CustomResNetGray(nn.Module):
-    def __init__(self, transfer_learning=True, pretrained=True, model_name="resnet18"):
+    def __init__(self, transfer_learning=True, pretrained=True, model_name="resnet18", out_features=8):
         super().__init__()
         if transfer_learning and (not pretrained):
             print("transfer_learning==True, pretrained=Falseの組み合わせはできません")
@@ -73,8 +72,7 @@ class CustomResNetGray(nn.Module):
         self.net = getattr(models, model_name)(pretrained=pretrained)
         self.net.conv1 = nn.Conv2d(1, 64, kernel_size=(7,7), stride=(2,2), padding=(3,3), bias=False)
         fc_input_dim = self.net.fc.in_features
-        # self.net.fc = nn.Linear(fc_input_dim, 8)
-        self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
+        self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, out_features))
         self.set_grad()
         print("使用モデル:{}\ttransfer_learning:{}\tpretrained:{}".format(model_name, transfer_learning, pretrained))
         
@@ -110,7 +108,7 @@ class CustomResNetGray(nn.Module):
 
 
 class ConcatMultiResNet(nn.Module):
-    def __init__(self, transfer_learning=True, pretrained=True, model_name="multi-resnet18"):
+    def __init__(self, transfer_learning=True, pretrained=True, model_name="multi-resnet18", out_features=8):
         super().__init__()
         if transfer_learning and (not pretrained):
             print("transfer_learning==True, pretrained=Falseの組み合わせはできません")
@@ -122,7 +120,7 @@ class ConcatMultiResNet(nn.Module):
         fc_input_dim = self.rgb_feature_net.fc.in_features * 2
         self.rgb_feature_net.fc = nn.Identity()  # 恒等関数に変更
         self.gray_feature_net = copy.deepcopy(self.rgb_feature_net)
-        self.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
+        self.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, out_features))
 
         self.set_grad()
         print("使用モデル:multi-{}\ttransfer_learning:{}\tpretrained:{}".format(model_name, transfer_learning, pretrained))
@@ -164,7 +162,7 @@ class ConcatMultiResNet(nn.Module):
 
 
 class CustomEfficientNet(nn.Module):
-    def __init__(self, transfer_learning=True, pretrained=True, model_name="efficientnet-b0"):
+    def __init__(self, transfer_learning=True, pretrained=True, model_name="efficientnet-b0", out_features=8):
         super().__init__()
         if transfer_learning and (not pretrained):
             print("transfer_learning==True, pretrained=Falseの組み合わせはできません")
@@ -178,8 +176,7 @@ class CustomEfficientNet(nn.Module):
             self.net = EfficientNet.from_name(model_name)
 
         fc_input_dim = self.net._fc.in_features
-        # self.net._fc = nn.Linear(fc_input_dim, 8)
-        self.net._fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, 8))
+        self.net._fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, out_features))
         self.set_grad()
         print("使用モデル:{}\ttransfer_learning:{}\tpretrained:{}".format(model_name, transfer_learning, pretrained))
         

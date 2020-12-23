@@ -10,7 +10,7 @@ import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
 import numpy as np
-from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
+from sklearn.metrics import confusion_matrix, accuracy_score, recall_score, classification_report
 
 # 自作ライブラリ
 from utils import ImageTransform, make_datapath_list, show_wrong_img
@@ -39,6 +39,7 @@ tissue_dataset_params = params["tissue_dataset_params"]
 net_params = params["net_params"]
 loss_weight_flag = params["loss_weight_flag"]
 optim_params = params["optim_params"]
+label_num = len(labels)
 
 # GPUが使用可能ならGPU、不可能ならCPUを使う
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -98,7 +99,7 @@ train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True,
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False,
                          num_workers=2)
 
-eval_accs = []  # estimateごとの推論時の正答率リスト
+eval_recall = []  # estimateごとのrecallのリスト
 net_weights = []  # estimateごとのネットワークの重みリスト
 
 for i in range(num_estimate):
@@ -108,21 +109,25 @@ for i in range(num_estimate):
         if net_params["multi_net"]:
             net = ConcatMultiResNet(transfer_learning=net_params["transfer_learning"],
                                     pretrained=net_params["pretrained"],
-                                    model_name=net_params["name"])
+                                    model_name=net_params["name"],
+                                    out_features=label_num)
         else:
             net = CustomResNet(transfer_learning=net_params["transfer_learning"],
                             pretrained=net_params["pretrained"],
-                            model_name=net_params["name"])
+                            model_name=net_params["name"],
+                            out_features=label_num)
     elif "efficientnet" in net_params["name"]:
         net = CustomEfficientNet(transfer_learning=net_params["transfer_learning"],
                                  pretrained=net_params["pretrained"],
-                                 model_name=net_params["name"])
+                                 model_name=net_params["name"],
+                                 out_features=label_num)
     else:  # ネットワーク名が間違っていたらエラー
         print("net_params['name']=={} : 定義されていないnameです".format(net_params['name']))
         sys.exit()
     # net = CustomResNetGray(transfer_learning=net_params["transfer_learning"],
     #                        pretrained=net_params["pretrained"],
-    #                        model_name=net_params["name"])
+    #                        model_name=net_params["name"],
+    #                        out_features=label_num)
 
     # 損失関数のクラス数に合わせてweightをかけるか決める
     if loss_weight_flag:
@@ -154,19 +159,21 @@ for i in range(num_estimate):
     # 正答率とネットワークの重みをリストに追加
     ys = ys.cpu().numpy()
     ypreds = ypreds.cpu().numpy()
-    eval_accs.append(accuracy_score(ys, ypreds))
+    eval_recall.append(recall_score(ys, ypreds, average=None))
     net_weights.append(net.state_dict())
 
-# eval_accの中央値のインデックスを求める
-acc_median = np.median(eval_accs)
-acc_median_index = np.argmin(np.abs(np.array(eval_accs) - acc_median))
-print("eval_accs:", eval_accs)
-print("acc_median:", acc_median)
-print("acc_median_index:", acc_median_index)
+# weightを保存するために
+# eval_recallのmeanに最も近いインデックスを求める
+recall_mean_all = np.mean(eval_recall)
+recall_means = np.mean(eval_recall, axis=0)
+recall_mean_index = np.argmin(np.abs(np.array(recall_means) - recall_mean_all))
+print("recall_mean_all:", recall_mean_all)
+print("recall_means:", recall_means)
+print("recall_mean_index:", recall_mean_index)
 
 # 推論結果表示
-net_weight_median = net_weights[acc_median_index]
-net.load_state_dict(net_weight_median)
+net_weight = net_weights[recall_mean_index]
+net.load_state_dict(net_weight)
 ys, ypreds = eval_net(net, test_loader, device=device)
 ys = ys.cpu().numpy()
 ypreds = ypreds.cpu().numpy()
@@ -177,7 +184,7 @@ print(classification_report(ys, ypreds,
 
 # ネットワークとjsonのパラメータを保存
 dt_now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-torch.save(net_weight_median, "weight/weight_{}_{}.pth".format(dt_now, int(acc_median*100)))
-f = open("config/params_{}_{}.json".format(dt_now, int(acc_median*100)), "w")
+torch.save(net_weight, "weight/weight_{}_{}.pth".format(dt_now, int(recall_mean_all*100)))
+f = open("config/params_{}_{}.json".format(dt_now, int(recall_mean_all*100)), "w")
 json.dump(params, f)
 f.close()

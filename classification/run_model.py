@@ -163,16 +163,18 @@ for i in range(num_estimate):
     ypreds = ypreds.cpu().numpy()
     eval_recall.append(recall_score(ys, ypreds, average=None))
     net_weights.append(net.state_dict())
+    print("eval_recall", eval_recall[-1])
 
 # weightを保存するために
 # eval_recallのmeanに最も近いインデックスを求める
 recall_mean_all = np.mean(eval_recall)
 recall_means = np.mean(eval_recall, axis=1)
 recall_mean_index = np.argmin(np.abs(np.array(recall_means) - recall_mean_all))
-print("recall_mean_all:", recall_mean_all)
-print("各recallの{}回平均\n{}".format(num_estimate, labels))
-print("recall_means:", np.mean(eval_recall, axis=0))
-print("recall_mean_index:", recall_mean_index)
+print("各感度の{}回平均\n{}".format(num_estimate, labels))
+print(np.mean(eval_recall, axis=0))
+print("各感度の{}回平均の平均：".format(num_estimate), recall_mean_all)
+# param,weight保存、混合行列表示用のインデックス
+print("↑に近い各感度の{}回平均のインデックス:".format(num_estimate), recall_mean_index)
 
 # 推論結果表示
 net_weight = net_weights[recall_mean_index]

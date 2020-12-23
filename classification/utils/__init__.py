@@ -107,7 +107,6 @@ def make_datapath_list(path, labels):
     search_path_list = []
     for label in labels:
         search_path_list.append(os.path.join(path+'/*'+label+'*/**/*.tif'))
-    print(search_path_list)
 
     path_list = []
     # recursive=True:子ディレクトリも再帰的に探索する

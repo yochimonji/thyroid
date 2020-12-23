@@ -13,9 +13,9 @@ import numpy as np
 from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
 
 # 自作ライブラリ
-from utils.utils import ImageTransform, make_datapath_list, show_wrong_img
+from utils import ImageTransform, make_datapath_list, show_wrong_img
 from utils.dataset import ArrangeNumDataset, ConcatDataset
-from model.model import CustomResNet, CustomResNetGray, ConcatMultiResNet, CustomEfficientNet, eval_net, train_net
+from model import CustomResNet, CustomResNetGray, ConcatMultiResNet, CustomEfficientNet, eval_net, train_net
 
 # 乱数シード値を固定して再現性を確保
 torch.manual_seed(1234)

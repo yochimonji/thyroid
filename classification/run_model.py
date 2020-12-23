@@ -103,7 +103,7 @@ eval_recall = []  # estimateごとのrecallのリスト
 net_weights = []  # estimateごとのネットワークの重みリスト
 
 for i in range(num_estimate):
-    print("学習・推論：{}/{}".format(i+1, num_estimate))
+    print("\n学習・推論：{}/{}".format(i+1, num_estimate))
     # 使用するネットワークを設定する
     if "resnet" in net_params["name"]:
         if net_params["multi_net"]:
@@ -165,10 +165,10 @@ for i in range(num_estimate):
 # weightを保存するために
 # eval_recallのmeanに最も近いインデックスを求める
 recall_mean_all = np.mean(eval_recall)
-recall_means = np.mean(eval_recall, axis=0)
+recall_means = np.mean(eval_recall, axis=1)
 recall_mean_index = np.argmin(np.abs(np.array(recall_means) - recall_mean_all))
 print("recall_mean_all:", recall_mean_all)
-print("recall_means:", recall_means)
+print("recall_means:", np.mean(eval_recall, axis=0))
 print("recall_mean_index:", recall_mean_index)
 
 # 推論結果表示

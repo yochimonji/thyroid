@@ -45,6 +45,8 @@ label_num = len(labels)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("使用デバイス：", device)
 
+print(labels)
+
 # 訓練とテストのファイルリストを取得する
 train_list = make_datapath_list(data_path+"train")
 test_list = make_datapath_list(data_path+"test")
@@ -168,6 +170,7 @@ recall_mean_all = np.mean(eval_recall)
 recall_means = np.mean(eval_recall, axis=1)
 recall_mean_index = np.argmin(np.abs(np.array(recall_means) - recall_mean_all))
 print("recall_mean_all:", recall_mean_all)
+print("各recallの{}回平均\n{}".format(num_estimate, labels))
 print("recall_means:", np.mean(eval_recall, axis=0))
 print("recall_mean_index:", recall_mean_index)
 

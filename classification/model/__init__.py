@@ -215,7 +215,7 @@ class CustomEfficientNet(nn.Module):
 # ネットワークで推論を行う
 # 戻り値：本物ラベル、予測ラベル
 # loaderの設定によってはシャッフルされているので本物ラベルも返す必要がある
-def eval_net(net, loader, device="cpu"):
+def eval_net(net, loader, probability=False, device="cpu"):
     net = net.to(device)
     net.eval()
     ys = []
@@ -225,7 +225,10 @@ def eval_net(net, loader, device="cpu"):
         x = x.to(device)
         y = y.to(device)
         with torch.no_grad():
-            ypred = net(x).argmax(1)
+            if probability:
+                ypred = net(x)
+            else:
+                ypred = net(x).argmax(1)
         ys.append(y)
         ypreds.append(ypred)
     ys = torch.cat(ys)

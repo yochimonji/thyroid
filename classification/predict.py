@@ -3,6 +3,7 @@ import json
 import sys
 
 # 外部ライブラリ
+import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from sklearn.metrics import confusion_matrix, accuracy_score, recall_score, classification_report
@@ -13,10 +14,7 @@ from utils.dataset import ArrangeNumDataset, ConcatDataset
 from model import CustomResNet, CustomResNetGray, ConcatMultiResNet, CustomEfficientNet, eval_net, train_net
 
 
-if __name__=="__main__":
-    # コマンドライン引数を受け取る
-    file_name = sys.argv[1]
-
+def predict(file_name, probability=False):
     # jsonファイルを読み込む
     f = open("./config/params_"+file_name+".json")
     params = json.load(f)
@@ -30,8 +28,7 @@ if __name__=="__main__":
     label_num = len(labels)
 
     # GPUが使用可能ならGPU、不可能ならCPUを使う
-    # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    device = "cpu"
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("使用デバイス：", device)
     
     print(labels)
@@ -82,8 +79,27 @@ if __name__=="__main__":
     ys, ypreds = eval_net(net, test_loader, probability=True, device=device)
     ys = ys.cpu().numpy()
     ypreds = ypreds.cpu().numpy()
-    print(accuracy_score(ys, ypreds))
+
+    return ys, ypreds
+
+if __name__=="__main__":
+    # コマンドライン引数を受け取る
+    file_names = sys.argv[1:]
+
+    if len(file_names) == 1:
+        ys, ypreds = predict(file_names[0])
+    else:
+        ypreds = []
+        recall_list = []
+        for file_name in file_names:
+            y, ypred = predict(file_name, probability=True)
+            ypreds.append(ypred)
+            recall_list.append(recall_score(y, ypred.argmax(axis=1), average="macro"))
+        ys = y
+        ypreds = np.average(ypreds, axis=0, weights=recall_list).argmax(axis=1)
+        print(ypreds.shape)
+
+    print("各腫瘍の感度：")
+    print(recall_score(ys, ypreds, average=None))
+    print("腫瘍の平均感度：", recall_score(ys, ypreds, average="macro"))
     print(confusion_matrix(ys, ypreds))
-    print(classification_report(ys, ypreds,
-                                target_names=labels,
-                                digits=3))

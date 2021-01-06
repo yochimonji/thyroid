@@ -88,7 +88,10 @@ class ArrangeNumDataset(Dataset):
         data_num_sum = data_num.sum()
         weights = []
         for n in data_num:
-            weights.append(data_num_sum / n)
+            if n == 0:
+                weights.append(0)
+            else:
+                weights.append(data_num_sum / n)
         
         return weights
             

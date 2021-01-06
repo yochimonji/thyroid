@@ -104,7 +104,7 @@ class ImageTransform():
 
 # path以下にあり、labelsと一致するすべてのディレクトリからtifファイルのパスリスト取得
 def make_datapath_list(path, labels):
-    if path[-1] is not "/":
+    if path[-1] != "/":
         path += "/"
     search_path_list = []
     for label in labels:

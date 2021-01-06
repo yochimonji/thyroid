@@ -104,9 +104,11 @@ class ImageTransform():
 
 # path以下にあり、labelsと一致するすべてのディレクトリからtifファイルのパスリスト取得
 def make_datapath_list(path, labels):
+    if path[-1] is not "/":
+        path += "/"
     search_path_list = []
     for label in labels:
-        search_path_list.append(os.path.join(path+'/*'+label+'*/**/*.tif'))
+        search_path_list.append(os.path.join(path, '*'+label+'*/**/*.tif'))
 
     path_list = []
     # recursive=True:子ディレクトリも再帰的に探索する

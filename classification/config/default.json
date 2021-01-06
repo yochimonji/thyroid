@@ -1,10 +1,10 @@
 {
     "data_path": {
-        "train": "data/train",
-        "test": "data/test",
-        "tissue": "data/tissue array"
+        "train": "data/train/",
+        "test": "data/test/",
+        "tissue": "data/tissue array/train/"
     },
-    
+
     "labels":[
         "Normal",
         "PTC HE",
@@ -17,7 +17,7 @@
     ],
     
     "num_estimate": 10,
-    "batch_size": 128,
+    "batch_size": 32,
     "epochs": 10,
     "img_resize": 224,
 
@@ -32,16 +32,16 @@
     },
 
     "tissue_dataset_params": {
-        "use": false,
+        "use": true,
         "phase": "train",
         "mean": [0.485, 0.456, 0.406],
         "std": [0.229, 0.224, 0.225]
     },
 
     "net_params": {
-        "name": "resnet101",
-        "multi_net": true,
-        "transfer_learning": true,
+        "name": "resnet50",
+        "multi_net": false,
+        "transfer_learning": false,
         "pretrained": true
     },
 
@@ -49,8 +49,8 @@
     
     "optim_params": {
         "name": "adam",
-        "lr_not_pretrained": 1e-3,
-        "lr_pretrained": 1e-4,
+        "lr_not_pretrained": 1e-4,
+        "lr_pretrained": 1e-5,
         "momentum": 0.9,
         "weight_decay": 1e-4
     }

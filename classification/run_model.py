@@ -72,6 +72,8 @@ test_dataset = ArrangeNumDataset(test_list,
                                                           normalize_per_img=dataset_params["normalize_per_img"],
                                                           multi_net=net_params["multi_net"]),
                                  arrange=dataset_params["arrange"])
+print("len(train_dataset)", len(train_dataset))
+print("len(test_dataset)", len(test_dataset))
 
 if tissue_dataset_params["use"]:
     tissue_list = make_datapath_list(data_path["tissue"], labels=labels)
@@ -92,9 +94,7 @@ if tissue_dataset_params["use"]:
     else:
         print("ValueError:tissue_dataset_params['phase']=={}は正しくありません。".format(tissue_dataset_params["phase"]))
         sys.exit()
-
-print("len(train_dataset)", len(train_dataset))
-print("len(test_dataset)", len(test_dataset))
+    print("len(tissue_dataset)", len(tissue_dataset))
 
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True,
                           num_workers=2)

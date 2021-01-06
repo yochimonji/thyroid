@@ -45,7 +45,7 @@ class ImageTransform():
                 transforms.ToTensor()  # ndarrayをTensorに変換、0〜1に正規化
                 # transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
             ]),
-            "val": transforms.Compose([  # 他の前処理をまとめる
+            "test": transforms.Compose([  # 他の前処理をまとめる
                 transforms.Resize((size, size)),
                 # transforms.CenterCrop(size),
                 transforms.ToTensor()  # ndarrayをTensorに変換
@@ -65,7 +65,7 @@ class ImageTransform():
                 transforms.ToTensor()  # ndarrayをTensorに変換、0〜1に正規化
                 # transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
             ]),
-            "val": transforms.Compose([  # 他の前処理をまとめる
+            "test": transforms.Compose([  # 他の前処理をまとめる
                 transforms.Resize((size, size)),
                 transforms.Grayscale(num_output_channels=3),
                 # transforms.CenterCrop(size),
@@ -138,7 +138,7 @@ def show_transform_img(img_path, transform=ImageTransform()):
     ax[1].imshow(img_transform_train)
     ax[1].set_title("train_transform")
 
-    img_transform_val = transform(img, phase="val")
+    img_transform_val = transform(img, phase="test")
     img_transform_val = img_transform_val.numpy().transpose((1, 2, 0))
 #     標準化で0より下の値になるため0~1にクリップ
     img_transform_val = np.clip(img_transform_val, 0, 1)

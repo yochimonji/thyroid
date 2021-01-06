@@ -30,7 +30,7 @@ test_list = make_datapath_list(data_path+"test")
 
 test_dataset = ArrangeNumDataset(test_list,
                                  label_list,
-                                 phase="val",
+                                 phase="test",
                                  transform=ImageTransform(),
                                  arrange=None)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False,

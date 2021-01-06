@@ -64,7 +64,7 @@ train_dataset = ArrangeNumDataset(train_list,
                                   arrange=dataset_params["arrange"])
 test_dataset = ArrangeNumDataset(test_list, 
                                  labels,
-                                 phase="val",
+                                 phase="test",
                                  transform=ImageTransform(size=img_resize,
                                                           mean=dataset_params["test_mean"],
                                                           std=dataset_params["test_std"],
@@ -89,7 +89,7 @@ if tissue_dataset_params["use"]:
                                        arrange=dataset_params["arrange"])
     if tissue_dataset_params["phase"] == "train":
         train_dataset = ConcatDataset(train_dataset, tissue_dataset)
-    elif tissue_dataset_params["phase"] == "val":
+    elif tissue_dataset_params["phase"] == "test":
         test_dataset = ConcatDataset(test_dataset, tissue_dataset)
     else:
         print("ValueError:tissue_dataset_params['phase']=={}は正しくありません。".format(tissue_dataset_params["phase"]))

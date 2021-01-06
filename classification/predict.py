@@ -39,7 +39,7 @@ def predict(file_name, probability=False):
     # テストのデータセットを作成する
     test_dataset = ArrangeNumDataset(test_list, 
                                     labels,
-                                    phase="val",
+                                    phase="test",
                                     transform=ImageTransform(size=img_resize,
                                                              mean=dataset_params["test_mean"],
                                                              std=dataset_params["test_std"],

@@ -1,5 +1,10 @@
 {
-    "data_path": "./data/",
+    "data_path": {
+        "train": "data/train",
+        "test": "data/test",
+        "tissue": "data/tissue array"
+    },
+    
     "labels":[
         "Normal",
         "PTC HE",

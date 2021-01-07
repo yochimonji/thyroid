@@ -9,6 +9,7 @@ from utils import make_datapath_list
 
 
 # データ数を調整したDatasetを作成するクラス
+# params["dataset_params"]["arrange"]:null にするとデータ数の調整なし
 # オーバー・アンダーサンプリング用
 class ArrangeNumDataset(Dataset):
     def __init__(self, params, phase, transform):
@@ -16,9 +17,9 @@ class ArrangeNumDataset(Dataset):
         self.labels = params["labels"]
         self.phase = phase
         self.transform = transform
-        self.file_list = self.make_file_list()
-        self.make_label_list()  
-        self.weights = self.calc_weights()  # ラベルリストからweightのリストを生成
+        self.file_list = self.make_file_list()  # データ数調整後のファイルリスト。self.label_listと対。
+        self.label_list = self.make_label_list()# データ数調整後のラベルリスト。self.file_listと対。
+        self.weights = self.calc_weights()      # 損失関数の重み調整用の重み。
         
     def __len__(self):
         return len(self.file_list)
@@ -40,7 +41,7 @@ class ArrangeNumDataset(Dataset):
         # データ数の調整ありの場合
         if arrange:
             arrange_file_list = []
-            file_dict = self.make_file_dict(file_list, labels)
+            file_dict = self.make_file_dict(file_list)
             
             # undrersampling(+bagging)を行う場合
             if arrange == "undersampling":
@@ -66,25 +67,25 @@ class ArrangeNumDataset(Dataset):
         return file_list
     
     # key:ラベル、value:ファイルパスリストの辞書を作成
-    def make_file_dict(self, file_list, labels):
+    def make_file_dict(self, file_list):
         label_dict = {}
-        for label in labels:
+        for label in self.labels:
             label_dict[label] = list()
         for file in file_list:
             for key in label_dict:
                 if key in file:
-                    labels[key].append(file)
+                    label_dict[key].append(file)
         return label_dict
     
     # self.fileリストと対になるラベルのリストを作成する
     def make_label_list(self):
-        self.label_list = []
+        label_list = []
         for file in self.file_list:
             for label in self.labels:
                 if label in file:
-                    self.label_list.append(self.labels.index(label))
+                    label_list.append(self.labels.index(label))
             
-        self.label_list
+        return label_list
     
     # ラベル数に応じてweightを計算する
     # 戻り値がnp.arrayなのに注意。PyTorchで使う場合、Tensorに変換する必要あり

@@ -89,9 +89,6 @@ if tissue_dataset_params["use"]:
         train_dataset = ConcatDataset(train_dataset, tissue_dataset)
     elif tissue_dataset_params["phase"] == "test":
         test_dataset = ConcatDataset(test_dataset, tissue_dataset)
-    else:
-        print("ValueError:tissue_dataset_params['phase']=={}は正しくありません。".format(tissue_dataset_params["phase"]))
-        sys.exit()
     print("tissue_datasetの各クラスのデータ数：\t", tissue_dataset.data_num, end="\t\t")
     print("計：", tissue_dataset.data_num_sum)
 
@@ -122,13 +119,6 @@ for i in range(num_estimate):
                                  pretrained=net_params["pretrained"],
                                  model_name=net_params["name"],
                                  out_features=label_num)
-    else:  # ネットワーク名が間違っていたらエラー
-        print("net_params['name']=={} : 定義されていないnameです".format(net_params['name']))
-        sys.exit()
-    # net = CustomResNetGray(transfer_learning=net_params["transfer_learning"],
-    #                        pretrained=net_params["pretrained"],
-    #                        model_name=net_params["name"],
-    #                        out_features=label_num)
 
     # 損失関数のクラス数に合わせてweightをかけるか決める
     if loss_weight_flag:
@@ -139,16 +129,13 @@ for i in range(num_estimate):
     print("loss_fn.weight:", loss_fn.weight)
 
     # 使用する最適化手法を設定する
-    if "adam" == optim_params["name"]:
+    if "Adam" == optim_params["name"]:
         optimizer = optim.Adam(net.get_params_lr(lr_not_pretrained=optim_params["lr_not_pretrained"], lr_pretrained=optim_params["lr_pretrained"]),
                             weight_decay=optim_params["weight_decay"])
-    elif "sgd" == optim_params["name"]:
+    elif "SGD" == optim_params["name"]:
         optimizer = optim.SGD(net.get_params_lr(lr_not_pretrained=optim_params["lr_not_pretrained"], lr_pretrained=optim_params["lr_pretrained"]),
                             momentum=optim_params["momentum"],
                             weight_decay=optim_params["weight_decay"])
-    else:  # 最適化手法の名前が間違えていたらエラー
-        print("optim_params['name']=={} : 定義されていないnameです".format(optim_params['name']))
-        sys.exit()
     print("optimizer:", optimizer)
 
     # 学習

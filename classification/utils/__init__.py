@@ -185,8 +185,22 @@ def load_params(path="config/params.json"):
     f = open(path, "r")
     params = json.load(f)
     f.close()
-    # check_params(params)
+    check_params(params)
     return params
 
 
-# def check_params(params):
+def check_params(params):
+    tissue_phase = params["tissue_dataset_params"]["phase"]
+    net_name = params["net_params"]["name"]
+    optim_name = params["optim_params"]["name"]
+
+    # 誤っているparamsがあれば終了する
+    if not((tissue_phase == "train") or (tissue_phase == "test")):
+        print("ParamsError:tissue_dataset_params['phase']=='{}'は定義されていない".format(tissue_phase))
+        sys.exit()
+    if not(("resnet" in net_name) or ("efficientnet" in net_name)):
+        print("ParamsError:net_params['name']=='{}'は定義されていない".format(net_name))
+        sys.exit()
+    if not((optim_name == "Adam") or (optim_name == "SGD")):
+        print("optim_params['name']=='{}'は定義されていない".format(optim_name))
+        sys.exit()

@@ -2,6 +2,7 @@ import os
 import glob
 import random
 import sys
+import json
 
 import torch
 from torch import nn
@@ -170,3 +171,22 @@ def show_wrong_img(dataset, ys, ypreds, indices=None, y=None, ypred=None):
         plt.title("real:{}  prediction:{}".format(
             dataset.label_list[y], dataset.label_list[ypred]))
         plt.show()
+
+
+# jsonファイルを読み込んでパラメータを設定する
+# jsonから読み込むことでpyファイルの書き換えをしなくてよいのでGitが汚れない
+def load_params(path="config/params.json"):
+    if len(sys.argv) == 2: 
+        if os.path.exists(sys.argv[1]):
+            path = sys.argv[1]
+        else:
+            print("Error:指定した引数のパスにファイルが存在しません")
+            sys.exit()
+    f = open(path, "r")
+    params = json.load(f)
+    f.close()
+    # check_params(params)
+    return params
+
+
+# def check_params(params):

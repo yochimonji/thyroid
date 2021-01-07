@@ -1,6 +1,5 @@
 # 標準ライブラリ
 import random
-import json
 import sys
 import os
 from datetime import datetime
@@ -13,7 +12,7 @@ import numpy as np
 from sklearn.metrics import confusion_matrix, accuracy_score, recall_score, classification_report
 
 # 自作ライブラリ
-from utils import ImageTransform, make_datapath_list, show_wrong_img
+from utils import ImageTransform, make_datapath_list, show_wrong_img, load_params
 from utils.dataset import ArrangeNumDataset, ConcatDataset
 from model import CustomResNet, CustomResNetGray, ConcatMultiResNet, CustomEfficientNet, eval_net, train_net
 
@@ -24,10 +23,7 @@ random.seed(1234)
 
 
 # jsonファイルを読み込んでパラメータを設定する
-# jsonから読み込むことでpyファイルの書き換えをしなくてよいのでGitが汚れない
-f = open("./config/params.json", "r")
-params = json.load(f)
-f.close()
+params = load_params()
 data_path = params["data_path"]
 labels = params["labels"]
 num_estimate = params["num_estimate"]

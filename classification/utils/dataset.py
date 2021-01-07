@@ -84,14 +84,14 @@ class ArrangeNumDataset(Dataset):
     # ラベル数に応じてweightを計算する
     # 戻り値がnp.arrayなのに注意。PyTorchで使う場合、Tensorに変換する必要あり
     def calc_weights(self):
-        data_num = np.bincount(np.array(self.labels))
-        data_num_sum = data_num.sum()
+        self.data_num = np.bincount(np.array(self.labels))
+        self.data_num_sum = self.data_num.sum()
         weights = []
-        for n in data_num:
+        for n in self.data_num:
             if n == 0:
                 weights.append(0)
             else:
-                weights.append(data_num_sum / n)
+                weights.append(self.data_num_sum / n)
         
         return weights
             

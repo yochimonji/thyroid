@@ -45,7 +45,7 @@ label_num = len(labels)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("使用デバイス：", device)
 
-print(labels)
+print("各クラスのラベル名:", labels)
 
 # 訓練とテストのファイルリストを取得する
 train_list = make_datapath_list(data_path["train"], labels=labels)
@@ -72,8 +72,10 @@ test_dataset = ArrangeNumDataset(test_list,
                                                           normalize_per_img=dataset_params["normalize_per_img"],
                                                           multi_net=net_params["multi_net"]),
                                  arrange=dataset_params["arrange"])
-print("len(train_dataset)", len(train_dataset))
-print("len(test_dataset)", len(test_dataset))
+print("train_datasetの各クラスのデータ数：\t", train_dataset.data_num, end="\t")
+print("計：",train_dataset.data_num_sum)
+print("test_datasetの各クラスのデータ数：\t", test_dataset.data_num, end="\t")
+print("計：", test_dataset.data_num_sum)
 
 if tissue_dataset_params["use"]:
     tissue_list = make_datapath_list(data_path["tissue"], labels=labels)
@@ -94,7 +96,8 @@ if tissue_dataset_params["use"]:
     else:
         print("ValueError:tissue_dataset_params['phase']=={}は正しくありません。".format(tissue_dataset_params["phase"]))
         sys.exit()
-    print("len(tissue_dataset)", len(tissue_dataset))
+    print("tissue_datasetの各クラスのデータ数：\t", tissue_dataset.data_num, end="\t\t")
+    print("計：", tissue_dataset.data_num_sum)
 
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True,
                           num_workers=2)

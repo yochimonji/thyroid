@@ -40,11 +40,11 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("使用デバイス：", device)
 
 # 訓練とテストのデータセットを作成する
-train_dataset = ArrangeNumDataset(params, path=params["data_path"]["train"], phase="train",
+train_dataset = ArrangeNumDataset(params, params["data_path"]["train"], "train",
                                   transform=ImageTransform(params=params,
                                                            mean=dataset_params["train_mean"],
                                                            std=dataset_params["train_std"]))
-test_dataset = ArrangeNumDataset(params, path=params["data_path"]["test"], phase="test",
+test_dataset = ArrangeNumDataset(params, params["data_path"]["test"], "test",
                                  transform=ImageTransform(params=params,
                                                           mean=dataset_params["test_mean"],
                                                           std=dataset_params["test_std"]))
@@ -52,22 +52,16 @@ print("train_datasetの各クラスのデータ数： {}\t計：{}".format(train
 print("test_datasetの各クラスのデータ数：  {}\t計：{}".format(test_dataset.data_num, test_dataset.data_num.sum()))
 
 if params["tissue_dataset_params"]["use"]:
-    tissue_list = make_datapath_list(data_path["tissue"], labels=labels)
-    tissue_dataset = ArrangeNumDataset(tissue_list,
-                                       labels,
+    tissue_dataset = ArrangeNumDataset(params, params["data_path"]["tissue"],
                                        phase=tissue_dataset_params["phase"],
-                                       transform=ImageTransform(size=img_resize,
+                                       transform=ImageTransform(params=params,
                                                                 mean=tissue_dataset_params["mean"],
-                                                                std=tissue_dataset_params["std"],
-                                                                grayscale_flag=dataset_params["grayscale_flag"],
-                                                                normalize_per_img=dataset_params["normalize_per_img"],
-                                                                multi_net=net_params["multi_net"]),
-                                       arrange=dataset_params["arrange"])
+                                                                std=tissue_dataset_params["std"]))
     if tissue_dataset_params["phase"] == "train":
         train_dataset = ConcatDataset(train_dataset, tissue_dataset)
     elif tissue_dataset_params["phase"] == "test":
         test_dataset = ConcatDataset(test_dataset, tissue_dataset)
-    print("tissue_datasetの各クラスのデータ数： {}\t計：{}".format(tissue_dataset.data_num, tissue_dataset.data_num.sum()))
+    print("tissue_datasetの各クラスのデータ数：{}\t計：{}".format(tissue_dataset.data_num, tissue_dataset.data_num.sum()))
 
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True,
                           num_workers=4)

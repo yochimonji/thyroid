@@ -108,7 +108,7 @@ class ArrangeNumDataset(Dataset):
 class ConcatDataset(Dataset):
     def __init__(self, *datasets):
         self.datasets = datasets
-        self.labels = self.make_labels()
+        self.label_list = self.make_label_list()
         self.weight = self.calc_weight()
     
     def __len__(self):
@@ -127,17 +127,17 @@ class ConcatDataset(Dataset):
                 index -= length
         return img, label
 
-    def make_labels(self):
-        labels = []
+    def make_label_list(self):
+        label_list = []
         for dataset in self.datasets:
-            labels.extend(dataset.make_labels())
-        return labels
+            label_list.extend(dataset.make_label_list())
+        return label_list
 
     def calc_weight(self):
-        data_num = np.bincount(np.array(self.labels))
+        data_num = np.bincount(np.array(self.label_list))
         data_num_sum = data_num.sum()
         weight = []
         for n in data_num:
             weight.append(data_num_sum / n)
-        
+        weight = torch.tensor(weight).float()
         return weight

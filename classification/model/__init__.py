@@ -11,6 +11,29 @@ from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 
 
+def create_net(params):
+    net_params = params["net_params"]
+    out_features = len(params["labels"])
+
+    if "resnet" in net_params["name"]:
+        if net_params["multi_net"]:
+            net = ConcatMultiResNet(transfer_learning=net_params["transfer_learning"],
+                                    pretrained=net_params["pretrained"],
+                                    model_name=net_params["name"],
+                                    out_features=out_features)
+        else:
+            net = CustomResNet(transfer_learning=net_params["transfer_learning"],
+                            pretrained=net_params["pretrained"],
+                            model_name=net_params["name"],
+                            out_features=out_features)
+    elif "efficientnet" in net_params["name"]:
+        net = CustomEfficientNet(transfer_learning=net_params["transfer_learning"],
+                                 pretrained=net_params["pretrained"],
+                                 model_name=net_params["name"],
+                                 out_features=out_features)
+    return net
+
+
 class CustomResNet(nn.Module):
     def __init__(self, transfer_learning=True, pretrained=True, model_name="resnet18", out_features=8):
         super().__init__()

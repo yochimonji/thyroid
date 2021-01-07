@@ -12,13 +12,12 @@ from sklearn.metrics import confusion_matrix, accuracy_score, recall_score, clas
 # 自作ライブラリ
 from utils import ImageTransform, make_datapath_list, show_wrong_img, load_params
 from utils.dataset import ArrangeNumDataset, ConcatDataset
-from model import CustomResNet, ConcatMultiResNet, CustomEfficientNet, eval_net, train_net
+from model import create_net, eval_net, train_net
 
 # 乱数シード値を固定して再現性を確保
 torch.manual_seed(1234)
 np.random.seed(1234)
 random.seed(1234)
-
 
 # jsonファイルを読み込んでパラメータを設定する
 # よく呼び出すパラメータを変数に代入
@@ -26,9 +25,7 @@ params = load_params()
 data_path = params["data_path"]
 dataset_params = params["dataset_params"]
 tissue_dataset_params = params["tissue_dataset_params"]
-net_params = params["net_params"]
 optim_params = params["optim_params"]
-label_num = len(params["labels"])
 
 # GPUが使用可能ならGPU、不可能ならCPUを使う
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -76,24 +73,8 @@ net_weights = []  # estimateごとのネットワークの重みリスト
 
 for i in range(params["num_estimate"]):
     print("\n学習・推論：{}/{}".format(i+1, params["num_estimate"]))
-    # 使用するネットワークを設定する
-    if "resnet" in net_params["name"]:
-        if net_params["multi_net"]:
-            net = ConcatMultiResNet(transfer_learning=net_params["transfer_learning"],
-                                    pretrained=net_params["pretrained"],
-                                    model_name=net_params["name"],
-                                    out_features=label_num)
-        else:
-            net = CustomResNet(transfer_learning=net_params["transfer_learning"],
-                            pretrained=net_params["pretrained"],
-                            model_name=net_params["name"],
-                            out_features=label_num)
-    elif "efficientnet" in net_params["name"]:
-        net = CustomEfficientNet(transfer_learning=net_params["transfer_learning"],
-                                 pretrained=net_params["pretrained"],
-                                 model_name=net_params["name"],
-                                 out_features=label_num)
-
+    
+    net = create_net(params)
 
     # 使用する最適化手法を設定する
     if "Adam" == optim_params["name"]:

@@ -28,12 +28,22 @@ class MyRotationTransform():
 # 画像に変換処理を行う
 # ResNetで転移学習するとき、sizeは224×224、defaultのmean,stdで標準化する
 class ImageTransform():
-    def __init__(self, size=224, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225],
-                 grayscale_flag=False, normalize_per_img=False, multi_net=False):
-        if grayscale_flag and multi_net:
+    def __init__(self, params, mean, std):
+        self.grayscale_flag = params["dataset_params"]["grayscale_flag"]
+        self.normalize_per_img = params["dataset_params"]["normalize_per_img"]
+        self.multi_net = params["net_params"]["multi_net"]
+        if self.multi_net:
+            self.mean = np.hstack((mean, mean))
+            self.std = np.hstack((std, std))
+        else:
+            self.mean = mean
+            self.std = std
+
+        if self.grayscale_flag and self.multi_net:
             print("grayscale==True and multi_net==Trueはできません")
             sys.exit()
 
+        size = params["img_resize"]
         self.transform_rgb = {
             "train": transforms.Compose([  # 他の前処理をまとめる
                 transforms.Resize((size, size)),  # リサイズ, 最初にしたほうが処理が軽い
@@ -74,15 +84,6 @@ class ImageTransform():
                 # transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
             ])
         }
-        if multi_net:
-            self.mean = np.hstack((mean, mean))
-            self.std = np.hstack((std, std))
-        else:
-            self.mean = mean
-            self.std = std
-        self.grayscale_flag = grayscale_flag
-        self.normalize_per_img = normalize_per_img
-        self.multi_net = multi_net
         
     def __call__(self, img, phase):
         if self.multi_net:
@@ -122,7 +123,7 @@ def make_datapath_list(path, labels):
     
 # img_pathの画像をそのまま・train変換・val変換で表示
 # 変換した画像を確認する
-def show_transform_img(img_path, transform=ImageTransform()):
+def show_transform_img(img_path, transform):
     fig, ax = plt.subplots(ncols=3, figsize=(12, 4))
     
     img = Image.open(img_path)

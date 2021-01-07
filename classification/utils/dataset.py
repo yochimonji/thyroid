@@ -6,16 +6,17 @@ from torch.utils.data import Dataset
 from PIL import Image
 import numpy as np
 
-from utils import make_datapath_list
+from utils import make_datapath_list, ImageTransform
 
 
 # データ数を調整したDatasetを作成するクラス
 # params["dataset_params"]["arrange"]:null にするとデータ数の調整なし
 # オーバー・アンダーサンプリング用
 class ArrangeNumDataset(Dataset):
-    def __init__(self, params, phase, transform):
+    def __init__(self, params, path, phase, transform):
         self.params = params
         self.labels = params["labels"]
+        self.path = path
         self.phase = phase
         self.transform = transform
         self.file_list = self.make_file_list()      # データ数調整後のファイルリスト。self.label_listと対。
@@ -37,7 +38,7 @@ class ArrangeNumDataset(Dataset):
         return img, label
 
     def make_file_list(self):
-        file_list =  make_datapath_list(self.params["data_path"][self.phase], self.labels)
+        file_list =  make_datapath_list(self.path, self.labels)
         
         arrange = self.params["dataset_params"]["arrange"]
         # データ数の調整ありの場合

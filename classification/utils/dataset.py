@@ -1,6 +1,7 @@
 import random
 import itertools
 
+import torch
 from torch.utils.data import Dataset
 from PIL import Image
 import numpy as np
@@ -17,9 +18,10 @@ class ArrangeNumDataset(Dataset):
         self.labels = params["labels"]
         self.phase = phase
         self.transform = transform
-        self.file_list = self.make_file_list()  # データ数調整後のファイルリスト。self.label_listと対。
-        self.label_list = self.make_label_list()# データ数調整後のラベルリスト。self.file_listと対。
-        self.weights = self.calc_weights()      # 損失関数の重み調整用の重み。
+        self.file_list = self.make_file_list()      # データ数調整後のファイルリスト。self.label_listと対。
+        self.label_list = self.make_label_list()    # データ数調整後のラベルリスト。self.file_listと対。
+        self.data_num = np.bincount(np.array(self.label_list))  # クラスごとのデータ数
+        self.weight = self.calc_weight()            # 損失関数の重み調整用の重み。
         
     def __len__(self):
         return len(self.file_list)
@@ -89,17 +91,16 @@ class ArrangeNumDataset(Dataset):
     
     # ラベル数に応じてweightを計算する
     # 戻り値がnp.arrayなのに注意。PyTorchで使う場合、Tensorに変換する必要あり
-    def calc_weights(self):
-        self.data_num = np.bincount(np.array(self.label_list))
-        self.data_num_sum = self.data_num.sum()
-        weights = []
+    def calc_weight(self):
+        data_num_sum = self.data_num.sum()
+        weight = []
         for n in self.data_num:
             if n == 0:
-                weights.append(0)
+                weight.append(0)
             else:
-                weights.append(self.data_num_sum / n)
-        
-        return weights
+                weight.append(data_num_sum / n)
+        weight = torch.tensor(weight).float()
+        return weight
             
 
 # 複数のデータセットを結合し、1つのデータセットとするクラス
@@ -107,7 +108,7 @@ class ConcatDataset(Dataset):
     def __init__(self, *datasets):
         self.datasets = datasets
         self.labels = self.make_labels()
-        self.weights = self.calc_weights()
+        self.weight = self.calc_weight()
     
     def __len__(self):
         length = 0
@@ -131,11 +132,11 @@ class ConcatDataset(Dataset):
             labels.extend(dataset.make_labels())
         return labels
 
-    def calc_weights(self):
+    def calc_weight(self):
         data_num = np.bincount(np.array(self.labels))
         data_num_sum = data_num.sum()
-        weights = []
+        weight = []
         for n in data_num:
-            weights.append(data_num_sum / n)
+            weight.append(data_num_sum / n)
         
-        return weights
+        return weight

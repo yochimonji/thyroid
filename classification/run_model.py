@@ -41,10 +41,6 @@ print("使用デバイス：", device)
 
 print("各クラスのラベル名:", labels)
 
-# 訓練とテストのファイルリストを取得する
-train_list = make_datapath_list(data_path["train"], labels=labels)
-test_list = make_datapath_list(data_path["test"], labels=labels)
-
 # 訓練とテストのデータセットを作成する
 train_dataset = ArrangeNumDataset(params, "train", transform=ImageTransform(size=img_resize,
                                                            mean=dataset_params["train_mean"],
@@ -58,30 +54,10 @@ test_dataset = ArrangeNumDataset(params, "test", transform=ImageTransform(size=i
                                                            grayscale_flag=dataset_params["grayscale_flag"],
                                                            normalize_per_img=dataset_params["normalize_per_img"],
                                                            multi_net=net_params["multi_net"]))
-# train_dataset = ArrangeNumDataset(train_list, 
-#                                   labels,
-#                                   phase="train",
-#                                   transform=ImageTransform(size=img_resize,
-#                                                            mean=dataset_params["train_mean"],
-#                                                            std=dataset_params["train_std"],
-#                                                            grayscale_flag=dataset_params["grayscale_flag"],
-#                                                            normalize_per_img=dataset_params["normalize_per_img"],
-#                                                            multi_net=net_params["multi_net"]), 
-#                                   arrange=dataset_params["arrange"])
-# test_dataset = ArrangeNumDataset(test_list, 
-#                                  labels,
-#                                  phase="test",
-#                                  transform=ImageTransform(size=img_resize,
-#                                                           mean=dataset_params["test_mean"],
-#                                                           std=dataset_params["test_std"],
-#                                                           grayscale_flag=dataset_params["grayscale_flag"],
-#                                                           normalize_per_img=dataset_params["normalize_per_img"],
-#                                                           multi_net=net_params["multi_net"]),
-#                                  arrange=dataset_params["arrange"])
 print("train_datasetの各クラスのデータ数：\t", train_dataset.data_num, end="\t")
-print("計：",train_dataset.data_num_sum)
+print("計：",train_dataset.data_num.sum())
 print("test_datasetの各クラスのデータ数：\t", test_dataset.data_num, end="\t")
-print("計：", test_dataset.data_num_sum)
+print("計：", test_dataset.data_num.sum())
 
 if tissue_dataset_params["use"]:
     tissue_list = make_datapath_list(data_path["tissue"], labels=labels)
@@ -100,12 +76,12 @@ if tissue_dataset_params["use"]:
     elif tissue_dataset_params["phase"] == "test":
         test_dataset = ConcatDataset(test_dataset, tissue_dataset)
     print("tissue_datasetの各クラスのデータ数：\t", tissue_dataset.data_num, end="\t\t")
-    print("計：", tissue_dataset.data_num_sum)
+    print("計：", tissue_dataset.data_num.sum())
 
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True,
-                          num_workers=2)
+                          num_workers=4)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False,
-                         num_workers=2)
+                         num_workers=4)
 
 eval_recall = []  # estimateごとのrecallのリスト
 net_weights = []  # estimateごとのネットワークの重みリスト
@@ -131,12 +107,12 @@ for i in range(num_estimate):
                                  out_features=label_num)
 
     # 損失関数のクラス数に合わせてweightをかけるか決める
-    if loss_weight_flag:
-        loss_weights = torch.tensor(train_dataset.weights).float().to(device)  # deviceに送らないと動かない
+    if params["loss_weight_flag"]:
+        loss_weight = train_dataset.weight.to(device)  # deviceに送らないと動かない
     else:
-        loss_weights = None
-    loss_fn=nn.CrossEntropyLoss(weight=loss_weights)
-    print("loss_fn.weight:", loss_fn.weight)
+        loss_weight = None
+    loss_fn = nn.CrossEntropyLoss(weight=loss_weight)
+    print("loss_fn.weight:", loss_weight.cpu())
 
     # 使用する最適化手法を設定する
     if "Adam" == optim_params["name"]:

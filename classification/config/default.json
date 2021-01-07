@@ -48,7 +48,7 @@
     "loss_weight_flag": true,
     
     "optim_params": {
-        "name": "adam",
+        "name": "Adam",
         "lr_not_pretrained": 1e-4,
         "lr_pretrained": 1e-5,
         "momentum": 0.9,

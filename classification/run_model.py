@@ -1,7 +1,5 @@
 # 標準ライブラリ
 import random
-import sys
-import os
 from datetime import datetime
 
 # 外部ライブラリ
@@ -48,26 +46,38 @@ train_list = make_datapath_list(data_path["train"], labels=labels)
 test_list = make_datapath_list(data_path["test"], labels=labels)
 
 # 訓練とテストのデータセットを作成する
-train_dataset = ArrangeNumDataset(train_list, 
-                                  labels,
-                                  phase="train",
-                                  transform=ImageTransform(size=img_resize,
+train_dataset = ArrangeNumDataset(params, "train", transform=ImageTransform(size=img_resize,
                                                            mean=dataset_params["train_mean"],
                                                            std=dataset_params["train_std"],
                                                            grayscale_flag=dataset_params["grayscale_flag"],
                                                            normalize_per_img=dataset_params["normalize_per_img"],
-                                                           multi_net=net_params["multi_net"]), 
-                                  arrange=dataset_params["arrange"])
-test_dataset = ArrangeNumDataset(test_list, 
-                                 labels,
-                                 phase="test",
-                                 transform=ImageTransform(size=img_resize,
-                                                          mean=dataset_params["test_mean"],
-                                                          std=dataset_params["test_std"],
-                                                          grayscale_flag=dataset_params["grayscale_flag"],
-                                                          normalize_per_img=dataset_params["normalize_per_img"],
-                                                          multi_net=net_params["multi_net"]),
-                                 arrange=dataset_params["arrange"])
+                                                           multi_net=net_params["multi_net"]))
+test_dataset = ArrangeNumDataset(params, "test", transform=ImageTransform(size=img_resize,
+                                                           mean=dataset_params["train_mean"],
+                                                           std=dataset_params["train_std"],
+                                                           grayscale_flag=dataset_params["grayscale_flag"],
+                                                           normalize_per_img=dataset_params["normalize_per_img"],
+                                                           multi_net=net_params["multi_net"]))
+# train_dataset = ArrangeNumDataset(train_list, 
+#                                   labels,
+#                                   phase="train",
+#                                   transform=ImageTransform(size=img_resize,
+#                                                            mean=dataset_params["train_mean"],
+#                                                            std=dataset_params["train_std"],
+#                                                            grayscale_flag=dataset_params["grayscale_flag"],
+#                                                            normalize_per_img=dataset_params["normalize_per_img"],
+#                                                            multi_net=net_params["multi_net"]), 
+#                                   arrange=dataset_params["arrange"])
+# test_dataset = ArrangeNumDataset(test_list, 
+#                                  labels,
+#                                  phase="test",
+#                                  transform=ImageTransform(size=img_resize,
+#                                                           mean=dataset_params["test_mean"],
+#                                                           std=dataset_params["test_std"],
+#                                                           grayscale_flag=dataset_params["grayscale_flag"],
+#                                                           normalize_per_img=dataset_params["normalize_per_img"],
+#                                                           multi_net=net_params["multi_net"]),
+#                                  arrange=dataset_params["arrange"])
 print("train_datasetの各クラスのデータ数：\t", train_dataset.data_num, end="\t")
 print("計：",train_dataset.data_num_sum)
 print("test_datasetの各クラスのデータ数：\t", test_dataset.data_num, end="\t")

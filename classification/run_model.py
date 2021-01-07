@@ -4,7 +4,7 @@ from datetime import datetime
 
 # 外部ライブラリ
 import torch
-from torch import nn, optim
+from torch import optim
 from torch.utils.data import DataLoader
 import numpy as np
 from sklearn.metrics import confusion_matrix, accuracy_score, recall_score, classification_report
@@ -12,7 +12,7 @@ from sklearn.metrics import confusion_matrix, accuracy_score, recall_score, clas
 # 自作ライブラリ
 from utils import ImageTransform, make_datapath_list, show_wrong_img, load_params
 from utils.dataset import ArrangeNumDataset, ConcatDataset
-from model import CustomResNet, CustomResNetGray, ConcatMultiResNet, CustomEfficientNet, eval_net, train_net
+from model import CustomResNet, ConcatMultiResNet, CustomEfficientNet, eval_net, train_net
 
 # 乱数シード値を固定して再現性を確保
 torch.manual_seed(1234)
@@ -23,7 +23,6 @@ random.seed(1234)
 # jsonファイルを読み込んでパラメータを設定する
 params = load_params()
 data_path = params["data_path"]
-labels = params["labels"]
 num_estimate = params["num_estimate"]
 batch_size = params["batch_size"]
 epochs = params["epochs"]
@@ -33,7 +32,7 @@ tissue_dataset_params = params["tissue_dataset_params"]
 net_params = params["net_params"]
 loss_weight_flag = params["loss_weight_flag"]
 optim_params = params["optim_params"]
-label_num = len(labels)
+label_num = len(params["labels"])
 
 # GPUが使用可能ならGPU、不可能ならCPUを使う
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -63,10 +62,10 @@ if params["tissue_dataset_params"]["use"]:
         test_dataset = ConcatDataset(test_dataset, tissue_dataset)
     print("tissue_datasetの各クラスのデータ数：{}\t計：{}".format(tissue_dataset.data_num, tissue_dataset.data_num.sum()))
 
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True,
-                          num_workers=4)
-test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False,
-                         num_workers=4)
+train_loader = DataLoader(train_dataset, batch_size=batch_size,
+                          shuffle=True, num_workers=4)
+test_loader = DataLoader(test_dataset, batch_size=batch_size,
+                         shuffle=False, num_workers=4)
 
 eval_recall = []  # estimateごとのrecallのリスト
 net_weights = []  # estimateごとのネットワークの重みリスト
@@ -96,7 +95,7 @@ for i in range(num_estimate):
         loss_weight = train_dataset.weight.to(device)  # deviceに送らないと動かない
     else:
         loss_weight = None
-    loss_fn = nn.CrossEntropyLoss(weight=loss_weight)
+    loss_fn = torch.nn.CrossEntropyLoss(weight=loss_weight)
     print("loss_fn.weight:", loss_weight.cpu())
 
     # 使用する最適化手法を設定する
@@ -127,7 +126,7 @@ for i in range(num_estimate):
 recall_mean_all = np.mean(eval_recall)
 recall_means = np.mean(eval_recall, axis=1)
 recall_mean_index = np.argmin(np.abs(np.array(recall_means) - recall_mean_all))
-print("各感度の{}回平均\n{}".format(num_estimate, labels))
+print("各感度の{}回平均\n{}".format(num_estimate, params["labels"]))
 print(np.mean(eval_recall, axis=0))
 print("各感度の{}回平均の平均：".format(num_estimate), recall_mean_all)
 # param,weight保存、混合行列表示用のインデックス
@@ -141,7 +140,7 @@ ys = ys.cpu().numpy()
 ypreds = ypreds.cpu().numpy()
 print(confusion_matrix(ys, ypreds))
 print(classification_report(ys, ypreds,
-                            target_names=labels,
+                            target_names=params["labels"],
                             digits=3))
 
 # ネットワークとjsonのパラメータを保存

@@ -39,10 +39,6 @@ class ImageTransform():
             self.mean = mean
             self.std = std
 
-        if self.grayscale_flag and self.multi_net:
-            print("grayscale==True and multi_net==Trueはできません")
-            sys.exit()
-
         size = params["img_resize"]
         self.transform_rgb = {
             "train": transforms.Compose([  # 他の前処理をまとめる
@@ -194,6 +190,8 @@ def check_params(params):
     tissue_phase = params["tissue_dataset_params"]["phase"]
     net_name = params["net_params"]["name"]
     optim_name = params["optim_params"]["name"]
+    grayscale_flag = params["dataset_params"]["grayscale_flag"]
+    multi_net = params["net_params"]["multi_net"]
 
     # 誤っているparamsがあれば終了する
     if not((tissue_phase == "train") or (tissue_phase == "test")):
@@ -204,4 +202,7 @@ def check_params(params):
         sys.exit()
     if not((optim_name == "Adam") or (optim_name == "SGD")):
         print("optim_params['name']=='{}'は定義されていない".format(optim_name))
+        sys.exit()
+    if grayscale_flag and multi_net:
+        print("grayscale==True and multi_net==Trueはできません")
         sys.exit()

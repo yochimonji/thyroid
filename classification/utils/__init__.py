@@ -183,6 +183,7 @@ def load_params(path="config/params.json"):
     params = json.load(f)
     f.close()
     check_params(params)
+    print_params(params)
     return params
 
 
@@ -206,3 +207,13 @@ def check_params(params):
     if grayscale_flag and multi_net:
         print("grayscale==True and multi_net==Trueはできません")
         sys.exit()
+
+def print_params(params, nest=0):
+    for param in params:
+        print("\t"*nest, param, end=":")
+        if type(params[param]) == dict:
+            print("{")
+            print_params(params[param], nest=nest+1)
+            print("}\n")
+        else:
+            print("\t", params[param])

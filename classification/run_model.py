@@ -21,16 +21,12 @@ random.seed(1234)
 
 
 # jsonファイルを読み込んでパラメータを設定する
+# よく呼び出すパラメータを変数に代入
 params = load_params()
 data_path = params["data_path"]
-num_estimate = params["num_estimate"]
-batch_size = params["batch_size"]
-epochs = params["epochs"]
-img_resize = params["img_resize"]
 dataset_params = params["dataset_params"]
 tissue_dataset_params = params["tissue_dataset_params"]
 net_params = params["net_params"]
-loss_weight_flag = params["loss_weight_flag"]
 optim_params = params["optim_params"]
 label_num = len(params["labels"])
 
@@ -62,16 +58,24 @@ if params["tissue_dataset_params"]["use"]:
         test_dataset = ConcatDataset(test_dataset, tissue_dataset)
     print("tissue_datasetの各クラスのデータ数：{}\t計：{}".format(tissue_dataset.data_num, tissue_dataset.data_num.sum()))
 
-train_loader = DataLoader(train_dataset, batch_size=batch_size,
+train_loader = DataLoader(train_dataset, batch_size=params["batch_size"],
                           shuffle=True, num_workers=4)
-test_loader = DataLoader(test_dataset, batch_size=batch_size,
+test_loader = DataLoader(test_dataset, batch_size=params["batch_size"],
                          shuffle=False, num_workers=4)
+
+# 損失関数のクラス数に合わせてweightをかけるか決める
+if params["loss_weight_flag"]:
+    loss_weight = train_dataset.weight.to(device)  # deviceに送らないと動かない
+    print("loss_weight:", loss_weight.cpu())
+else:
+    loss_weight = None
+loss_fn = torch.nn.CrossEntropyLoss(weight=loss_weight)
 
 eval_recall = []  # estimateごとのrecallのリスト
 net_weights = []  # estimateごとのネットワークの重みリスト
 
-for i in range(num_estimate):
-    print("\n学習・推論：{}/{}".format(i+1, num_estimate))
+for i in range(params["num_estimate"]):
+    print("\n学習・推論：{}/{}".format(i+1, params["num_estimate"]))
     # 使用するネットワークを設定する
     if "resnet" in net_params["name"]:
         if net_params["multi_net"]:
@@ -90,13 +94,6 @@ for i in range(num_estimate):
                                  model_name=net_params["name"],
                                  out_features=label_num)
 
-    # 損失関数のクラス数に合わせてweightをかけるか決める
-    if params["loss_weight_flag"]:
-        loss_weight = train_dataset.weight.to(device)  # deviceに送らないと動かない
-    else:
-        loss_weight = None
-    loss_fn = torch.nn.CrossEntropyLoss(weight=loss_weight)
-    print("loss_fn.weight:", loss_weight.cpu())
 
     # 使用する最適化手法を設定する
     if "Adam" == optim_params["name"]:
@@ -110,7 +107,7 @@ for i in range(num_estimate):
 
     # 学習
     train_net(net, train_loader, test_loader, optimizer=optimizer,
-            loss_fn=loss_fn, epochs=epochs, device=device)
+            loss_fn=loss_fn, epochs=params["epochs"], device=device)
     # 推論
     ys, ypreds = eval_net(net, test_loader, device=device)
 
@@ -126,11 +123,11 @@ for i in range(num_estimate):
 recall_mean_all = np.mean(eval_recall)
 recall_means = np.mean(eval_recall, axis=1)
 recall_mean_index = np.argmin(np.abs(np.array(recall_means) - recall_mean_all))
-print("各感度の{}回平均\n{}".format(num_estimate, params["labels"]))
+print("各感度の{}回平均\n{}".format(params["num_estimate"], params["labels"]))
 print(np.mean(eval_recall, axis=0))
-print("各感度の{}回平均の平均：".format(num_estimate), recall_mean_all)
+print("各感度の{}回平均の平均：".format(params["num_estimate"]), recall_mean_all)
 # param,weight保存、混合行列表示用のインデックス
-print("↑に近い各感度の{}回平均のインデックス:".format(num_estimate), recall_mean_index)
+print("↑に近い各感度の{}回平均のインデックス:".format(params["num_estimate"]), recall_mean_index)
 
 # 推論結果表示
 net_weight = net_weights[recall_mean_index]

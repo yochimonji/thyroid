@@ -1,4 +1,6 @@
 {
+    "name": "experiment",
+
     "data_path": {
         "train": "data/train/",
         "test": "data/test/",
@@ -39,7 +41,7 @@
     },
 
     "net_params": {
-        "name": "resnet50",
+        "name": "resnet101",
         "multi_net": false,
         "transfer_learning": false,
         "pretrained": true

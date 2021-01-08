@@ -6,5 +6,5 @@ __pycache__/
 logs/
 /classification/config/*
 
-*.pth
+classification/weight/*.pth
 !/classification/config/default.json

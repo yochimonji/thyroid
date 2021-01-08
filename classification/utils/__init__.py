@@ -179,9 +179,8 @@ def load_params(path="config/params.json"):
         else:
             print("Error:指定した引数のパスにファイルが存在しません")
             sys.exit()
-    f = open(path, "r")
-    params = json.load(f)
-    f.close()
+    with open(path, "r") as file:
+        params = json.load(file)
     check_params(params)
     print_params(params)
     return params
@@ -217,3 +216,12 @@ def print_params(params, nest=0):
             print("}\n")
         else:
             print("\t", params[param])
+
+
+def save_params(params, weight):
+    path = os.path.join("result", params["name"])
+    if not os.path.exists(path):
+        os.makedirs(path)
+    torch.save(weight, os.path.join(path, "weight.pth"))
+    with open(os.path.join(path, "params.json"), "w") as params_file:
+        json.dump(params, params_file)

@@ -1,6 +1,6 @@
 # 標準ライブラリ
 import random
-from datetime import datetime
+import json
 
 # 外部ライブラリ
 import torch
@@ -10,7 +10,8 @@ import numpy as np
 from sklearn.metrics import confusion_matrix, accuracy_score, recall_score, classification_report
 
 # 自作ライブラリ
-from utils import ImageTransform, make_datapath_list, show_wrong_img, load_params
+import utils
+from utils import ImageTransform
 from utils.dataset import ArrangeNumDataset, ConcatDataset
 from model import create_net, eval_net, train_net
 
@@ -21,7 +22,7 @@ random.seed(1234)
 
 # jsonファイルを読み込んでパラメータを設定する
 # よく呼び出すパラメータを変数に代入
-params = load_params()
+params = utils.load_params()
 data_path = params["data_path"]
 dataset_params = params["dataset_params"]
 tissue_dataset_params = params["tissue_dataset_params"]
@@ -68,7 +69,9 @@ else:
     loss_weight = None
 loss_fn = torch.nn.CrossEntropyLoss(weight=loss_weight)
 
-eval_recall = []  # estimateごとのrecallのリスト
+ys = []
+ypreds = []
+eval_recalls = []  # estimateごとのrecallのリスト
 net_weights = []  # estimateごとのネットワークの重みリスト
 
 for i in range(params["num_estimate"]):
@@ -90,40 +93,36 @@ for i in range(params["num_estimate"]):
     train_net(net, train_loader, test_loader, optimizer=optimizer,
             loss_fn=loss_fn, epochs=params["epochs"], device=device)
     # 推論
-    ys, ypreds = eval_net(net, test_loader, device=device)
+    y, ypred = eval_net(net, test_loader, device=device)
 
     # 正答率とネットワークの重みをリストに追加
-    ys = ys.cpu().numpy()
-    ypreds = ypreds.cpu().numpy()
-    eval_recall.append(recall_score(ys, ypreds, average=None))
-    net_weights.append(net.state_dict())
-    print("eval_recall", eval_recall[-1])
+    ys.append(y.cpu().numpy())
+    ypreds.append(ypred.cpu().numpy())
+    eval_recall = recall_score(ys[-1], ypreds[-1], average=None, zero_division=0)
+    eval_recalls.append(eval_recall)
+    print("テストの各クラスrecall：{}\t平均：{}".format(eval_recall, eval_recall.mean()))
+    net_weights.append(net.cpu().state_dict())
 
 # weightを保存するために
-# eval_recallのmeanに最も近いインデックスを求める
-recall_mean_all = np.mean(eval_recall)
-recall_means = np.mean(eval_recall, axis=1)
-recall_mean_index = np.argmin(np.abs(np.array(recall_means) - recall_mean_all))
-print("各感度の{}回平均\n{}".format(params["num_estimate"], params["labels"]))
-print(np.mean(eval_recall, axis=0))
-print("各感度の{}回平均の平均：".format(params["num_estimate"]), recall_mean_all)
+# eval_recallsのmeanに最も近いインデックスを求める
+recall_mean_all = np.mean(eval_recalls)
+recall_means_per_estimate = np.mean(eval_recalls, axis=1)
+recall_mean_index = np.argmin(np.abs(recall_means_per_estimate - recall_mean_all))
+print("各感度の{}回平均".format(params["num_estimate"]))
+print(params["labels"])
+print(np.mean(eval_recalls, axis=0))
+print("各感度の{}回平均の平均：{}".format(params["num_estimate"], recall_mean_all))
 # param,weight保存、混合行列表示用のインデックス
 print("↑に近い各感度の{}回平均のインデックス:".format(params["num_estimate"]), recall_mean_index)
 
 # 推論結果表示
-net_weight = net_weights[recall_mean_index]
-net.load_state_dict(net_weight)
-ys, ypreds = eval_net(net, test_loader, device=device)
-ys = ys.cpu().numpy()
-ypreds = ypreds.cpu().numpy()
-print(confusion_matrix(ys, ypreds))
-print(classification_report(ys, ypreds,
+y = ys[recall_mean_index]
+ypred = ypreds[recall_mean_index]
+print(confusion_matrix(y, ypred))
+print(classification_report(y, ypred,
                             target_names=params["labels"],
-                            digits=3))
+                            digits=3,
+                            zero_division=0))
 
 # ネットワークとjsonのパラメータを保存
-dt_now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-torch.save(net_weight, "weight/weight_{}_{}.pth".format(dt_now, int(recall_mean_all*100)))
-f = open("config/params_{}_{}.json".format(dt_now, int(recall_mean_all*100)), "w")
-json.dump(params, f)
-f.close()
+utils.save_params(params, net_weights[recall_mean_index])

@@ -7,7 +7,7 @@ import torch
 from torch import optim
 from torch.utils.data import DataLoader
 import numpy as np
-from sklearn.metrics import confusion_matrix, accuracy_score, recall_score, classification_report
+from sklearn.metrics import confusion_matrix, recall_score, classification_report
 
 # 自作ライブラリ
 import utils
@@ -87,7 +87,6 @@ for i in range(params["num_estimate"]):
         optimizer = optim.SGD(net.get_params_lr(lr_not_pretrained=optim_params["lr_not_pretrained"], lr_pretrained=optim_params["lr_pretrained"]),
                             momentum=optim_params["momentum"],
                             weight_decay=optim_params["weight_decay"])
-    print("optimizer:", optimizer)
 
     # 学習
     train_net(net, train_loader, test_loader, optimizer=optimizer,

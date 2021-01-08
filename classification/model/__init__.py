@@ -37,17 +37,11 @@ def create_net(params):
 class CustomResNet(nn.Module):
     def __init__(self, transfer_learning=True, pretrained=True, model_name="resnet18", out_features=8):
         super().__init__()
-        if transfer_learning and (not pretrained):
-            print("transfer_learning==True, pretrained=Falseの組み合わせはできません")
-            sys.exit()
-
         self.transfer_learning = transfer_learning
-
         self.net = getattr(models, model_name)(pretrained=pretrained)
         fc_input_dim = self.net.fc.in_features
         self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, out_features))
         self.set_grad()
-        print("使用モデル:{}\ttransfer_learning:{}\tpretrained:{}".format(model_name, transfer_learning, pretrained))
         
     def forward(self, x):
         return self.net(x)
@@ -86,18 +80,12 @@ class CustomResNet(nn.Module):
 class CustomResNetGray(nn.Module):
     def __init__(self, transfer_learning=True, pretrained=True, model_name="resnet18", out_features=8):
         super().__init__()
-        if transfer_learning and (not pretrained):
-            print("transfer_learning==True, pretrained=Falseの組み合わせはできません")
-            sys.exit()
-
         self.transfer_learning = transfer_learning
-
         self.net = getattr(models, model_name)(pretrained=pretrained)
         self.net.conv1 = nn.Conv2d(1, 64, kernel_size=(7,7), stride=(2,2), padding=(3,3), bias=False)
         fc_input_dim = self.net.fc.in_features
         self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, out_features))
         self.set_grad()
-        print("使用モデル:{}\ttransfer_learning:{}\tpretrained:{}".format(model_name, transfer_learning, pretrained))
         
     def forward(self, x):
         return self.net(x)
@@ -133,20 +121,13 @@ class CustomResNetGray(nn.Module):
 class ConcatMultiResNet(nn.Module):
     def __init__(self, transfer_learning=True, pretrained=True, model_name="multi-resnet18", out_features=8):
         super().__init__()
-        if transfer_learning and (not pretrained):
-            print("transfer_learning==True, pretrained=Falseの組み合わせはできません")
-            sys.exit()
-
         self.transfer_learning = transfer_learning
-
         self.rgb_feature_net = getattr(models, model_name)(pretrained=pretrained)
         fc_input_dim = self.rgb_feature_net.fc.in_features * 2
         self.rgb_feature_net.fc = nn.Identity()  # 恒等関数に変更
         self.gray_feature_net = copy.deepcopy(self.rgb_feature_net)
         self.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, out_features))
-
         self.set_grad()
-        print("使用モデル:multi-{}\ttransfer_learning:{}\tpretrained:{}".format(model_name, transfer_learning, pretrained))
         
     def forward(self, x):
         x_rgb = self.rgb_feature_net(x[:, :3, :, :])
@@ -187,21 +168,14 @@ class ConcatMultiResNet(nn.Module):
 class CustomEfficientNet(nn.Module):
     def __init__(self, transfer_learning=True, pretrained=True, model_name="efficientnet-b0", out_features=8):
         super().__init__()
-        if transfer_learning and (not pretrained):
-            print("transfer_learning==True, pretrained=Falseの組み合わせはできません")
-            sys.exit()
-            
         self.transfer_learning = transfer_learning
-        
         if pretrained:
             self.net = EfficientNet.from_pretrained(model_name)
         else:
             self.net = EfficientNet.from_name(model_name)
-
         fc_input_dim = self.net._fc.in_features
         self.net._fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, out_features))
         self.set_grad()
-        print("使用モデル:{}\ttransfer_learning:{}\tpretrained:{}".format(model_name, transfer_learning, pretrained))
         
     def forward(self, x):
         return self.net(x)

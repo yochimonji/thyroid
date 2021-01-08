@@ -192,6 +192,8 @@ def check_params(params):
     optim_name = params["optim_params"]["name"]
     grayscale_flag = params["dataset_params"]["grayscale_flag"]
     multi_net = params["net_params"]["multi_net"]
+    transfer_learning = params["net_params"]["transfer_learning"]
+    pretrained = params["net_params"]["pretrained"]
 
     # 誤っているparamsがあれば終了する
     if not((tissue_phase == "train") or (tissue_phase == "test")):
@@ -205,6 +207,9 @@ def check_params(params):
         sys.exit()
     if grayscale_flag and multi_net:
         print("grayscale==True and multi_net==Trueはできません")
+        sys.exit()
+    if transfer_learning and (not pretrained):
+        print("transfer_learning==True and pretrained=Falseはできません")
         sys.exit()
 
 def print_params(params, nest=0):

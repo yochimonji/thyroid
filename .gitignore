@@ -4,7 +4,7 @@ material/
 .vscode/
 __pycache__/
 logs/
-/classification/config/*
-
+classification/config/*
+classification/result
 classification/weight/*.pth
 !/classification/config/default.json

@@ -32,43 +32,6 @@ optim_params = params["optim_params"]
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("使用デバイス：", device)
 
-# 訓練とテストのデータセットを作成する
-train_dataset = ArrangeNumDataset(params, params["data_path"]["train"], "train",
-                                  transform=ImageTransform(params=params,
-                                                           mean=dataset_params["train_mean"],
-                                                           std=dataset_params["train_std"]))
-test_dataset = ArrangeNumDataset(params, params["data_path"]["test"], "test",
-                                 transform=ImageTransform(params=params,
-                                                          mean=dataset_params["test_mean"],
-                                                          std=dataset_params["test_std"]))
-print("train_datasetの各クラスのデータ数： {}\t計：{}".format(train_dataset.data_num, train_dataset.data_num.sum()))
-print("test_datasetの各クラスのデータ数：  {}\t計：{}".format(test_dataset.data_num, test_dataset.data_num.sum()))
-
-if params["tissue_dataset_params"]["use"]:
-    tissue_dataset = ArrangeNumDataset(params, params["data_path"]["tissue"],
-                                       phase=tissue_dataset_params["phase"],
-                                       transform=ImageTransform(params=params,
-                                                                mean=tissue_dataset_params["mean"],
-                                                                std=tissue_dataset_params["std"]))
-    if tissue_dataset_params["phase"] == "train":
-        train_dataset = ConcatDataset(train_dataset, tissue_dataset)
-    elif tissue_dataset_params["phase"] == "test":
-        test_dataset = ConcatDataset(test_dataset, tissue_dataset)
-    print("tissue_datasetの各クラスのデータ数：{}\t計：{}".format(tissue_dataset.data_num, tissue_dataset.data_num.sum()))
-
-train_loader = DataLoader(train_dataset, batch_size=params["batch_size"],
-                          shuffle=True, num_workers=4)
-test_loader = DataLoader(test_dataset, batch_size=params["batch_size"],
-                         shuffle=False, num_workers=4)
-
-# 損失関数のクラス数に合わせてweightをかけるか決める
-if params["loss_weight_flag"]:
-    loss_weight = train_dataset.weight.to(device)  # deviceに送らないと動かない
-    print("loss_weight:", loss_weight.cpu())
-else:
-    loss_weight = None
-loss_fn = torch.nn.CrossEntropyLoss(weight=loss_weight)
-
 ys = []
 ypreds = []
 eval_recalls = []  # estimateごとのrecallのリスト
@@ -76,6 +39,43 @@ net_weights = []  # estimateごとのネットワークの重みリスト
 
 for i in range(params["num_estimate"]):
     print("\n学習・推論：{}/{}".format(i+1, params["num_estimate"]))
+
+    # 訓練とテストのデータセットを作成する
+    train_dataset = ArrangeNumDataset(params, params["data_path"]["train"], "train",
+                                    transform=ImageTransform(params=params,
+                                                            mean=dataset_params["train_mean"],
+                                                            std=dataset_params["train_std"]))
+    test_dataset = ArrangeNumDataset(params, params["data_path"]["test"], "test",
+                                    transform=ImageTransform(params=params,
+                                                            mean=dataset_params["test_mean"],
+                                                            std=dataset_params["test_std"]))
+    print("train_datasetの各クラスのデータ数： {}\t計：{}".format(train_dataset.data_num, train_dataset.data_num.sum()))
+    print("test_datasetの各クラスのデータ数：  {}\t計：{}".format(test_dataset.data_num, test_dataset.data_num.sum()))
+
+    if params["tissue_dataset_params"]["use"]:
+        tissue_dataset = ArrangeNumDataset(params, params["data_path"]["tissue"],
+                                        phase=tissue_dataset_params["phase"],
+                                        transform=ImageTransform(params=params,
+                                                                    mean=tissue_dataset_params["mean"],
+                                                                    std=tissue_dataset_params["std"]))
+        if tissue_dataset_params["phase"] == "train":
+            train_dataset = ConcatDataset(train_dataset, tissue_dataset)
+        elif tissue_dataset_params["phase"] == "test":
+            test_dataset = ConcatDataset(test_dataset, tissue_dataset)
+        print("tissue_datasetの各クラスのデータ数：{}\t計：{}".format(tissue_dataset.data_num, tissue_dataset.data_num.sum()))
+
+    train_loader = DataLoader(train_dataset, batch_size=params["batch_size"],
+                            shuffle=True, num_workers=4)
+    test_loader = DataLoader(test_dataset, batch_size=params["batch_size"],
+                            shuffle=False, num_workers=4)
+
+    # 損失関数のクラス数に合わせてweightをかけるか決める
+    if params["loss_weight_flag"]:
+        loss_weight = train_dataset.weight.to(device)  # deviceに送らないと動かない
+        print("loss_weight:", loss_weight.cpu())
+    else:
+        loss_weight = None
+    loss_fn = torch.nn.CrossEntropyLoss(weight=loss_weight)
     
     net = create_net(params)
 

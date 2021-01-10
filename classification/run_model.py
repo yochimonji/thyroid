@@ -99,7 +99,7 @@ for i in range(params["num_estimate"]):
     ypreds.append(ypred.cpu().numpy())
     eval_recall = recall_score(ys[-1], ypreds[-1], average=None, zero_division=0)
     eval_recalls.append(eval_recall)
-    print("テストの各クラスrecall：{}\t平均：{}".format(eval_recall, eval_recall.mean()))
+    print("テストの各クラスrecall：\n{}\n平均：{}".format(np.round(eval_recall*100, decimals=1), np.round(eval_recall.mean()*100, decimals=1)))
     net_weights.append(net.cpu().state_dict())
 
 # weightを保存するために
@@ -109,8 +109,8 @@ recall_means_per_estimate = np.mean(eval_recalls, axis=1)
 recall_mean_index = np.argmin(np.abs(recall_means_per_estimate - recall_mean_all))
 print("各感度の{}回平均".format(params["num_estimate"]))
 print(params["labels"])
-print(np.mean(eval_recalls, axis=0))
-print("各感度の{}回平均の平均：{}".format(params["num_estimate"], recall_mean_all))
+print(np.round(np.mean(eval_recalls, axis=0)*100, decimals=1))
+print("各感度の{}回平均の平均：{}".format(params["num_estimate"], np.round(recall_mean_all*100, decimals=1)))
 # param,weight保存、混合行列表示用のインデックス
 print("↑に近い各感度の{}回平均のインデックス:".format(params["num_estimate"]), recall_mean_index)
 

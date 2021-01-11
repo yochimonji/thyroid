@@ -10,6 +10,7 @@ from torchvision import transforms
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
+import pandas as pd
 
 
 
@@ -230,3 +231,10 @@ def save_params(params, weight):
     torch.save(weight, os.path.join(path, "weight.pth"))
     with open(os.path.join(path, "params.json"), "w") as params_file:
         json.dump(params, params_file)
+
+
+def save_result(ys, ypreds, params):
+    ys_df = pd.DataFrame(ys)
+    ypreds_df = pd.DataFrame(ypreds)
+    ys_df.to_csv(os.path.join("result", params["name"], "ys.csv"))
+    ypreds_df.to_csv(os.path.join("result", params["name"], "ypreds.csv"))

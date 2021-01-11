@@ -123,5 +123,6 @@ print(classification_report(y, ypred,
                             digits=3,
                             zero_division=0))
 
-# ネットワークとjsonのパラメータを保存
+# 各種パラメータと結果の保存
 utils.save_params(params, net_weights[recall_mean_index])
+utils.save_result(ys, ypreds, params)

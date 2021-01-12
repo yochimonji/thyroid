@@ -50,7 +50,7 @@ for cv_num, (train_indices, val_indices) in enumerate(skf.split(
                                       transform=ImageTransform())
     val_dataset = ArrangeNumDataset(val_list,
                                     label_list,
-                                    phase="val",
+                                    phase="test",
                                     arrange=None,
                                     transform=ImageTransform())
     

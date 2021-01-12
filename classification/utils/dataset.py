@@ -42,7 +42,7 @@ class ArrangeNumDataset(Dataset):
         
         arrange = self.params["dataset_params"]["arrange"]
         # データ数の調整ありの場合
-        if arrange:
+        if arrange and (self.phase == "train"):
             arrange_file_list = []
             file_dict = self.make_file_dict(file_list)
             

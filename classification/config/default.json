@@ -21,12 +21,11 @@
     "num_estimate": 10,
     "epochs": 10,
     "batch_size": 32,
-    "imbalance": "loss_weight",
+    "imbalance": null,
 
     "dataset_params":{
         "grayscale_flag": false,
-        "normalize_per_img": false,
-        "arrange": null
+        "normalize_per_img": false
     },
 
     "transform_params": {

@@ -40,9 +40,9 @@ class ArrangeNumDataset(Dataset):
         if self.params["data_path"]["tissue_"+self.phase]:
             file_list.extend(make_datapath_list(self.params["data_path"]["tissue_"+self.phase], self.labels))
         
-        arrange = self.params["dataset_params"]["arrange"]
+        arrange = self.params["imbalance"]
         # データ数の調整ありの場合
-        if arrange and (self.phase == "train"):
+        if ((arrange=="oversampling") or (arrange=="undersampling")) and (self.phase == "train"):
             arrange_file_list = []
             file_dict = self.make_file_dict(file_list)
             

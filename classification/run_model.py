@@ -11,7 +11,6 @@ from sklearn.metrics import confusion_matrix, recall_score, classification_repor
 
 # 自作ライブラリ
 import utils
-from utils import ImageTransform
 from utils.dataset import ArrangeNumDataset
 from model import create_net, eval_net, train_net
 
@@ -23,14 +22,11 @@ random.seed(1234)
 # jsonファイルを読み込んでパラメータを設定する
 # よく呼び出すパラメータを変数に代入
 params = utils.load_params()
-data_path = params["data_path"]
-dataset_params = params["dataset_params"]
-tissue_dataset_params = params["tissue_dataset_params"]
 optim_params = params["optim_params"]
 
 # GPUが使用可能ならGPU、不可能ならCPUを使う
-# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-device = 'cpu'
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# device = 'cpu'
 print("使用デバイス：", device)
 
 ys = []
@@ -42,14 +38,8 @@ for i in range(params["num_estimate"]):
     print("\n学習・推論：{}/{}".format(i+1, params["num_estimate"]))
 
     # 訓練とテストのデータセットを作成する
-    train_dataset = ArrangeNumDataset(params, "train",
-                                    transform=ImageTransform(params=params,
-                                                            mean=dataset_params["train_mean"],
-                                                            std=dataset_params["train_std"]))
-    test_dataset = ArrangeNumDataset(params, "test",
-                                    transform=ImageTransform(params=params,
-                                                            mean=dataset_params["test_mean"],
-                                                            std=dataset_params["test_std"]))
+    train_dataset = ArrangeNumDataset(params=params, phase="train")
+    test_dataset = ArrangeNumDataset(params=params, phase="test")
     print("train_datasetの各クラスのデータ数： {}\t計：{}".format(train_dataset.data_num, train_dataset.data_num.sum()))
     print("test_datasetの各クラスのデータ数：  {}\t計：{}".format(test_dataset.data_num, test_dataset.data_num.sum()))
 

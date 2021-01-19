@@ -13,11 +13,11 @@ from utils import make_datapath_list, ImageTransform
 # params["dataset_params"]["arrange"]:null にするとデータ数の調整なし
 # オーバー・アンダーサンプリング用
 class ArrangeNumDataset(Dataset):
-    def __init__(self, params, phase, transform):
+    def __init__(self, params, phase):
         self.params = params
         self.labels = params["labels"]
         self.phase = phase
-        self.transform = transform
+        self.transform = ImageTransform(params)
         self.file_list = self.make_file_list()      # データ数調整後のファイルリスト。self.label_listと対。
         self.label_list = self.make_label_list()    # データ数調整後のラベルリスト。self.file_listと対。
         self.data_num = np.bincount(np.array(self.label_list))  # クラスごとのデータ数

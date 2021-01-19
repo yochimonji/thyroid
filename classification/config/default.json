@@ -19,23 +19,18 @@
     ],
     
     "num_estimate": 10,
-    "batch_size": 32,
     "epochs": 10,
-    "img_resize": 224,
+    "batch_size": 32,
+    "loss_weight_flag": true,
 
     "dataset_params":{
         "grayscale_flag": false,
         "normalize_per_img": false,
-        "arrange": null,
-        "train_mean": [0.485, 0.456, 0.406],
-        "train_std": [0.229, 0.224, 0.225] ,
-        "test_mean": [0.485, 0.456, 0.406],
-        "test_std": [0.229, 0.224, 0.225]
+        "arrange": null
     },
 
-    "tissue_dataset_params": {
-        "use": true,
-        "phase": "train",
+    "transform_params": {
+        "img_resize": 224,
         "mean": [0.485, 0.456, 0.406],
         "std": [0.229, 0.224, 0.225]
     },
@@ -46,8 +41,6 @@
         "transfer_learning": false,
         "pretrained": true
     },
-
-    "loss_weight_flag": true,
     
     "optim_params": {
         "name": "Adam",

@@ -10,7 +10,6 @@ from utils import make_datapath_list, ImageTransform
 
 
 # データ数を調整したDatasetを作成するクラス
-# params["dataset_params"]["arrange"]:null にするとデータ数の調整なし
 # オーバー・アンダーサンプリング用
 class ArrangeNumDataset(Dataset):
     def __init__(self, params, phase):

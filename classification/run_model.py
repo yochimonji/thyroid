@@ -49,7 +49,7 @@ for i in range(params["num_estimate"]):
                             shuffle=False, num_workers=4)
 
     # 損失関数のクラス数に合わせてweightをかけるか決める
-    if params["loss_weight_flag"]:
+    if params["imbalance"] == "loss_weight":
         loss_weight = train_dataset.weight.to(device)  # deviceに送らないと動かない
         print("loss_weight:", loss_weight.cpu())
     else:

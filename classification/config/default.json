@@ -21,7 +21,7 @@
     "num_estimate": 10,
     "epochs": 10,
     "batch_size": 32,
-    "loss_weight_flag": true,
+    "imbalance": "loss_weight",
 
     "dataset_params":{
         "grayscale_flag": false,

@@ -12,7 +12,7 @@ from sklearn.metrics import confusion_matrix, recall_score, classification_repor
 # 自作ライブラリ
 import utils
 from utils import ImageTransform
-from utils.dataset import ArrangeNumDataset, ConcatDataset
+from utils.dataset import ArrangeNumDataset
 from model import create_net, eval_net, train_net
 
 # 乱数シード値を固定して再現性を確保
@@ -29,7 +29,8 @@ tissue_dataset_params = params["tissue_dataset_params"]
 optim_params = params["optim_params"]
 
 # GPUが使用可能ならGPU、不可能ならCPUを使う
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = 'cpu'
 print("使用デバイス：", device)
 
 ys = []
@@ -41,28 +42,16 @@ for i in range(params["num_estimate"]):
     print("\n学習・推論：{}/{}".format(i+1, params["num_estimate"]))
 
     # 訓練とテストのデータセットを作成する
-    train_dataset = ArrangeNumDataset(params, params["data_path"]["train"], "train",
+    train_dataset = ArrangeNumDataset(params, "train",
                                     transform=ImageTransform(params=params,
                                                             mean=dataset_params["train_mean"],
                                                             std=dataset_params["train_std"]))
-    test_dataset = ArrangeNumDataset(params, params["data_path"]["test"], "test",
+    test_dataset = ArrangeNumDataset(params, "test",
                                     transform=ImageTransform(params=params,
                                                             mean=dataset_params["test_mean"],
                                                             std=dataset_params["test_std"]))
     print("train_datasetの各クラスのデータ数： {}\t計：{}".format(train_dataset.data_num, train_dataset.data_num.sum()))
     print("test_datasetの各クラスのデータ数：  {}\t計：{}".format(test_dataset.data_num, test_dataset.data_num.sum()))
-
-    if params["tissue_dataset_params"]["use"]:
-        tissue_dataset = ArrangeNumDataset(params, params["data_path"]["tissue"],
-                                        phase=tissue_dataset_params["phase"],
-                                        transform=ImageTransform(params=params,
-                                                                    mean=tissue_dataset_params["mean"],
-                                                                    std=tissue_dataset_params["std"]))
-        if tissue_dataset_params["phase"] == "train":
-            train_dataset = ConcatDataset(train_dataset, tissue_dataset)
-        elif tissue_dataset_params["phase"] == "test":
-            test_dataset = ConcatDataset(test_dataset, tissue_dataset)
-        print("tissue_datasetの各クラスのデータ数：{}\t計：{}".format(tissue_dataset.data_num, tissue_dataset.data_num.sum()))
 
     train_loader = DataLoader(train_dataset, batch_size=params["batch_size"],
                             shuffle=True, num_workers=4)

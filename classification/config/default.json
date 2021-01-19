@@ -4,13 +4,13 @@
     "data_path": {
         "train": "data/train/",
         "test": "data/test/",
-        "tissue": "data/tissue array/train/"
+        "tissue_train": "data/tissue array/train/",
+        "tissue_test": "data/tissue array/test/"
     },
 
     "labels":[
         "Normal",
         "PTC HE",
-        "UN",
         "fvptc",
         "FTC",
         "med",
@@ -41,7 +41,7 @@
     },
 
     "net_params": {
-        "name": "resnet101",
+        "name": "resnet18",
         "multi_net": false,
         "transfer_learning": false,
         "pretrained": true

@@ -236,7 +236,6 @@ def print_recall(params, ys, ypreds):
     recall_means_by_type = np.mean(recalls, axis=0)
     for i, recall in enumerate(recalls):
         error = mean_squared_error(recall_means_by_type, recall)
-        print(error)
         if error < min_error:
             min_error = error
             min_error_index = i

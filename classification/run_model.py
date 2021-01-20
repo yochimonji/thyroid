@@ -19,6 +19,7 @@ torch.manual_seed(1234)
 np.random.seed(1234)
 random.seed(1234)
 
+
 # jsonファイルを読み込んでパラメータを設定する
 # よく呼び出すパラメータを変数に代入
 params = utils.load_params()
@@ -26,12 +27,10 @@ optim_params = params["optim_params"]
 
 # GPUが使用可能ならGPU、不可能ならCPUを使う
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-# device = 'cpu'
 print("使用デバイス：", device)
 
 ys = []
 ypreds = []
-eval_recalls = []  # estimateごとのrecallのリスト
 net_weights = []  # estimateごとのネットワークの重みリスト
 
 for i in range(params["num_estimate"]):
@@ -40,8 +39,6 @@ for i in range(params["num_estimate"]):
     # 訓練とテストのデータセットを作成する
     train_dataset = ArrangeNumDataset(params=params, phase="train")
     test_dataset = ArrangeNumDataset(params=params, phase="test")
-    print("train_datasetの各クラスのデータ数： {}\t計：{}".format(train_dataset.data_num, train_dataset.data_num.sum()))
-    print("test_datasetの各クラスのデータ数：  {}\t計：{}".format(test_dataset.data_num, test_dataset.data_num.sum()))
 
     train_loader = DataLoader(train_dataset, batch_size=params["batch_size"],
                             shuffle=True, num_workers=4)
@@ -76,11 +73,9 @@ for i in range(params["num_estimate"]):
     # 正答率とネットワークの重みをリストに追加
     ys.append(y.cpu().numpy())
     ypreds.append(ypred.cpu().numpy())
-    eval_recall = recall_score(ys[-1], ypreds[-1], average=None, zero_division=0)
-    eval_recalls.append(eval_recall)
-    print("テストの各クラスrecall：\n{}\n平均：{}".format(np.round(eval_recall*100, decimals=1), np.round(eval_recall.mean()*100, decimals=1)))
+    recall = recall_score(ys[-1], ypreds[-1], average=None, zero_division=0) * 100
+    print("テストの各クラスrecall：\n{}\n平均：{}".format(np.round(recall, decimals=1), np.round(recall.mean(), decimals=1)))
     net_weights.append(net.cpu().state_dict())
-
 
 # 各種パラメータと結果の表示と保存
 utils.print_recall(params, ys, ypreds)

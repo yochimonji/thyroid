@@ -21,6 +21,7 @@ class ArrangeNumDataset(Dataset):
         self.label_list = self.make_label_list()    # データ数調整後のラベルリスト。self.file_listと対。
         self.data_num = np.bincount(np.array(self.label_list))  # クラスごとのデータ数
         self.weight = self.calc_weight()            # 損失関数の重み調整用の重み。
+        print("{}の各データ数： {}\t計：{}".format(self.phase, self.data_num, self.data_num.sum()))
         
     def __len__(self):
         return len(self.file_list)

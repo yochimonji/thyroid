@@ -222,17 +222,23 @@ def print_params(params, nest=0):
             print("\t", params[param])
 
 
-def save_params(params, weight):
+# 各種パラメータ、結果、ネットワークの重みを保存する
+def save_result(params, ys, ypreds, weights):
+    # フォルダ作成
     path = os.path.join("result", params["name"])
     if not os.path.exists(path):
-        os.makedirs(path)
-    torch.save(weight, os.path.join(path, "weight.pth"))
+        os.makedirs(os.path.join(path, "weight"))
+
+    # パラメータ保存
     with open(os.path.join(path, "params.json"), "w") as params_file:
         json.dump(params, params_file)
 
-
-def save_result(ys, ypreds, params):
+    # ys, ypreds保存
     ys_df = pd.DataFrame(ys)
     ypreds_df = pd.DataFrame(ypreds)
     ys_df.to_csv(os.path.join("result", params["name"], "ys.csv"))
     ypreds_df.to_csv(os.path.join("result", params["name"], "ypreds.csv"))
+
+    # ネットワークの重み保存
+    for i, weight in enumerate(weights):
+        torch.save(weight, os.path.join(path, "weight", "weight" + str(i) + ".pth"))

@@ -81,8 +81,7 @@ for i in range(params["num_estimate"]):
     print("テストの各クラスrecall：\n{}\n平均：{}".format(np.round(eval_recall*100, decimals=1), np.round(eval_recall.mean()*100, decimals=1)))
     net_weights.append(net.cpu().state_dict())
 
-# weightを保存するために
-# eval_recallsのmeanに最も近いインデックスを求める
+# 結果表示のためにeval_recallsのmeanに最も近いインデックスを求める
 recall_mean_all = np.mean(eval_recalls)
 recall_means_per_estimate = np.mean(eval_recalls, axis=1)
 recall_mean_index = np.argmin(np.abs(recall_means_per_estimate - recall_mean_all))
@@ -103,5 +102,4 @@ print(classification_report(y, ypred,
                             zero_division=0))
 
 # 各種パラメータと結果の保存
-utils.save_params(params, net_weights[recall_mean_index])
-utils.save_result(ys, ypreds, params)
+utils.save_result(params, ys, ypreds, net_weights)

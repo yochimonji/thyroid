@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 import pandas as pd
+from sklearn.metrics import confusion_matrix, recall_score, classification_report, mean_squared_error
 
 
 
@@ -220,6 +221,38 @@ def print_params(params, nest=0):
             print("}\n")
         else:
             print("\t", params[param])
+
+
+# 結果（主にrecall）を表示する
+def print_recall(params, ys, ypreds):
+    # recall計算
+    recalls = []
+    for y, ypred in zip(ys, ypreds):
+        recalls.append(recall_score(y, ypred, average=None, zero_division=0))
+
+    # recallの？回平均と各recallの平均二乗誤差が最小のインデックスを求める
+    min_error = float("inf")
+    min_error_index = 0
+    recall_means_by_type = np.mean(recalls, axis=0)
+    for i, recall in enumerate(recalls):
+        error = mean_squared_error(recall_means_by_type, recall)
+        print(error)
+        if error < min_error:
+            min_error = error
+            min_error_index = i
+
+    # 結果表示
+    print("各感度の{}回平均".format(params["num_estimate"]))
+    print(params["labels"])
+    print(np.round(recall_means_by_type*100, decimals=1))
+    print("各感度の{}回平均の平均：{}".format(params["num_estimate"], np.round(np.mean(recalls)*100, decimals=1)))
+    print("↑に近い各感度の{}回平均のインデックス:".format(params["num_estimate"]), min_error_index)
+
+    y = ys[min_error_index]
+    ypred = ypreds[min_error_index]
+    print(confusion_matrix(y, ypred))
+    print(classification_report(y, ypred, target_names=params["labels"],
+                                digits=3, zero_division=0))
 
 
 # 各種パラメータ、結果、ネットワークの重みを保存する

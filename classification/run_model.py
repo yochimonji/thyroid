@@ -7,7 +7,7 @@ import torch
 from torch import optim
 from torch.utils.data import DataLoader
 import numpy as np
-from sklearn.metrics import confusion_matrix, recall_score, classification_report
+from sklearn.metrics import recall_score
 
 # 自作ライブラリ
 import utils
@@ -81,25 +81,7 @@ for i in range(params["num_estimate"]):
     print("テストの各クラスrecall：\n{}\n平均：{}".format(np.round(eval_recall*100, decimals=1), np.round(eval_recall.mean()*100, decimals=1)))
     net_weights.append(net.cpu().state_dict())
 
-# 結果表示のためにeval_recallsのmeanに最も近いインデックスを求める
-recall_mean_all = np.mean(eval_recalls)
-recall_means_per_estimate = np.mean(eval_recalls, axis=1)
-recall_mean_index = np.argmin(np.abs(recall_means_per_estimate - recall_mean_all))
-print("各感度の{}回平均".format(params["num_estimate"]))
-print(params["labels"])
-print(np.round(np.mean(eval_recalls, axis=0)*100, decimals=1))
-print("各感度の{}回平均の平均：{}".format(params["num_estimate"], np.round(recall_mean_all*100, decimals=1)))
-# param,weight保存、混合行列表示用のインデックス
-print("↑に近い各感度の{}回平均のインデックス:".format(params["num_estimate"]), recall_mean_index)
 
-# 推論結果表示
-y = ys[recall_mean_index]
-ypred = ypreds[recall_mean_index]
-print(confusion_matrix(y, ypred))
-print(classification_report(y, ypred,
-                            target_names=params["labels"],
-                            digits=3,
-                            zero_division=0))
-
-# 各種パラメータと結果の保存
+# 各種パラメータと結果の表示と保存
+utils.print_recall(params, ys, ypreds)
 utils.save_result(params, ys, ypreds, net_weights)

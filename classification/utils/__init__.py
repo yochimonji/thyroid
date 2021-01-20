@@ -31,8 +31,8 @@ class MyRotationTransform():
 # ResNetで転移学習するとき、sizeは224×224、defaultのmean,stdで標準化する
 class ImageTransform():
     def __init__(self, params):
-        self.grayscale_flag = params["dataset_params"]["grayscale_flag"]
-        self.normalize_per_img = params["dataset_params"]["normalize_per_img"]
+        self.grayscale_flag = params["transform_params"]["grayscale_flag"]
+        self.normalize_per_img = params["transform_params"]["normalize_per_img"]
         self.multi_net = params["net_params"]["multi_net"]
         mean = params["transform_params"]["mean"]
         std = params["transform_params"]["std"]
@@ -193,7 +193,7 @@ def load_params(path="config/params.json"):
 def check_params(params):
     net_name = params["net_params"]["name"]
     optim_name = params["optim_params"]["name"]
-    grayscale_flag = params["dataset_params"]["grayscale_flag"]
+    grayscale_flag = params["transform_params"]["grayscale_flag"]
     multi_net = params["net_params"]["multi_net"]
     transfer_learning = params["net_params"]["transfer_learning"]
     pretrained = params["net_params"]["pretrained"]

@@ -23,15 +23,12 @@
     "batch_size": 32,
     "imbalance": null,
 
-    "dataset_params":{
-        "grayscale_flag": false,
-        "normalize_per_img": false
-    },
-
     "transform_params": {
         "img_resize": 224,
         "mean": [0.485, 0.456, 0.406],
-        "std": [0.229, 0.224, 0.225]
+        "std": [0.229, 0.224, 0.225],
+        "grayscale_flag": false,
+        "normalize_per_img": false
     },
 
     "net_params": {

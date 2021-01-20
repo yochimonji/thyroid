@@ -36,9 +36,13 @@ class ArrangeNumDataset(Dataset):
         return img, label
 
     def make_file_list(self):
-        file_list =  make_datapath_list(self.params["data_path"][self.phase], self.labels)
-        if self.params["data_path"]["tissue_"+self.phase]:
-            file_list.extend(make_datapath_list(self.params["data_path"]["tissue_"+self.phase], self.labels))
+        file_list = []
+        path = self.params["data_path"][self.phase]
+        tissue_path = self.params["data_path"]["tissue_"+self.phase]
+        if path:
+            file_list.extend(make_datapath_list(path, self.labels))
+        if tissue_path:
+            file_list.extend(make_datapath_list(tissue_path, self.labels))
         
         arrange = self.params["imbalance"]
         # データ数の調整ありの場合

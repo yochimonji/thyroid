@@ -268,11 +268,3 @@ def save_params(params, weights):
     # ネットワークの重み保存
     for i, weight in enumerate(weights):
         torch.save(weight, os.path.join(path, "weight", "weight" + str(i) + ".pth"))
-
-
-def load_weights_path(params):
-    search_path = os.path.join("result", params["name"], "weight/*.pth")
-    weights_path = []
-    for path in glob.glob(search_path, recursive=True):
-        weights_path.append(path)
-    return weights_path

@@ -77,6 +77,5 @@ for i in range(params["num_estimate"]):
     print("テストの各クラスrecall：\n{}\n平均：{}".format(np.round(recall, decimals=1), np.round(recall.mean(), decimals=1)))
     net_weights.append(net.cpu().state_dict())
 
-# 各種パラメータと結果の表示と保存
 utils.print_recall(params, ys, ypreds)
-utils.save_result(params, ys, ypreds, net_weights)
+utils.save_params(params, net_weights)

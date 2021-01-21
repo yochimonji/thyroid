@@ -255,7 +255,7 @@ def print_recall(params, ys, ypreds):
 
 
 # 各種パラメータ、結果、ネットワークの重みを保存する
-def save_result(params, ys, ypreds, weights):
+def save_params(params, weights):
     # フォルダ作成
     path = os.path.join("result", params["name"])
     if not os.path.exists(path):
@@ -265,12 +265,14 @@ def save_result(params, ys, ypreds, weights):
     with open(os.path.join(path, "params.json"), "w") as params_file:
         json.dump(params, params_file)
 
-    # ys, ypreds保存
-    ys_df = pd.DataFrame(ys)
-    ypreds_df = pd.DataFrame(ypreds)
-    ys_df.to_csv(os.path.join("result", params["name"], "ys.csv"))
-    ypreds_df.to_csv(os.path.join("result", params["name"], "ypreds.csv"))
-
     # ネットワークの重み保存
     for i, weight in enumerate(weights):
         torch.save(weight, os.path.join(path, "weight", "weight" + str(i) + ".pth"))
+
+
+def load_weights_path(params):
+    search_path = os.path.join("result", params["name"], "weight/*.pth")
+    weights_path = []
+    for path in glob.glob(search_path, recursive=True):
+        weights_path.append(path)
+    return weights_path

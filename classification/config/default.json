@@ -4,13 +4,13 @@
     "data_path": {
         "train": "data/train/",
         "test": "data/test/",
-        "tissue": "data/tissue array/train/"
+        "tissue_train": "data/tissue array/train/",
+        "tissue_test": "data/tissue array/test/"
     },
 
     "labels":[
         "Normal",
         "PTC HE",
-        "UN",
         "fvptc",
         "FTC",
         "med",
@@ -19,35 +19,24 @@
     ],
     
     "num_estimate": 10,
-    "batch_size": 32,
     "epochs": 10,
-    "img_resize": 224,
+    "batch_size": 32,
+    "imbalance": null,
 
-    "dataset_params":{
-        "grayscale_flag": false,
-        "normalize_per_img": false,
-        "arrange": null,
-        "train_mean": [0.485, 0.456, 0.406],
-        "train_std": [0.229, 0.224, 0.225] ,
-        "test_mean": [0.485, 0.456, 0.406],
-        "test_std": [0.229, 0.224, 0.225]
-    },
-
-    "tissue_dataset_params": {
-        "use": true,
-        "phase": "train",
+    "transform_params": {
+        "img_resize": 224,
         "mean": [0.485, 0.456, 0.406],
-        "std": [0.229, 0.224, 0.225]
+        "std": [0.229, 0.224, 0.225],
+        "grayscale_flag": false,
+        "normalize_per_img": false
     },
 
     "net_params": {
-        "name": "resnet101",
+        "name": "resnet18",
         "multi_net": false,
         "transfer_learning": false,
         "pretrained": true
     },
-
-    "loss_weight_flag": true,
     
     "optim_params": {
         "name": "Adam",

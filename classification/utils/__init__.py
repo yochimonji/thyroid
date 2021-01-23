@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 import pandas as pd
+from sklearn.metrics import confusion_matrix, recall_score, classification_report, mean_squared_error
 
 
 
@@ -29,10 +30,12 @@ class MyRotationTransform():
 # 画像に変換処理を行う
 # ResNetで転移学習するとき、sizeは224×224、defaultのmean,stdで標準化する
 class ImageTransform():
-    def __init__(self, params, mean, std):
-        self.grayscale_flag = params["dataset_params"]["grayscale_flag"]
-        self.normalize_per_img = params["dataset_params"]["normalize_per_img"]
+    def __init__(self, params):
+        self.grayscale_flag = params["transform_params"]["grayscale_flag"]
+        self.normalize_per_img = params["transform_params"]["normalize_per_img"]
         self.multi_net = params["net_params"]["multi_net"]
+        mean = params["transform_params"]["mean"]
+        std = params["transform_params"]["std"]
         if self.multi_net:
             self.mean = np.hstack((mean, mean))
             self.std = np.hstack((std, std))
@@ -40,7 +43,7 @@ class ImageTransform():
             self.mean = mean
             self.std = std
 
-        size = params["img_resize"]
+        size = params["transform_params"]["img_resize"]
         self.transform_rgb = {
             "train": transforms.Compose([  # 他の前処理をまとめる
                 transforms.Resize((size, size)),  # リサイズ, 最初にしたほうが処理が軽い
@@ -188,18 +191,14 @@ def load_params(path="config/params.json"):
 
 
 def check_params(params):
-    tissue_phase = params["tissue_dataset_params"]["phase"]
     net_name = params["net_params"]["name"]
     optim_name = params["optim_params"]["name"]
-    grayscale_flag = params["dataset_params"]["grayscale_flag"]
+    grayscale_flag = params["transform_params"]["grayscale_flag"]
     multi_net = params["net_params"]["multi_net"]
     transfer_learning = params["net_params"]["transfer_learning"]
     pretrained = params["net_params"]["pretrained"]
 
     # 誤っているparamsがあれば終了する
-    if not((tissue_phase == "train") or (tissue_phase == "test")):
-        print("ParamsError:tissue_dataset_params['phase']=='{}'は定義されていない".format(tissue_phase))
-        sys.exit()
     if not(("resnet" in net_name) or ("efficientnet" in net_name)):
         print("ParamsError:net_params['name']=='{}'は定義されていない".format(net_name))
         sys.exit()
@@ -224,17 +223,48 @@ def print_params(params, nest=0):
             print("\t", params[param])
 
 
-def save_params(params, weight):
+# 結果（主にrecall）を表示する
+def print_recall(params, ys, ypreds):
+    # recall計算
+    recalls = []
+    for y, ypred in zip(ys, ypreds):
+        recalls.append(recall_score(y, ypred, average=None, zero_division=0))
+
+    # recallの？回平均と各recallの平均二乗誤差が最小のインデックスを求める
+    min_error = float("inf")
+    min_error_index = 0
+    recall_means_by_type = np.mean(recalls, axis=0)
+    for i, recall in enumerate(recalls):
+        error = mean_squared_error(recall_means_by_type, recall)
+        if error < min_error:
+            min_error = error
+            min_error_index = i
+
+    # 結果表示
+    print("各感度の{}回平均".format(params["num_estimate"]))
+    print(params["labels"])
+    print(np.round(recall_means_by_type*100, decimals=1))
+    print("各感度の{}回平均の平均：{}".format(params["num_estimate"], np.round(np.mean(recalls)*100, decimals=1)))
+    print("↑に近い各感度の{}回平均のインデックス:".format(params["num_estimate"]), min_error_index)
+
+    y = ys[min_error_index]
+    ypred = ypreds[min_error_index]
+    print(confusion_matrix(y, ypred))
+    print(classification_report(y, ypred, target_names=params["labels"],
+                                digits=3, zero_division=0))
+
+
+# 各種パラメータ、結果、ネットワークの重みを保存する
+def save_params(params, weights):
+    # フォルダ作成
     path = os.path.join("result", params["name"])
     if not os.path.exists(path):
-        os.makedirs(path)
-    torch.save(weight, os.path.join(path, "weight.pth"))
+        os.makedirs(os.path.join(path, "weight"))
+
+    # パラメータ保存
     with open(os.path.join(path, "params.json"), "w") as params_file:
         json.dump(params, params_file)
 
-
-def save_result(ys, ypreds, params):
-    ys_df = pd.DataFrame(ys)
-    ypreds_df = pd.DataFrame(ypreds)
-    ys_df.to_csv(os.path.join("result", params["name"], "ys.csv"))
-    ypreds_df.to_csv(os.path.join("result", params["name"], "ypreds.csv"))
+    # ネットワークの重み保存
+    for i, weight in enumerate(weights):
+        torch.save(weight, os.path.join(path, "weight", "weight" + str(i) + ".pth"))

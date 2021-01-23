@@ -10,19 +10,18 @@ from utils import make_datapath_list, ImageTransform
 
 
 # データ数を調整したDatasetを作成するクラス
-# params["dataset_params"]["arrange"]:null にするとデータ数の調整なし
 # オーバー・アンダーサンプリング用
 class ArrangeNumDataset(Dataset):
-    def __init__(self, params, path, phase, transform):
+    def __init__(self, params, phase):
         self.params = params
         self.labels = params["labels"]
-        self.path = path
         self.phase = phase
-        self.transform = transform
+        self.transform = ImageTransform(params)
         self.file_list = self.make_file_list()      # データ数調整後のファイルリスト。self.label_listと対。
         self.label_list = self.make_label_list()    # データ数調整後のラベルリスト。self.file_listと対。
         self.data_num = np.bincount(np.array(self.label_list))  # クラスごとのデータ数
         self.weight = self.calc_weight()            # 損失関数の重み調整用の重み。
+        print("{}の各データ数： {}\t計：{}".format(self.phase, self.data_num, self.data_num.sum()))
         
     def __len__(self):
         return len(self.file_list)
@@ -38,11 +37,17 @@ class ArrangeNumDataset(Dataset):
         return img, label
 
     def make_file_list(self):
-        file_list =  make_datapath_list(self.path, self.labels)
+        file_list = []
+        path = self.params["data_path"][self.phase]
+        tissue_path = self.params["data_path"]["tissue_"+self.phase]
+        if path:
+            file_list.extend(make_datapath_list(path, self.labels))
+        if tissue_path:
+            file_list.extend(make_datapath_list(tissue_path, self.labels))
         
-        arrange = self.params["dataset_params"]["arrange"]
+        arrange = self.params["imbalance"]
         # データ数の調整ありの場合
-        if arrange and (self.phase == "train"):
+        if ((arrange=="oversampling") or (arrange=="undersampling")) and (self.phase == "train"):
             arrange_file_list = []
             file_dict = self.make_file_dict(file_list)
             

@@ -7,7 +7,6 @@ import os
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
-from sklearn.metrics import recall_score
 
 # 自作ライブラリ
 import utils
@@ -40,16 +39,15 @@ def predict():
         load_weight = torch.load(weight_path, map_location=device)
         net.load_state_dict(load_weight)
         print("ネットワークに重みをロードしました")
+        print("-----推論中-----")
 
         # 推論
         y, ypred = eval_net(net, test_loader, device=device)
 
         ys.append(y.cpu().numpy())
         ypreds.append(ypred.cpu().numpy())
-        recall = recall_score(ys[-1], ypreds[-1], average=None, zero_division=0) * 100
-        print("テストの各クラスrecall：\n{}\n平均：{}".format(np.round(recall, decimals=1), np.round(recall.mean(), decimals=1)))
 
-    utils.print_recall(params, ys, ypreds)
+    utils.print_result(params, ys, ypreds)
 
 if __name__=="__main__":
     predict()

@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import pandas as pd
 from sklearn.metrics import confusion_matrix, recall_score, classification_report, mean_squared_error
-
+from sklearn.metrics import precision_recall_fscore_support as scores
 
 
 # 与えられた角度をランダムに一つ選択する
@@ -268,3 +268,22 @@ def save_params(params, weights):
     # ネットワークの重み保存
     for i, weight in enumerate(weights):
         torch.save(weight, os.path.join(path, "weight", "weight" + str(i) + ".pth"))
+
+
+def print_result(params, ys, ypreds):
+    precisions = []
+    recalls = []
+    f1_scores = []
+    for y, ypred in zip(ys, ypreds):
+        result = scores(y, ypred, zero_division=0)
+        precisions.append(result[0])
+        recalls.append(result[1])
+        f1_scores.append(result[2])
+    
+    precision = np.round(np.mean(precisions, axis=0)*100, decimals=1)
+    recall = np.round(np.mean(recalls, axis=0)*100, decimals=1)
+    f1_score = np.round(np.mean(f1_scores, axis=0)*100, decimals=1)
+    print("label:\t", params["labels"])
+    print("precision:\t{}\tmean:\t{}".format(precision, np.mean(precision)))
+    print("recall:\t\t{}\tmean:\t{}".format(recall, np.mean(recall)))
+    print("f1_score:\t{}\tmean:\t{}".format(f1_score, np.mean(f1_score)))

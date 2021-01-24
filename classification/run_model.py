@@ -46,9 +46,9 @@ for i in range(params["num_estimate"]):
                             shuffle=False, num_workers=4)
 
     # 損失関数のクラス数に合わせてweightをかけるか決める
-    if params["imbalance"] == "loss_weight":
+    if params["imbalance"] == "lossweight":
         loss_weight = train_dataset.weight.to(device)  # deviceに送らないと動かない
-        print("loss_weight:", loss_weight.cpu())
+        print("lossweight:", loss_weight.cpu())
     else:
         loss_weight = None
     loss_fn = torch.nn.CrossEntropyLoss(weight=loss_weight)
@@ -77,5 +77,5 @@ for i in range(params["num_estimate"]):
     print("テストの各クラスrecall：\n{}\n平均：{}".format(np.round(recall, decimals=1), np.round(recall.mean(), decimals=1)))
     net_weights.append(net.cpu().state_dict())
 
-utils.print_recall(params, ys, ypreds)
+utils.print_result(params, ys, ypreds)
 utils.save_params(params, net_weights)

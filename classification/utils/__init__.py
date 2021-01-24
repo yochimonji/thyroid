@@ -275,7 +275,7 @@ def print_result(params, ys, ypreds):
     recalls = []
     f1_scores = []
     for y, ypred in zip(ys, ypreds):
-        result = scores(y, ypred, zero_division=0)
+        result = scores(y, ypred, labels=range(len(params["labels"])), zero_division=0)
         precisions.append(result[0])
         recalls.append(result[1])
         f1_scores.append(result[2])

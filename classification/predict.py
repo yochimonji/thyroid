@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 import utils
 from utils.dataset import ArrangeNumDataset
 from model import create_net, eval_net
+from sklearn.metrics import confusion_matrix, classification_report
 
 
 def predict():
@@ -46,6 +47,9 @@ def predict():
 
         ys.append(y.cpu().numpy())
         ypreds.append(ypred.cpu().numpy())
+        print(confusion_matrix(ys[-1], ypreds[-1]))
+        print(classification_report(ys[-1], ypreds[-1], target_names=params["labels"],
+                                    digits=3, zero_division=0))
 
     utils.print_result(params, ys, ypreds)
 

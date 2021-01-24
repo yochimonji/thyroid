@@ -280,10 +280,12 @@ def print_result(params, ys, ypreds):
         recalls.append(result[1])
         f1_scores.append(result[2])
     
-    precision = np.round(np.mean(precisions, axis=0)*100, decimals=1)
-    recall = np.round(np.mean(recalls, axis=0)*100, decimals=1)
-    f1_score = np.round(np.mean(f1_scores, axis=0)*100, decimals=1)
+    precision = np.mean(precisions, axis=0) * 100
+    recall = np.mean(recalls, axis=0) * 100
+    f1_score = np.mean(f1_scores, axis=0) * 100
+
+    print("\n{}回平均".format(len(ys)))
     print("label:\t", params["labels"])
-    print("precision:\t{}\tmean:\t{}".format(precision, np.mean(precision)))
-    print("recall:\t\t{}\tmean:\t{}".format(recall, np.mean(recall)))
-    print("f1_score:\t{}\tmean:\t{}".format(f1_score, np.mean(f1_score)))
+    print("precision:\t{}\tmean:\t{}".format(np.round(precision, decimals=1), np.round(np.mean(precision), decimals=1)))
+    print("recall:\t\t{}\tmean:\t{}".format(np.round(recall, decimals=1), np.round(np.mean(recall), decimals=1)))
+    print("f1_score:\t{}\tmean:\t{}".format(np.round(f1_score, decimals=1), np.round(np.mean(f1_score), decimals=1)))

@@ -258,7 +258,7 @@ def print_recall(params, ys, ypreds):
 def save_params(params, weights):
     # フォルダ作成
     path = os.path.join("result", params["name"])
-    if not os.path.exists(path):
+    if not os.path.exists(os.path.join(path, "weight")):
         os.makedirs(os.path.join(path, "weight"))
 
     # パラメータ保存

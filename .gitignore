@@ -1,0 +1,11 @@
+/data/
+/material/
+/notebook/
+/.vscode/
+*/__pycache__/*
+/logs/
+/config/*
+!/config/default.json
+/result
+/weight/*.pth
+/train.sh

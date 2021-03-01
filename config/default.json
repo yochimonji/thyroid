@@ -1,0 +1,48 @@
+{
+    "name": "experiment",
+
+    "data_path": {
+        "train": "data/train/",
+        "test": "data/test/",
+        "tissue_train": "data/tissue array/train/",
+        "tissue_test": "data/tissue array/test/"
+    },
+
+    "labels":[
+        "Normal",
+        "PTC HE",
+        "poor",
+        "fvptc",
+        "FTC",
+        "med",
+        "und"
+    ],
+    
+    "num_estimate": 10,
+    "epochs": 10,
+    "batch_size": 32,
+    "imbalance": null,
+
+    "transform_params": {
+        "img_resize": 224,
+        "mean": [0.485, 0.456, 0.406],
+        "std": [0.229, 0.224, 0.225],
+        "grayscale_flag": false,
+        "normalize_per_img": false
+    },
+
+    "net_params": {
+        "name": "resnet18",
+        "multi_net": false,
+        "transfer_learning": false,
+        "pretrained": true
+    },
+    
+    "optim_params": {
+        "name": "Adam",
+        "lr_not_pretrained": 1e-4,
+        "lr_pretrained": 1e-5,
+        "momentum": 0.9,
+        "weight_decay": 1e-4
+    }
+}

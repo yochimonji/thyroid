@@ -11,10 +11,10 @@
     "labels":[
         "Normal",
         "PTC HE",
-        "poor",
         "fvptc",
         "FTC",
         "med",
+        "poor",
         "und"
     ],
     

@@ -15,7 +15,12 @@ from utils import make_datapath_list
 
 # 画像の縮小は単純にPCのHDDの容量が驚きの500GBだったため行う。。。（全データ容量約570GB）
 # アスペクト比を維持しながら長辺を224pixelにする。
-# def resize(image):
+def resize(image, size=224):
+    if image.width > image.height:
+        resize_image = image.resize((size, int(image.height / image.width * size)))
+    else:
+        resize_image = image.resize((int(image.width / image.height * size), size))
+    return resize_image
 
 # 画像の正方形化は一部の画像が長方形であり、このままではネットワークの学習に悪影響を与えるため行う。
 # def padding(image):
@@ -35,11 +40,15 @@ if __name__ == '__main__':
         sys.exit()
 
     LABELS = ['Normal', 'PTC HE', 'fvptc', 'FTC', 'med', 'poor', 'und']
+    SIZE = 224  # リサイズする大きさ
 
     path_list = make_datapath_list(str(BASEPATH), LABELS)
-    for path in path_list[:3]:
+    for path in path_list:
         image = Image.open(path)
-        save_path = pathlib.Path(path.replace(str(BASEPATH), str(SAVEBASEPATH)))
-        if not save_path.parent.exists():
-            save_path.parent.mkdir(parents=True)
-        image.save(save_path)
+        if (image.width != 1024) or (image.height != 1024):
+            resize_image = resize(image=image, size=SIZE)
+
+            save_path = pathlib.Path(path.replace(str(BASEPATH), str(SAVEBASEPATH)))
+            if not save_path.parent.exists():
+                save_path.parent.mkdir(parents=True)
+            resize_image.save(save_path)

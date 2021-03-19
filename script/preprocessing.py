@@ -79,7 +79,8 @@ if __name__ == '__main__':
         if is_white_image(result_image):
             save_path = pathlib.Path(path.replace(str(BASEPATH), str(SAVEWHITEPATH)))
         else:
-            save_path = pathlib.Path(path.replace(str(BASEPATH), str(SAVEBASEPATH)))
+            continue
+            # save_path = pathlib.Path(path.replace(str(BASEPATH), str(SAVEBASEPATH)))
         if not save_path.parent.exists():
             save_path.parent.mkdir(parents=True)
         result_image.save(save_path)

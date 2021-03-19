@@ -77,10 +77,10 @@ if __name__ == '__main__':
         result_image = resize(image=image, size=SIZE)
         result_image = padding_square(image=result_image, background_color=BACKGROUNDCOLOR)
         if is_white_image(result_image):
-            save_path = pathlib.Path(path.replace(str(BASEPATH), str(SAVEWHITEPATH)))
-        else:
             continue
-            # save_path = pathlib.Path(path.replace(str(BASEPATH), str(SAVEBASEPATH)))
+            # save_path = pathlib.Path(path.replace(str(BASEPATH), str(SAVEWHITEPATH)))
+        else:
+            save_path = pathlib.Path(path.replace(str(BASEPATH), str(SAVEBASEPATH)))
         if not save_path.parent.exists():
             save_path.parent.mkdir(parents=True)
         result_image.save(save_path)

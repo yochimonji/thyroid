@@ -1,4 +1,6 @@
 # 画像の正方形化、画像の縮小、ほぼ背景のみの画像の削除を行う。
+# コマンド例
+# python preprcessing.py DATAPATH SAVEPATH
 
 import os
 import sys
@@ -58,17 +60,17 @@ def is_white_image(image, threshold=220):
             return False
 
 if __name__ == '__main__':
-    if (len(sys.argv) == 2) and (os.path.exists(sys.argv[1])):
+    if (len(sys.argv) == 3) and (os.path.exists(sys.argv[1])):
         BASEPATH = pathlib.Path(sys.argv[1])
-        SAVEBASEPATH = BASEPATH.parent / ('prepro_' + str(BASEPATH.name))
-        SAVEWHITEPATH = BASEPATH.parent / ('white_' + str(BASEPATH.name))
+        SAVEBASEPATH = pathlib.Path(sys.argv[2])
+        SAVEWHITEPATH = SAVEBASEPATH / 'white'
     else:
         print('Error:正しいパスを入力してください')
         sys.exit()
 
     LABELS = ['Normal', 'PTC HE', 'fvptc', 'FTC', 'med', 'poor', 'und']
     SIZE = 224  # リサイズする大きさ
-    BACKGROUNDCOLOR = (255, 255, 255)
+    BACKGROUNDCOLOR = (234, 228, 224)  # 背景とほぼ同じ色
 
     path_list = make_datapath_list(str(BASEPATH), LABELS)
     print('前処理：縮小、正方形化、ほぼ背景のみの画像の削除を行います')

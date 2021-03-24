@@ -45,7 +45,7 @@ def padding_square(image, background_color=(255, 255, 255)):
 
 # ほぼ背景のみの画像(今の所90％以上が背景)はTrue, 細胞が多く写っている画像はFalse
 # ほぼ背景のみの画像は情報量が少ない、もしくはノイズであるため。
-def is_white_image(image, threshold=220):
+def is_white_image(image, threshold):
     PERCENTAGE = 0.9
     gray_image = image.convert(mode='L')
     binary_image = np.array(gray_image) > threshold
@@ -70,15 +70,24 @@ if __name__ == '__main__':
 
     LABELS = ['Normal', 'PTC HE', 'fvptc', 'FTC', 'med', 'poor', 'und']
     SIZE = 224  # リサイズする大きさ
-    BACKGROUNDCOLOR = (234, 228, 224)  # 背景とほぼ同じ色
+
+    if '01_自施設症例' in str(BASEPATH):
+        back_ground_color = (234, 228, 224)  # 背景とほぼ同じ色
+        threshold = 220
+    elif '03_迅速標本frozen' in str(BASEPATH):
+        back_ground_color = (221, 207, 220)
+        threshold = 203
+    else:
+        print(back_ground_colorが未設定)
+        exit()
 
     path_list = make_datapath_list(str(BASEPATH), LABELS)
     print('前処理：縮小、正方形化、ほぼ背景のみの画像の削除を行います')
     for path in tqdm(path_list):
         image = Image.open(path)
         result_image = resize(image=image, size=SIZE)
-        result_image = padding_square(image=result_image, background_color=BACKGROUNDCOLOR)
-        if is_white_image(result_image):
+        result_image = padding_square(image=result_image, background_color=back_ground_color)
+        if is_white_image(result_image, threshold=threshold):
             continue
             # save_path = pathlib.Path(path.replace(str(BASEPATH), str(SAVEWHITEPATH)))
         else:

@@ -270,21 +270,17 @@ def save_params(params, weights):
         torch.save(weight, os.path.join(path, "weight", "weight" + str(i) + ".pth"))
 
 
+# ys:推論回数　×　データ数　　2次元配列
+# ypreds:推論回数　×　データ数　×　ラベル数　　3次元配列
 def print_result(params, ys, ypreds):
-    precisions = []
-    recalls = []
-    f1_scores = []
-    for y, ypred in zip(ys, ypreds):
-        result = scores(y, ypred, labels=range(len(params["labels"])), zero_division=0)
-        precisions.append(result[0])
-        recalls.append(result[1])
-        f1_scores.append(result[2])
-    
-    precision = np.mean(precisions, axis=0) * 100
-    recall = np.mean(recalls, axis=0) * 100
-    f1_score = np.mean(f1_scores, axis=0) * 100
-
+    y = ys[0]
+    ypred = np.argmax(np.mean(ypreds, axis=0), axis=1)
+    result = scores(y, ypred, labels=range(len(params['labels'])), zero_division=0)
+    precision = result[0] * 100
+    recall = result[1] * 100
+    f1_score = result[2] * 100
     print("\n{}回平均".format(len(ys)))
+    print('confusion matrix\n{}'.format(confusion_matrix(y, ypred)))
     print("label:\t", params["labels"])
     print("precision:\t{}\tmean:\t{}".format(np.round(precision, decimals=1), np.round(np.mean(precision), decimals=1)))
     print("recall:\t\t{}\tmean:\t{}".format(np.round(recall, decimals=1), np.round(np.mean(recall), decimals=1)))

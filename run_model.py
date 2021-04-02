@@ -68,12 +68,12 @@ for i in range(params["num_estimate"]):
     train_net(net, train_loader, test_loader, optimizer=optimizer,
             loss_fn=loss_fn, epochs=params["epochs"], device=device)
     # 推論
-    y, ypred = eval_net(net, test_loader, device=device)
+    y, ypred = eval_net(net, test_loader, probability=True, device=device)
 
     # 正答率とネットワークの重みをリストに追加
     ys.append(y.cpu().numpy())
     ypreds.append(ypred.cpu().numpy())
-    recall = recall_score(ys[-1], ypreds[-1], average=None, zero_division=0) * 100
+    recall = recall_score(ys[-1], ypreds[-1].argmax(1), average=None, zero_division=0) * 100
     print("テストの各クラスrecall：\n{}\n平均：{}".format(np.round(recall, decimals=1), np.round(recall.mean(), decimals=1)))
     net_weights.append(net.cpu().state_dict())
 

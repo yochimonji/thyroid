@@ -4,18 +4,13 @@
     "data_path": {
         "train": "data/train/",
         "test": "data/test/",
-        "tissue_train": "data/tissue array/train/",
-        "tissue_test": "data/tissue array/test/"
+        "tissue_train": "data/03_迅速標本frozen/padding_and_remove_white_train/",
+        "tissue_test": "data/03_迅速標本frozen/padding_and_remove_white_test/"
     },
 
     "labels":[
         "Normal",
-        "PTC HE",
-        "fvptc",
-        "FTC",
-        "med",
-        "poor",
-        "und"
+        "PTC HE"
     ],
     
     "num_estimate": 10,
@@ -35,7 +30,8 @@
         "name": "resnet18",
         "multi_net": false,
         "transfer_learning": false,
-        "pretrained": true
+        "pretrained": true,
+        "weight_path": null
     },
     
     "optim_params": {

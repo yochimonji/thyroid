@@ -1,6 +1,7 @@
 # 標準ライブラリ
 import random
 import json
+import os
 
 # 外部ライブラリ
 import torch
@@ -54,6 +55,11 @@ for i in range(params["num_estimate"]):
     loss_fn = torch.nn.CrossEntropyLoss(weight=loss_weight)
     
     net = create_net(params)
+    if params["net_params"]["weight_path"]:
+        weight_path = os.path.join(params["net_params"]["weight_path"], "weight"+str(i)+".pth")
+        load_weight = torch.load(weight_path, map_location=device)
+        net.load_state_dict(load_weight)
+        print('重みをロードしました')
 
     # 使用する最適化手法を設定する
     if "Adam" == optim_params["name"]:

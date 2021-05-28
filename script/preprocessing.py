@@ -71,16 +71,13 @@ if __name__ == '__main__':
     LABELS = ['Normal', 'PTC HE', 'fvptc', 'FTC', 'med', 'poor', 'und']
     SIZE = 224  # リサイズする大きさ
 
-    if '01_自施設症例' in str(BASEPATH):
-        back_ground_color = (234, 228, 224)  # 背景とほぼ同じ色
-        threshold = 220
-    elif '03_迅速標本frozen' in str(BASEPATH):
+    if '03_迅速標本frozen' in str(BASEPATH):
         back_ground_color = (221, 207, 220)
         threshold = 203
     else:
-        print(back_ground_colorが未設定)
-        exit()
-
+        back_ground_color = (234, 228, 224)  # 背景とほぼ同じ色
+        threshold = 220
+    
     path_list = make_datapath_list(str(BASEPATH), LABELS)
     print('前処理：縮小、正方形化、ほぼ背景のみの画像の削除を行います')
     for path in tqdm(path_list):

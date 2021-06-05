@@ -68,7 +68,7 @@ if __name__ == '__main__':
         print('Error:正しいパスを入力してください')
         sys.exit()
 
-    LABELS = ['Normal', 'PTC HE', 'fvptc', 'FTC', 'med', 'poor', 'und']
+    LABELS = ['Normal', 'PTC', 'fvptc', 'ftc', 'med', 'poor', 'und']
     SIZE = 224  # リサイズする大きさ
 
     if '03_迅速標本frozen' in str(BASEPATH):

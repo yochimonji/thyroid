@@ -23,7 +23,7 @@ pretrained = True
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("使用デバイス：", device)
 data_path = "./data/"
-label_list = ["Normal", "PTC HE", "UN", "fvptc", "FTC", "med", "poor", "und"]
+label_list = ["Normal", "PTC", "UN", "fvptc", "ftc", "med", "poor", "und"]
 
 train_list = make_datapath_list(data_path+"train")
 test_list = make_datapath_list(data_path+"test")

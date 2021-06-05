@@ -18,7 +18,7 @@ random.seed(1234)
 
 
 data_path = "./data/"
-label_list = ["Normal", "PTC HE", "UN", "fvptc", "FTC", "med", "poor", "und"]
+label_list = ["Normal", "PTC", "UN", "fvptc", "ftc", "med", "poor", "und"]
 file_list = make_datapath_list(data_path+"train")
 dataset = ArrangeNumDataset(file_list, label_list, phase="train",
                             arrange=None, transform=None)

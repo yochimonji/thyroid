@@ -13,8 +13,7 @@ from tqdm import tqdm
 from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
-
-from utils import make_datapath_list
+import glob
 
 
 # 画像の縮小は単純にPCのHDDの容量が驚きの500GBだったため行う。。。（全データ容量約570GB）
@@ -62,32 +61,32 @@ def is_white_image(image, threshold):
 
 if __name__ == '__main__':
     if (len(sys.argv) == 4) and (os.path.exists(sys.argv[1])):
-        BASEPATH = pathlib.Path(sys.argv[1])
-        SAVEBASEPATH = pathlib.Path(sys.argv[2])
-        SAVEWHITEPATH = SAVEBASEPATH / 'white'
+        BASEPATH = sys.argv[1]
+        SAVEBASEPATH = sys.argv[2]
+        SAVEWHITEPATH = SAVEBASEPATH + 'white'
         SIZE = int(sys.argv[3])  # リサイズする大きさ
     else:
         print('Error:正しいコマンドを入力したください')
         sys.exit()
 
-    LABELS = ['Normal', 'PTC', 'fvptc', 'ftc', 'med', 'poor', 'und']
+    search_path = BASEPATH + '/**/*.tif'
+    path_list = []
+    for path in glob.glob(search_path, recursive=True):
+        path_list.append(path)
 
-    if 'frozen' in str(BASEPATH):
-        back_ground_color = (221, 207, 220)
-        threshold = 203
-    else:
-        back_ground_color = (234, 228, 224)  # 背景とほぼ同じ色
-        threshold = 220
-    
-    path_list = make_datapath_list(str(BASEPATH), LABELS)
     print('前処理：縮小、正方形化、ほぼ背景のみの画像の削除を行います')
-    num = 0
     for path in tqdm(path_list):
+        if 'frozen' in path:
+            back_ground_color = (221, 207, 220)
+            threshold = 203
+        else:
+            back_ground_color = (234, 228, 224)  # 背景とほぼ同じ色
+            threshold = 220
+
         image = Image.open(path)
         result_image = resize(image=image, size=SIZE)
         result_image = padding_square(image=result_image, background_color=back_ground_color)
         if is_white_image(result_image, threshold=threshold):
-            num += 1
             continue
             # save_path = pathlib.Path(path.replace(str(BASEPATH), str(SAVEWHITEPATH)))
         else:
@@ -95,4 +94,3 @@ if __name__ == '__main__':
         if not save_path.parent.exists():
             save_path.parent.mkdir(parents=True)
         result_image.save(save_path)
-    print(num)

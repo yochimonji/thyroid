@@ -1,6 +1,7 @@
 # 画像の正方形化、画像の縮小、ほぼ背景のみの画像の削除を行う。
 # コマンド例
-# python preprcessing.py DATAPATH SAVEPATH
+# python preprcessing.py DATAPATH SAVEPATH SIZE
+# python preprocesing.py ../data/20210427福井大学症例/ ../data/20210427福井大学症例_resized_224/ 224
 
 import os
 import sys
@@ -60,18 +61,18 @@ def is_white_image(image, threshold):
             return False
 
 if __name__ == '__main__':
-    if (len(sys.argv) == 3) and (os.path.exists(sys.argv[1])):
+    if (len(sys.argv) == 4) and (os.path.exists(sys.argv[1])):
         BASEPATH = pathlib.Path(sys.argv[1])
         SAVEBASEPATH = pathlib.Path(sys.argv[2])
         SAVEWHITEPATH = SAVEBASEPATH / 'white'
+        SIZE = int(sys.argv[3])  # リサイズする大きさ
     else:
-        print('Error:正しいパスを入力してください')
+        print('Error:正しいコマンドを入力したください')
         sys.exit()
 
     LABELS = ['Normal', 'PTC', 'fvptc', 'ftc', 'med', 'poor', 'und']
-    SIZE = 224  # リサイズする大きさ
 
-    if '03_迅速標本frozen' in str(BASEPATH):
+    if 'frozen' in str(BASEPATH):
         back_ground_color = (221, 207, 220)
         threshold = 203
     else:
@@ -80,11 +81,13 @@ if __name__ == '__main__':
     
     path_list = make_datapath_list(str(BASEPATH), LABELS)
     print('前処理：縮小、正方形化、ほぼ背景のみの画像の削除を行います')
+    num = 0
     for path in tqdm(path_list):
         image = Image.open(path)
         result_image = resize(image=image, size=SIZE)
         result_image = padding_square(image=result_image, background_color=back_ground_color)
         if is_white_image(result_image, threshold=threshold):
+            num += 1
             continue
             # save_path = pathlib.Path(path.replace(str(BASEPATH), str(SAVEWHITEPATH)))
         else:
@@ -92,3 +95,4 @@ if __name__ == '__main__':
         if not save_path.parent.exists():
             save_path.parent.mkdir(parents=True)
         result_image.save(save_path)
+    print(num)

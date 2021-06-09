@@ -275,7 +275,9 @@ def train_net(net, train_loader, val_loader, optimizer,
         writer.add_scalar("train/loss", train_loss, epoch)
         writer.add_scalar("train/acc", train_acc, epoch)
         writer.add_scalar("val/acc", val_acc, epoch)
-        
+
+    if not os.path.exists("weight"):
+        os.makedirs("weight")
     torch.save(net.state_dict(), "weight/last_weight.pth")
     
     return net

@@ -1,0 +1,11 @@
+version: "3"
+services: 
+    thyroid:
+        build: .
+        working_dir: /mnt
+        tty: true
+        volumes: 
+            - $PWD:/mnt
+        ports: 
+            - "8888:8888"
+        runtime: nvidia

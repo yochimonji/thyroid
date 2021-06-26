@@ -5,7 +5,7 @@ services:
         working_dir: /mnt
         tty: true
         volumes: 
-            - $PWD:/mnt
+            - $PWD:/mnt:cached
         ports: 
             - "8888:8888"
         runtime: nvidia

@@ -77,15 +77,18 @@ if __name__ == '__main__':
     print('前処理：縮小、正方形化、ほぼ背景のみの画像の削除を行います')
     for path in tqdm(path_list):
         if 'frozen' in path:
-            back_ground_color = (221, 207, 220)
+            background_color = (221, 207, 220)
             threshold = 203
+        elif 'tissue' in path:
+            background_color = (234, 227, 226)
+            threshold = 220
         else:
-            back_ground_color = (234, 228, 224)  # 背景とほぼ同じ色
+            background_color = (234, 228, 224)  # 背景とほぼ同じ色
             threshold = 220
 
         image = Image.open(path)
         result_image = resize(image=image, size=SIZE)
-        result_image = padding_square(image=result_image, background_color=back_ground_color)
+        result_image = padding_square(image=result_image, background_color=background_color)
         if is_white_image(result_image, threshold=threshold):
             continue
             # save_path = pathlib.Path(path.replace(str(BASEPATH), str(SAVEWHITEPATH)))

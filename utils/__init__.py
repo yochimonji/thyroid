@@ -280,7 +280,7 @@ def print_result(params, ys, ypreds):
     recall = result[1] * 100
     f1_score = result[2] * 100
     print("\n{}回平均".format(len(ys)))
-    print('confusion matrix\n{}'.format(confusion_matrix(y, ypred)))
+    print('confusion matrix\n{}'.format(confusion_matrix(y, ypred, labels=range(len(params['labels'])))))
     print("label:\t", params["labels"])
     print("precision:\t{}\tmean:\t{}".format(np.round(precision, decimals=1), np.round(np.mean(precision), decimals=1)))
     print("recall:\t\t{}\tmean:\t{}".format(np.round(recall, decimals=1), np.round(np.mean(recall), decimals=1)))

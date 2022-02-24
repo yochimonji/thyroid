@@ -79,7 +79,7 @@ for i in range(params["num_estimate"]):
     # 正答率とネットワークの重みをリストに追加
     ys.append(y.cpu().numpy())
     ypreds.append(ypred.cpu().numpy())
-    recall = recall_score(ys[-1], ypreds[-1].argmax(1), average=None, zero_division=0) * 100
+    recall = recall_score(ys[-1], ypreds[-1].argmax(1), average=None, zero_division=0, labels=range(len(params['labels']))) * 100
     print("テストの各クラスrecall：\n{}\n平均：{}".format(np.round(recall, decimals=1), np.round(recall.mean(), decimals=1)))
     net_weights.append(net.cpu().state_dict())
 

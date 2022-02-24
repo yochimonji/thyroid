@@ -13,6 +13,7 @@ from PIL import Image
 import pandas as pd
 from sklearn.metrics import confusion_matrix, recall_score, classification_report, mean_squared_error
 from sklearn.metrics import precision_recall_fscore_support as scores
+import pandas as pd
 
 
 # 与えられた角度をランダムに一つ選択する
@@ -272,7 +273,7 @@ def save_params(params, weights):
 
 # ys:推論回数　×　データ数　　2次元配列
 # ypreds:推論回数　×　データ数　×　ラベル数　　3次元配列
-def print_result(params, ys, ypreds):
+def print_result(params, ys, ypreds, x=None):
     y = ys[0]
     ypred = np.argmax(np.mean(ypreds, axis=0), axis=1)
     result = scores(y, ypred, labels=range(len(params['labels'])), zero_division=0)
@@ -285,3 +286,12 @@ def print_result(params, ys, ypreds):
     print("precision:\t{}\tmean:\t{}".format(np.round(precision, decimals=1), np.round(np.mean(precision), decimals=1)))
     print("recall:\t\t{}\tmean:\t{}".format(np.round(recall, decimals=1), np.round(np.mean(recall), decimals=1)))
     print("f1_score:\t{}\tmean:\t{}".format(np.round(f1_score, decimals=1), np.round(np.mean(f1_score), decimals=1)))
+
+
+    # フォルダ作成
+    path = os.path.join("result", params["name"])
+    if not os.path.exists(path):
+        os.makedirs(path)
+    df = pd.DataFrame(dict(y_true=y))
+    df["y_pred"] = ypred
+    df.to_csv(os.path.join(path, "result.csv"))

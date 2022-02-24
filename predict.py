@@ -33,6 +33,10 @@ def predict():
 
     ys = []
     ypreds = []
+    xs = []
+    for (x, y) in test_dataset:
+        xs.append(x)
+
     for i in range(params["num_estimate"]):
         print("\n推論：{}/{}".format(i+1, params["num_estimate"]))
         # ネットワークに重みをロードする
@@ -51,7 +55,7 @@ def predict():
         # print(classification_report(ys[-1], ypreds[-1], target_names=params["labels"],
         #                             digits=3, zero_division=0))
 
-    utils.print_result(params, ys, ypreds)
+    utils.print_result(params, ys, ypreds, np.array(xs))
 
 if __name__=="__main__":
     predict()

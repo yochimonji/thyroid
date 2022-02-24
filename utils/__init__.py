@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 import pandas as pd
-from sklearn.metrics import confusion_matrix, recall_score, classification_report, mean_squared_error
+from sklearn.metrics import confusion_matrix, accuracy_score, recall_score, classification_report, mean_squared_error
 from sklearn.metrics import precision_recall_fscore_support as scores
 import pandas as pd
 
@@ -273,7 +273,7 @@ def save_params(params, weights):
 
 # ys:推論回数　×　データ数　　2次元配列
 # ypreds:推論回数　×　データ数　×　ラベル数　　3次元配列
-def print_result(params, ys, ypreds, x=None):
+def print_result(params, ys, ypreds):
     y = ys[0]
     ypred = np.argmax(np.mean(ypreds, axis=0), axis=1)
     result = scores(y, ypred, labels=range(len(params['labels'])), zero_division=0)
@@ -283,6 +283,7 @@ def print_result(params, ys, ypreds, x=None):
     print("\n{}回平均".format(len(ys)))
     print('confusion matrix\n{}'.format(confusion_matrix(y, ypred, labels=range(len(params['labels'])))))
     print("label:\t", params["labels"])
+    print(f"accuracy:\t{accuracy_score(y, ypred):.3f}")
     print("precision:\t{}\tmean:\t{}".format(np.round(precision, decimals=1), np.round(np.mean(precision), decimals=1)))
     print("recall:\t\t{}\tmean:\t{}".format(np.round(recall, decimals=1), np.round(np.mean(recall), decimals=1)))
     print("f1_score:\t{}\tmean:\t{}".format(np.round(f1_score, decimals=1), np.round(np.mean(f1_score), decimals=1)))

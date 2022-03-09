@@ -271,11 +271,12 @@ def save_params(params, weights):
         torch.save(weight, os.path.join(path, "weight", "weight" + str(i) + ".pth"))
 
 
-def print_score_line(all_score_list, title):
-    score_list = np.array(all_score_list).mean(axis=0)
-    score_mean = np.array(all_score_list).mean()
+def print_score_line(all_score_list, y_class_num, title):
+    all_score_array = np.array(all_score_list)
+    score_array = all_score_array.mean(axis=0)
+    score_mean = score_array[score_array.nonzero()].sum() / y_class_num
     print(title, end="\t")
-    for score in score_list:
+    for score in score_array:
         print(f"{score:.3f}", end="\t")
     print(f"{score_mean:.3f}")
 
@@ -293,12 +294,14 @@ def print_and_save_result(params, y, preds, need_std=True, need_confusion_matrix
         all_recall_list.append(result[1] * 100)
         all_f1_score_list.append(result[2] * 100)
         total_accuracy += accuracy_score(y, pred) * 100
+    
+    y_class_num = np.unique(y).size
         
     print("\n{}回平均".format(params["num_estimate"]))
     print(params["labels"], "マクロ平均")
-    print_score_line(all_precision_list, "Precision")
-    print_score_line(all_recall_list, "Recall")
-    print_score_line(all_f1_score_list, "F1 Score")
+    print_score_line(all_precision_list, y_class_num, "Precision")
+    print_score_line(all_recall_list, y_class_num, "Recall\t")
+    print_score_line(all_f1_score_list, y_class_num, "F1 Score")
     print(f"Accuracy\t{total_accuracy / params['num_estimate']:.3f}")
 
 

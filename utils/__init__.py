@@ -271,14 +271,23 @@ def save_params(params, weights):
         torch.save(weight, os.path.join(path, "weight", "weight" + str(i) + ".pth"))
 
 
-def print_score_line(all_score_list, y_class_num, title):
+def print_score_line(all_score_list, y_class_num, title, need_std=True):
     all_score_array = np.array(all_score_list)
     score_array = all_score_array.mean(axis=0)
     score_mean = score_array[score_array.nonzero()].sum() / y_class_num
+
     print(title, end="\t")
-    for score in score_array:
-        print(f"{score:.3f}", end="\t")
-    print(f"{score_mean:.3f}")
+
+    if not need_std:
+        for score in score_array:
+            print(f"{score:.3f}", end="\t")
+        print(f"{score_mean:.3f}")
+    else:
+        std_array = np.std(all_score_array, axis=0, ddof=1)
+        std_mean = std_array[std_array.nonzero()].sum() / y_class_num
+        for score, std in zip(score_array, std_array):
+            print(f"{score:.3f}± {std:.3f}", end="\t")
+        print(f"{score_mean:.3f}± {std:.3f}")
 
 
 # ys:推論回数　×　データ数　　2次元配列
@@ -299,10 +308,10 @@ def print_and_save_result(params, y, preds, need_std=True, need_confusion_matrix
         
     print("\n{}回平均".format(params["num_estimate"]))
     print(params["labels"], "マクロ平均")
-    print_score_line(all_precision_list, y_class_num, "Precision")
-    print_score_line(all_recall_list, y_class_num, "Recall\t")
-    print_score_line(all_f1_score_list, y_class_num, "F1 Score")
-    print(f"Accuracy\t{total_accuracy / params['num_estimate']:.3f}")
+    print_score_line(all_precision_list, y_class_num, "Precision", need_std)
+    print_score_line(all_recall_list, y_class_num, "Recall\t", need_std)
+    print_score_line(all_f1_score_list, y_class_num, "F1 Score", need_std)
+    print(f"Accuracy\t{total_accuracy / params['num_estimate']:.3f}", need_std)
 
 
     pred = np.argmax(np.mean(preds, axis=0), axis=1)

@@ -271,35 +271,35 @@ def save_params(params, weights):
         torch.save(weight, os.path.join(path, "weight", "weight" + str(i) + ".pth"))
 
 
-def print_and_save_result(params, y, pred, need_std=True):
-    ypred = np.argmax(np.mean(ypreds, axis=0), axis=1)
-    result = scores(y, ypred, labels=range(len(params['labels'])), zero_division=0)
-    precision, recall, f1_score, _ = result * 100
-    print(result)
+def print_score_line(all_score_list, title):
+    score_list = np.array(all_score_list).mean(axis=0)
+    score_mean = np.array(all_score_list).mean()
+    print(title, end="\t")
+    for score in score_list:
+        print(f"{score:.3f}", end="\t")
+    print(f"{score_mean:.3f}")
+
 
 # ys:推論回数　×　データ数　　2次元配列
 # ypreds:推論回数　×　データ数　×　ラベル数　　3次元配列
-def print_result(params, y, preds, need_std=True, need_confusion_matrix=False):
+def print_and_save_result(params, y, preds, need_std=True, need_confusion_matrix=False):
+    all_precision_list = []
+    all_recall_list = []
+    all_f1_score_list = []
     total_accuracy = 0
-    precision_list = []
-    recall_list = []
-    f1_score_list = []
     for pred in preds:
+        result = scores(y, pred, labels=range(len(params["labels"])), zero_division=0)
+        all_precision_list.append(result[0] * 100)
+        all_recall_list.append(result[1] * 100)
+        all_f1_score_list.append(result[2] * 100)
         total_accuracy += accuracy_score(y, pred) * 100
-        result = scores(y, pred, labels=range(len(params['labels'])), zero_division=0)
-        precision_list.append(result[0] * 100)
-        recall_list.append(result[1] * 100)
-        f1_score_list.append(result[2] * 100)
         
     print("\n{}回平均".format(params["num_estimate"]))
-    print(f"Accuracy\t{total_accuracy / params['num_estimate']}")
-
-    precision = np.array(precision_list).mean(axis=0)
-    precision_mean = np.array(precision_list).mean()
-    print("Precision")
-    for prec in precision:
-        print(prec, end="\t")
-    print(precision_mean)
+    print(params["labels"], "マクロ平均")
+    print_score_line(all_precision_list, "Precision")
+    print_score_line(all_recall_list, "Recall")
+    print_score_line(all_f1_score_list, "F1 Score")
+    print(f"Accuracy\t{total_accuracy / params['num_estimate']:.3f}")
 
 
     pred = np.argmax(np.mean(preds, axis=0), axis=1)

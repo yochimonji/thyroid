@@ -7,12 +7,12 @@ import os
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
+from sklearn.metrics import confusion_matrix, classification_report
 
 # 自作ライブラリ
 import utils
 from utils.dataset import ArrangeNumDataset
 from model import create_net, eval_net
-from sklearn.metrics import confusion_matrix, classification_report
 
 
 def predict():
@@ -49,7 +49,7 @@ def predict():
         ys.append(y.cpu().numpy())
         ypreds.append(ypred.cpu().numpy().argmax(axis=1))
 
-    utils.print_result(params, ys[0], ypreds)
+    utils.print_and_save_result(params, ys[0], ypreds)
 
 if __name__=="__main__":
     predict()

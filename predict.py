@@ -47,12 +47,9 @@ def predict():
         y, ypred = eval_net(net, test_loader, probability=True, device=device)
 
         ys.append(y.cpu().numpy())
-        ypreds.append(ypred.cpu().numpy())
-        # print(confusion_matrix(ys[-1], ypreds[-1]))
-        # print(classification_report(ys[-1], ypreds[-1], target_names=params["labels"],
-        #                             digits=3, zero_division=0))
+        ypreds.append(ypred.cpu().numpy().argmax(axis=1))
 
-    utils.print_result(params, ys, ypreds)
+    utils.print_result(params, ys[0], ypreds)
 
 if __name__=="__main__":
     predict()

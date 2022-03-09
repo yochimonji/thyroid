@@ -271,19 +271,46 @@ def save_params(params, weights):
         torch.save(weight, os.path.join(path, "weight", "weight" + str(i) + ".pth"))
 
 
-# ys:推論回数　×　データ数　　2次元配列
-# ypreds:推論回数　×　データ数　×　ラベル数　　3次元配列
-def print_result(params, ys, ypreds):
-    y = ys[0]
+def print_and_save_result(params, y, pred, need_std=True):
     ypred = np.argmax(np.mean(ypreds, axis=0), axis=1)
     result = scores(y, ypred, labels=range(len(params['labels'])), zero_division=0)
+    precision, recall, f1_score, _ = result * 100
+    print(result)
+
+# ys:推論回数　×　データ数　　2次元配列
+# ypreds:推論回数　×　データ数　×　ラベル数　　3次元配列
+def print_result(params, y, preds, need_std=True, need_confusion_matrix=False):
+    total_accuracy = 0
+    precision_list = []
+    recall_list = []
+    f1_score_list = []
+    for pred in preds:
+        total_accuracy += accuracy_score(y, pred) * 100
+        result = scores(y, pred, labels=range(len(params['labels'])), zero_division=0)
+        precision_list.append(result[0] * 100)
+        recall_list.append(result[1] * 100)
+        f1_score_list.append(result[2] * 100)
+        
+    print("\n{}回平均".format(params["num_estimate"]))
+    print(f"Accuracy\t{total_accuracy / params['num_estimate']}")
+
+    precision = np.array(precision_list).mean(axis=0)
+    precision_mean = np.array(precision_list).mean()
+    print("Precision")
+    for prec in precision:
+        print(prec, end="\t")
+    print(precision_mean)
+
+
+    pred = np.argmax(np.mean(preds, axis=0), axis=1)
+    result = scores(y, pred, labels=range(len(params['labels'])), zero_division=0)
     precision = result[0] * 100
     recall = result[1] * 100
     f1_score = result[2] * 100
-    print("\n{}回平均".format(len(ys)))
-    print('confusion matrix\n{}'.format(confusion_matrix(y, ypred, labels=range(len(params['labels'])))))
+    print("\n{}回平均".format(params["num_estimate"]))
+    print('confusion matrix\n{}'.format(confusion_matrix(y, pred, labels=range(len(params['labels'])))))
     print("label:\t", params["labels"])
-    print(f"accuracy:\t{accuracy_score(y, ypred):.3f}")
+    print(f"accuracy:\t{accuracy_score(y, pred):.3f}")
     print("precision:\t{}\tmean:\t{}".format(np.round(precision, decimals=1), np.round(np.mean(precision), decimals=1)))
     print("recall:\t\t{}\tmean:\t{}".format(np.round(recall, decimals=1), np.round(np.mean(recall), decimals=1)))
     print("f1_score:\t{}\tmean:\t{}".format(np.round(f1_score, decimals=1), np.round(np.mean(f1_score), decimals=1)))
@@ -294,5 +321,5 @@ def print_result(params, ys, ypreds):
     if not os.path.exists(path):
         os.makedirs(path)
     df = pd.DataFrame(dict(y_true=y))
-    df["y_pred"] = ypred
+    df["pred"] = pred
     df.to_csv(os.path.join(path, "result.csv"))

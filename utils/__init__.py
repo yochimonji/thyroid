@@ -290,6 +290,16 @@ def format_score_line(all_score_list, y_class_num, need_std=True):
     return formated_line
 
 
+def save_y_preds(params, y, preds):
+    path = os.path.join("result", params["name"])
+    if not os.path.exists(path):
+        os.makedirs(path)
+    df = pd.DataFrame(dict(y=y))
+    for i,pred in enumerate(preds):
+        df[f"pred_{i}"] = pred
+    df.to_csv(os.path.join(path, "y_preds.csv"))
+
+
 # ys:推論回数　×　データ数　　2次元配列
 # ypreds:推論回数　×　データ数　×　ラベル数　　3次元配列
 def print_and_save_result(params, y, preds, need_std=True, need_confusion_matrix=False):
@@ -315,10 +325,5 @@ def print_and_save_result(params, y, preds, need_std=True, need_confusion_matrix
     print(f"F1 Score\t{format_score_line(all_f1_score_list, y_class_num, need_std)}")
     print(f"Accuracy\t{total_accuracy / params['num_estimate']:.3f}")
 
-    # フォルダ作成
-    path = os.path.join("result", params["name"])
-    if not os.path.exists(path):
-        os.makedirs(path)
-    df = pd.DataFrame(dict(y_true=y))
-    df["pred"] = pred
-    df.to_csv(os.path.join(path, "result.csv"))
+    # 結果保存
+    save_y_preds(params, y, preds)

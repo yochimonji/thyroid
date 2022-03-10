@@ -271,22 +271,28 @@ def save_params(params, weights):
         torch.save(weight, os.path.join(path, "weight", "weight" + str(i) + ".pth"))
 
 
-def format_score_line(all_score_list, y_class_num, need_std=True):
+def calc_score(all_score_list, y_class_num, need_std=True):
     all_score_array = np.array(all_score_list)
     score_array = all_score_array.mean(axis=0)
     score_mean = score_array[score_array.nonzero()].sum() / y_class_num
-
-    formated_line = ""
+    score_array = np.concatenate([score_array, [score_mean]])
     if need_std:
         std_array = np.std(all_score_array, axis=0, ddof=1)
         std_mean = std_array[std_array.nonzero()].sum() / y_class_num
-        for score, std in zip(score_array, std_array):
-            formated_line += f"{score:.3f}±{std:.3f}\t"
-        formated_line += f"{score_mean:.3f}±{std:.3f}"
+        std_array = np.concatenate([std_array, [std_mean]])
+        return score_array, std_array
     else:
+        return score_array, None
+
+
+def format_score_line(score_array, std_array=None):
+    formated_line = ""
+    if std_array is None:
         for score in score_array:
             formated_line += f"{score:.3f}\t"
-        formated_line += f"{score_mean:.3f}"
+    else:
+        for score, std in zip(score_array, std_array):
+            formated_line += f"{score:.3f}±{std:.3f}\t"
     return formated_line
 
 
@@ -317,13 +323,18 @@ def print_and_save_result(params, y, preds, need_std=True, need_confusion_matrix
             print(f"Confusion Matrix {i+1}\n{confusion_matrix(y, pred, labels=range(len(params['labels'])))}\n")
     
     y_class_num = np.unique(y).size
+
+    precision_array, precision_std = calc_score(all_precision_list, y_class_num, need_std)
+    recall_array, recall_std = calc_score(all_recall_list, y_class_num, need_std)
+    f1_score_array, f1_score_std = calc_score(all_f1_score_list, y_class_num, need_std)
         
     print("\n{}回平均".format(params["num_estimate"]))
     print(params["labels"], "マクロ平均")
-    print(f"Precision\t{format_score_line(all_precision_list, y_class_num, need_std)}")
-    print(f"Recall\t\t{format_score_line(all_recall_list, y_class_num, need_std)}")
-    print(f"F1 Score\t{format_score_line(all_f1_score_list, y_class_num, need_std)}")
+    print(f"Precision\t{format_score_line(precision_array, precision_std)}")
+    print(f"Recall\t\t{format_score_line(recall_array, recall_std)}")
+    print(f"F1 Score\t{format_score_line(f1_score_array, f1_score_std)}")
     print(f"Accuracy\t{total_accuracy / params['num_estimate']:.3f}")
 
     # 結果保存
     save_y_preds(params, y, preds)
+    

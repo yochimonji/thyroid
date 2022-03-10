@@ -271,15 +271,18 @@ def save_params(params, weights):
         torch.save(weight, os.path.join(path, "weight", "weight" + str(i) + ".pth"))
 
 
-def calc_score(all_score_list, y_class_num, need_std=True):
+def calc_score(all_score_list, y_class_num, need_mean=True, need_std=True):
     all_score_array = np.array(all_score_list)
     score_array = all_score_array.mean(axis=0)
-    score_mean = score_array[score_array.nonzero()].sum() / y_class_num
-    score_array = np.concatenate([score_array, [score_mean]])
+    if need_mean:
+        score_mean = score_array[score_array.nonzero()].sum() / y_class_num
+        score_array = np.concatenate([score_array, [score_mean]])
+
     if need_std:
         std_array = np.std(all_score_array, axis=0, ddof=1)
-        std_mean = std_array[std_array.nonzero()].sum() / y_class_num
-        std_array = np.concatenate([std_array, [std_mean]])
+        if need_mean:
+            std_mean = std_array[std_array.nonzero()].sum() / y_class_num
+            std_array = np.concatenate([std_array, [std_mean]])
         return score_array, std_array
     else:
         return score_array, None
@@ -308,7 +311,7 @@ def save_y_preds(params, y, preds):
 
 # ys:推論回数　×　データ数　　2次元配列
 # ypreds:推論回数　×　データ数　×　ラベル数　　3次元配列
-def print_and_save_result(params, y, preds, need_std=True, need_confusion_matrix=False):
+def print_and_save_result(params, y, preds, need_mean=True, need_std=True, need_confusion_matrix=False):
     all_precision_list = []
     all_recall_list = []
     all_f1_score_list = []
@@ -324,12 +327,15 @@ def print_and_save_result(params, y, preds, need_std=True, need_confusion_matrix
     
     y_class_num = np.unique(y).size
 
-    precision_array, precision_std = calc_score(all_precision_list, y_class_num, need_std)
-    recall_array, recall_std = calc_score(all_recall_list, y_class_num, need_std)
-    f1_score_array, f1_score_std = calc_score(all_f1_score_list, y_class_num, need_std)
+    precision_array, precision_std = calc_score(all_precision_list, y_class_num, need_mean, need_std)
+    recall_array, recall_std = calc_score(all_recall_list, y_class_num, need_mean, need_std)
+    f1_score_array, f1_score_std = calc_score(all_f1_score_list, y_class_num, need_mean, need_std)
         
-    print("\n{}回平均".format(params["num_estimate"]))
-    print(params["labels"], "マクロ平均")
+    print(f"\n{params['num_estimate']}回平均", end="\t")
+    for label in params["labels"]:
+        print(label, end="\t\t" if need_std else "\t")
+    if need_mean: print("マクロ平均")
+    else: print("")
     print(f"Precision\t{format_score_line(precision_array, precision_std)}")
     print(f"Recall\t\t{format_score_line(recall_array, recall_std)}")
     print(f"F1 Score\t{format_score_line(f1_score_array, f1_score_std)}")

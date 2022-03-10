@@ -271,23 +271,23 @@ def save_params(params, weights):
         torch.save(weight, os.path.join(path, "weight", "weight" + str(i) + ".pth"))
 
 
-def print_score_line(all_score_list, y_class_num, title, need_std=True):
+def format_score_line(all_score_list, y_class_num, need_std=True):
     all_score_array = np.array(all_score_list)
     score_array = all_score_array.mean(axis=0)
     score_mean = score_array[score_array.nonzero()].sum() / y_class_num
 
-    print(title, end="\t")
-
-    if not need_std:
-        for score in score_array:
-            print(f"{score:.3f}", end="\t")
-        print(f"{score_mean:.3f}")
-    else:
+    formated_line = ""
+    if need_std:
         std_array = np.std(all_score_array, axis=0, ddof=1)
         std_mean = std_array[std_array.nonzero()].sum() / y_class_num
         for score, std in zip(score_array, std_array):
-            print(f"{score:.3f}± {std:.3f}", end="\t")
-        print(f"{score_mean:.3f}± {std:.3f}")
+            formated_line += f"{score:.3f}±{std:.3f}\t"
+        formated_line += f"{score_mean:.3f}±{std:.3f}"
+    else:
+        for score in score_array:
+            formated_line += f"{score:.3f}\t"
+        formated_line += f"{score_mean:.3f}"
+    return formated_line
 
 
 # ys:推論回数　×　データ数　　2次元配列
@@ -297,36 +297,23 @@ def print_and_save_result(params, y, preds, need_std=True, need_confusion_matrix
     all_recall_list = []
     all_f1_score_list = []
     total_accuracy = 0
-    for pred in preds:
+    for i, pred in enumerate(preds):
         result = scores(y, pred, labels=range(len(params["labels"])), zero_division=0)
         all_precision_list.append(result[0] * 100)
         all_recall_list.append(result[1] * 100)
         all_f1_score_list.append(result[2] * 100)
         total_accuracy += accuracy_score(y, pred) * 100
+        if need_confusion_matrix:
+            print(f"Confusion Matrix {i+1}\n{confusion_matrix(y, pred, labels=range(len(params['labels'])))}\n")
     
     y_class_num = np.unique(y).size
         
     print("\n{}回平均".format(params["num_estimate"]))
     print(params["labels"], "マクロ平均")
-    print_score_line(all_precision_list, y_class_num, "Precision", need_std)
-    print_score_line(all_recall_list, y_class_num, "Recall\t", need_std)
-    print_score_line(all_f1_score_list, y_class_num, "F1 Score", need_std)
-    print(f"Accuracy\t{total_accuracy / params['num_estimate']:.3f}", need_std)
-
-
-    pred = np.argmax(np.mean(preds, axis=0), axis=1)
-    result = scores(y, pred, labels=range(len(params['labels'])), zero_division=0)
-    precision = result[0] * 100
-    recall = result[1] * 100
-    f1_score = result[2] * 100
-    print("\n{}回平均".format(params["num_estimate"]))
-    print('confusion matrix\n{}'.format(confusion_matrix(y, pred, labels=range(len(params['labels'])))))
-    print("label:\t", params["labels"])
-    print(f"accuracy:\t{accuracy_score(y, pred):.3f}")
-    print("precision:\t{}\tmean:\t{}".format(np.round(precision, decimals=1), np.round(np.mean(precision), decimals=1)))
-    print("recall:\t\t{}\tmean:\t{}".format(np.round(recall, decimals=1), np.round(np.mean(recall), decimals=1)))
-    print("f1_score:\t{}\tmean:\t{}".format(np.round(f1_score, decimals=1), np.round(np.mean(f1_score), decimals=1)))
-
+    print(f"Precision\t{format_score_line(all_precision_list, y_class_num, need_std)}")
+    print(f"Recall\t\t{format_score_line(all_recall_list, y_class_num, need_std)}")
+    print(f"F1 Score\t{format_score_line(all_f1_score_list, y_class_num, need_std)}")
+    print(f"Accuracy\t{total_accuracy / params['num_estimate']:.3f}")
 
     # フォルダ作成
     path = os.path.join("result", params["name"])

@@ -3,6 +3,7 @@ import glob
 import random
 import sys
 import json
+import copy
 
 import torch
 from torch import nn
@@ -323,14 +324,14 @@ def format_score_line(score_array, std_array=None):
     formated_line = ""
     if std_array is None:
         for score in score_array:
-            formated_line += f"{score:.3f}\t"
+            formated_line += f"{score:.2f}\t"
     else:
         for score, std in zip(score_array, std_array):
-            formated_line += f"{score:.3f}±{std:.3f}\t"
+            formated_line += f"{score:.2f}±{std:.2f}\t"
     return formated_line
 
 
-def print_result(params, score, need_mean=True, need_std=True):
+def print_score(params, score, need_mean=True, need_std=True):
     print(f"\n{params['num_estimate']}回平均", end="\t")
     for label in params["labels"]:
         print(label, end="\t\t" if need_std else "\t")
@@ -339,9 +340,31 @@ def print_result(params, score, need_mean=True, need_std=True):
     print(f"Precision\t{format_score_line(score['precision_array'], score['precision_std'])}")
     print(f"Recall\t\t{format_score_line(score['recall_array'], score['recall_std'])}")
     print(f"F1 Score\t{format_score_line(score['f1_score_array'], score['f1_score_std'])}")
-    if need_std: print(f"Accuracy\t{score['accuracy']:.3f}±{score['accuracy_std']:.3f}")
-    else: print(f"Accuracy\t{score['accuracy']:.3f}")
+    if need_std: print(f"Accuracy\t{score['accuracy']:.2f}±{score['accuracy_std']:.2f}")
+    else: print(f"Accuracy\t{score['accuracy']:.2f}")
 
+
+def save_score(params, score, need_mean=True, need_std=True):
+    path = os.path.join("result", params["name"])
+    if not os.path.exists(path):
+        os.makedirs(path)
+    precision = format_score_line(score['precision_array'], score['precision_std']).split()
+    recall = format_score_line(score['recall_array'], score['recall_std']).split()
+    f1_score = format_score_line(score['f1_score_array'], score['f1_score_std']).split()
+
+    if need_std: accuracy = f"{score['accuracy']:.2f}±{score['accuracy_std']:.2f}"
+    else: accuracy = f"{score['accuracy']:.2f}"
+
+    index = params["labels"].copy()
+    if need_mean: index.append("平均")
+
+    df = pd.DataFrame({
+        "Precision": precision,
+        "Recall": recall,
+        "F1 Score": f1_score,
+        "Accuracy": accuracy
+    }, index=index).T
+    df.to_csv(os.path.join(path, "score.csv"))
 
 def save_y_preds(params, y, preds):
     path = os.path.join("result", params["name"])
@@ -363,6 +386,7 @@ def print_and_save_result(params, y, preds, need_mean=True, need_std=True, need_
     score = calc_score(params, y, preds, need_mean, need_std)
 
     # 結果の表示と保存
-    print_result(params, score, need_mean, need_std)
+    print_score(params, score, need_mean, need_std)
+    save_score(params, score, need_mean, need_std)
     save_y_preds(params, y, preds)
     

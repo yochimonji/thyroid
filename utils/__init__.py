@@ -271,16 +271,16 @@ def save_params(params, weights):
         torch.save(weight, os.path.join(path, "weight", "weight" + str(i) + ".pth"))
 
 
-def mean_and_std_score(all_score_list, y_class_num, need_mean=True, need_std=True):
+def mean_and_std_score(all_score_list, y_class_num, need_all_mean=True, need_std=True):
     all_score_array = np.array(all_score_list)
     score_array = all_score_array.mean(axis=0)
-    if need_mean:
+    if need_all_mean:
         mean_score = score_array[score_array.nonzero()].sum() / y_class_num
         score_array = np.concatenate([score_array, [mean_score]])
 
     if need_std:
         std_array = np.std(all_score_array, axis=0, ddof=1)
-        if need_mean:
+        if need_all_mean:
             mean_std = std_array[std_array.nonzero()].sum() / y_class_num
             std_array = np.concatenate([std_array, [mean_std]])
         return score_array, std_array
@@ -292,26 +292,29 @@ def calc_score(params, y, preds, need_mean=True, need_std=True):
     all_precision_list = []
     all_recall_list = []
     all_f1_score_list = []
-    total_accuracy = 0
+    accuracy_list = []
     for i, pred in enumerate(preds):
         result = scores(y, pred, labels=range(len(params["labels"])), zero_division=0)
         all_precision_list.append(result[0] * 100)
         all_recall_list.append(result[1] * 100)
         all_f1_score_list.append(result[2] * 100)
-        total_accuracy += accuracy_score(y, pred) * 100
+        accuracy_list.append(accuracy_score(y, pred) * 100)
 
     y_class_num = np.unique(y).size
     precision_array, precision_std = mean_and_std_score(all_precision_list, y_class_num, need_mean, need_std)
     recall_array, recall_std = mean_and_std_score(all_recall_list, y_class_num, need_mean, need_std)
     f1_score_array, f1_score_std = mean_and_std_score(all_f1_score_list, y_class_num, need_mean, need_std)
-
+    accuracy_array, accuracy_std = mean_and_std_score(accuracy_list, y_class_num, need_all_mean=False, need_std=need_std)
+    
     score = {
         "precision_array": precision_array,
         "precision_std": precision_std,
         "recall_array": recall_array,
         "recall_std": recall_std,
         "f1_score_array": f1_score_array,
-        "f1_score_std": f1_score_std
+        "f1_score_std": f1_score_std,
+        "accuracy": accuracy_array,
+        "accuracy_std": accuracy_std
     }
     return score
     
@@ -325,6 +328,19 @@ def format_score_line(score_array, std_array=None):
         for score, std in zip(score_array, std_array):
             formated_line += f"{score:.3f}±{std:.3f}\t"
     return formated_line
+
+
+def print_result(params, score, need_mean=True, need_std=True):
+    print(f"\n{params['num_estimate']}回平均", end="\t")
+    for label in params["labels"]:
+        print(label, end="\t\t" if need_std else "\t")
+    if need_mean: print("平均")
+    else: print("")
+    print(f"Precision\t{format_score_line(score['precision_array'], score['precision_std'])}")
+    print(f"Recall\t\t{format_score_line(score['recall_array'], score['recall_std'])}")
+    print(f"F1 Score\t{format_score_line(score['f1_score_array'], score['f1_score_std'])}")
+    if need_std: print(f"Accuracy\t{score['accuracy']:.3f}±{score['accuracy_std']:.3f}")
+    else: print(f"Accuracy\t{score['accuracy']:.3f}")
 
 
 def save_y_preds(params, y, preds):
@@ -346,16 +362,7 @@ def print_and_save_result(params, y, preds, need_mean=True, need_std=True, need_
 
     score = calc_score(params, y, preds, need_mean, need_std)
 
-    print(f"\n{params['num_estimate']}回平均", end="\t")
-    for label in params["labels"]:
-        print(label, end="\t\t" if need_std else "\t")
-    if need_mean: print("平均")
-    else: print("")
-    print(f"Precision\t{format_score_line(score['precision_array'], score['precision_std'])}")
-    print(f"Recall\t\t{format_score_line(score['recall_array'], score['recall_std'])}")
-    print(f"F1 Score\t{format_score_line(score['f1_score_array'], score['f1_score_std'])}")
-    # print(f"Accuracy\t{total_accuracy / params['num_estimate']:.3f}")
-
-    # 結果保存
+    # 結果の表示と保存
+    print_result(params, score, need_mean, need_std)
     save_y_preds(params, y, preds)
     

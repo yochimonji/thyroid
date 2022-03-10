@@ -271,22 +271,50 @@ def save_params(params, weights):
         torch.save(weight, os.path.join(path, "weight", "weight" + str(i) + ".pth"))
 
 
-def calc_score(all_score_list, y_class_num, need_mean=True, need_std=True):
+def mean_and_std_score(all_score_list, y_class_num, need_mean=True, need_std=True):
     all_score_array = np.array(all_score_list)
     score_array = all_score_array.mean(axis=0)
     if need_mean:
-        score_mean = score_array[score_array.nonzero()].sum() / y_class_num
-        score_array = np.concatenate([score_array, [score_mean]])
+        mean_score = score_array[score_array.nonzero()].sum() / y_class_num
+        score_array = np.concatenate([score_array, [mean_score]])
 
     if need_std:
         std_array = np.std(all_score_array, axis=0, ddof=1)
         if need_mean:
-            std_mean = std_array[std_array.nonzero()].sum() / y_class_num
-            std_array = np.concatenate([std_array, [std_mean]])
+            mean_std = std_array[std_array.nonzero()].sum() / y_class_num
+            std_array = np.concatenate([std_array, [mean_std]])
         return score_array, std_array
     else:
         return score_array, None
 
+
+def calc_score(params, y, preds, need_mean=True, need_std=True):
+    all_precision_list = []
+    all_recall_list = []
+    all_f1_score_list = []
+    total_accuracy = 0
+    for i, pred in enumerate(preds):
+        result = scores(y, pred, labels=range(len(params["labels"])), zero_division=0)
+        all_precision_list.append(result[0] * 100)
+        all_recall_list.append(result[1] * 100)
+        all_f1_score_list.append(result[2] * 100)
+        total_accuracy += accuracy_score(y, pred) * 100
+
+    y_class_num = np.unique(y).size
+    precision_array, precision_std = mean_and_std_score(all_precision_list, y_class_num, need_mean, need_std)
+    recall_array, recall_std = mean_and_std_score(all_recall_list, y_class_num, need_mean, need_std)
+    f1_score_array, f1_score_std = mean_and_std_score(all_f1_score_list, y_class_num, need_mean, need_std)
+
+    score = {
+        "precision_array": precision_array,
+        "precision_std": precision_std,
+        "recall_array": recall_array,
+        "recall_std": recall_std,
+        "f1_score_array": f1_score_array,
+        "f1_score_std": f1_score_std
+    }
+    return score
+    
 
 def format_score_line(score_array, std_array=None):
     formated_line = ""
@@ -312,34 +340,21 @@ def save_y_preds(params, y, preds):
 # ys:推論回数　×　データ数　　2次元配列
 # ypreds:推論回数　×　データ数　×　ラベル数　　3次元配列
 def print_and_save_result(params, y, preds, need_mean=True, need_std=True, need_confusion_matrix=False):
-    all_precision_list = []
-    all_recall_list = []
-    all_f1_score_list = []
-    total_accuracy = 0
-    for i, pred in enumerate(preds):
-        result = scores(y, pred, labels=range(len(params["labels"])), zero_division=0)
-        all_precision_list.append(result[0] * 100)
-        all_recall_list.append(result[1] * 100)
-        all_f1_score_list.append(result[2] * 100)
-        total_accuracy += accuracy_score(y, pred) * 100
-        if need_confusion_matrix:
+    if need_confusion_matrix:
+        for i, pred in enumerate(preds):
             print(f"Confusion Matrix {i+1}\n{confusion_matrix(y, pred, labels=range(len(params['labels'])))}\n")
-    
-    y_class_num = np.unique(y).size
 
-    precision_array, precision_std = calc_score(all_precision_list, y_class_num, need_mean, need_std)
-    recall_array, recall_std = calc_score(all_recall_list, y_class_num, need_mean, need_std)
-    f1_score_array, f1_score_std = calc_score(all_f1_score_list, y_class_num, need_mean, need_std)
-        
+    score = calc_score(params, y, preds, need_mean, need_std)
+
     print(f"\n{params['num_estimate']}回平均", end="\t")
     for label in params["labels"]:
         print(label, end="\t\t" if need_std else "\t")
-    if need_mean: print("マクロ平均")
+    if need_mean: print("平均")
     else: print("")
-    print(f"Precision\t{format_score_line(precision_array, precision_std)}")
-    print(f"Recall\t\t{format_score_line(recall_array, recall_std)}")
-    print(f"F1 Score\t{format_score_line(f1_score_array, f1_score_std)}")
-    print(f"Accuracy\t{total_accuracy / params['num_estimate']:.3f}")
+    print(f"Precision\t{format_score_line(score['precision_array'], score['precision_std'])}")
+    print(f"Recall\t\t{format_score_line(score['recall_array'], score['recall_std'])}")
+    print(f"F1 Score\t{format_score_line(score['f1_score_array'], score['f1_score_std'])}")
+    # print(f"Accuracy\t{total_accuracy / params['num_estimate']:.3f}")
 
     # 結果保存
     save_y_preds(params, y, preds)

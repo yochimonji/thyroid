@@ -44,7 +44,7 @@ def predict():
         print("-----推論中-----")
 
         # 推論
-        y, ypred = eval_net(net, test_loader, probability=True, device=device)
+        y, ypred = eval_net(net, test_loader, probability=False, device=device)
 
         ys.append(y.cpu().numpy())
         ypreds.append(ypred.cpu().numpy().argmax(axis=1))

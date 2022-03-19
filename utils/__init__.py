@@ -4,6 +4,7 @@ import random
 import sys
 import json
 import copy
+import itertools
 
 import torch
 from torch import nn
@@ -308,14 +309,14 @@ def calc_score(params, y, preds, need_mean=True, need_std=True):
     accuracy_array, accuracy_std = mean_and_std_score(accuracy_list, y_class_num, need_all_mean=False, need_std=need_std)
     
     score = {
-        "precision_array": precision_array,
-        "precision_std": precision_std,
-        "recall_array": recall_array,
-        "recall_std": recall_std,
-        "f1_score_array": f1_score_array,
-        "f1_score_std": f1_score_std,
-        "accuracy": accuracy_array,
-        "accuracy_std": accuracy_std
+        "Precision": precision_array,
+        "Precision_Std": precision_std,
+        "Recall": recall_array,
+        "Recall_Std": recall_std,
+        "F1 Score": f1_score_array,
+        "F1 Score_Std": f1_score_std,
+        "Accuracy": accuracy_array,
+        "Accuracy_Std": accuracy_std
     }
     return score
     
@@ -337,23 +338,23 @@ def print_score(params, score, need_mean=True, need_std=True):
         print(label, end="\t\t" if need_std else "\t")
     if need_mean: print("平均")
     else: print("")
-    print(f"Precision\t{format_score_line(score['precision_array'], score['precision_std'])}")
-    print(f"Recall\t\t{format_score_line(score['recall_array'], score['recall_std'])}")
-    print(f"F1 Score\t{format_score_line(score['f1_score_array'], score['f1_score_std'])}")
-    if need_std: print(f"Accuracy\t{score['accuracy']:.2f}±{score['accuracy_std']:.2f}")
-    else: print(f"Accuracy\t{score['accuracy']:.2f}")
+    print(f"Precision\t{format_score_line(score['Precision'], score['Precision_Std'])}")
+    print(f"Recall\t\t{format_score_line(score['Recall'], score['Recall_Std'])}")
+    print(f"F1 Score\t{format_score_line(score['F1 Score'], score['F1 Score_Std'])}")
+    if need_std: print(f"Accuracy\t{score['Accuracy']:.2f}±{score['Accuracy_Std']:.2f}")
+    else: print(f"Accuracy\t{score['Accuracy']:.2f}")
 
 
 def save_score(params, score, need_mean=True, need_std=True):
     path = os.path.join("result", params["name"])
     if not os.path.exists(path):
         os.makedirs(path)
-    precision = format_score_line(score['precision_array'], score['precision_std']).split()
-    recall = format_score_line(score['recall_array'], score['recall_std']).split()
-    f1_score = format_score_line(score['f1_score_array'], score['f1_score_std']).split()
+    precision = format_score_line(score['Precision'], score['Precision_Std']).split()
+    recall = format_score_line(score['Recall'], score['Recall_Std']).split()
+    f1_score = format_score_line(score['F1 Score'], score['F1 Score_Std']).split()
 
-    if need_std: accuracy = f"{score['accuracy']:.2f}±{score['accuracy_std']:.2f}"
-    else: accuracy = f"{score['accuracy']:.2f}"
+    if need_std: accuracy = f"{score['Accuracy']:.2f}±{score['Accuracy_Std']:.2f}"
+    else: accuracy = f"{score['Accuracy']:.2f}"
 
     index = params["labels"].copy()
     if need_mean: index.append("平均")
@@ -366,14 +367,39 @@ def save_score(params, score, need_mean=True, need_std=True):
     }, index=index).T
     df.to_csv(os.path.join(path, "score.csv"))
 
-def save_y_preds(params, y, preds):
+def save_y_preds_all_score(params, y, preds):
+    # フォルダを作製する
     path = os.path.join("result", params["name"])
     if not os.path.exists(path):
         os.makedirs(path)
-    df = pd.DataFrame(dict(y=y))
+
+    y_preds_df = pd.DataFrame(dict(y=y))
+    all_score_array = None
     for i,pred in enumerate(preds):
-        df[f"pred_{i}"] = pred
-    df.to_csv(os.path.join(path, "y_preds.csv"))
+        # 各施行の予測値のdf作成
+        y_preds_df[f"pred_{i}"] = pred
+
+        # 各施行のスコアを計算
+        score = calc_score(params, y, [pred], True, False)
+        score_array = np.hstack([score["Precision"], score["Recall"], score["F1 Score"], score["Accuracy"]])
+        score_array = format_score_line(score_array).split()
+        if all_score_array is None:
+            all_score_array = score_array
+        else:
+            all_score_array = np.vstack([all_score_array, score_array])
+    
+    # 計算したスコアをフォーマットして、予測値dfの末尾に連結できる形式にする
+    score_name_list = ["Precision", "Recall", "F1 Score"]
+    label_name_list = params["labels"].copy()
+    label_name_list.append("Mean")
+    score_index = []
+    for score_name, label_name in itertools.product(score_name_list, label_name_list):
+        score_index.append(f"{score_name}_{label_name}")
+    score_index.append("Accuracy")
+    score_df = pd.DataFrame(all_score_array, columns=score_index, index=[f"pred_{i}" for i in range(params["num_estimate"])]).T
+    
+    result_df = pd.concat([y_preds_df, score_df])
+    result_df.to_csv(os.path.join(path, "y_preds_all_score.csv"))
 
 
 # ys:推論回数　×　データ数　　2次元配列
@@ -388,5 +414,5 @@ def print_and_save_result(params, y, preds, need_mean=True, need_std=True, need_
     # 結果の表示と保存
     print_score(params, score, need_mean, need_std)
     save_score(params, score, need_mean, need_std)
-    save_y_preds(params, y, preds)
+    save_y_preds_all_score(params, y, preds)
     

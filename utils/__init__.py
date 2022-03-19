@@ -1,21 +1,20 @@
-import os
 import glob
+import itertools
+import json
+import os
 import random
 import sys
-import json
-import copy
-import itertools
 
-import torch
-from torch import nn
-from torchvision import transforms
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import torch
 from PIL import Image
-import pandas as pd
-from sklearn.metrics import confusion_matrix, accuracy_score, recall_score, classification_report, mean_squared_error
+from sklearn.metrics import (accuracy_score, classification_report,
+                             confusion_matrix, mean_squared_error)
 from sklearn.metrics import precision_recall_fscore_support as scores
-import pandas as pd
+from sklearn.metrics import recall_score
+from torchvision import transforms
 
 
 # 与えられた角度をランダムに一つ選択する
@@ -24,11 +23,11 @@ import pandas as pd
 class MyRotationTransform():
     def __init__(self, angles):
         self.angles = angles
-        
+
     def __call__(self, img):
         angle = random.choice(self.angles)
         return transforms.functional.rotate(img, angle)
-    
+
 
 # 画像に変換処理を行う
 # ResNetで転移学習するとき、sizeは224×224、defaultのmean,stdで標準化する
@@ -87,7 +86,7 @@ class ImageTransform():
                 # transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
             ])
         }
-        
+
     def __call__(self, img, phase):
         if self.multi_net:
             transform_rgb_img = self.transform_rgb[phase](img)
@@ -100,8 +99,8 @@ class ImageTransform():
                 transform_img = self.transform_rgb[phase](img)
 
         if self.normalize_per_img:
-            self.mean = torch.mean(transform_img, dim=(1,2))
-            self.std = torch.std(transform_img, dim=(1,2))
+            self.mean = torch.mean(transform_img, dim=(1, 2))
+            self.std = torch.std(transform_img, dim=(1, 2))
         normalize = transforms.Normalize(self.mean, self.std)
 
         return normalize(transform_img)
@@ -120,15 +119,15 @@ def make_datapath_list(path, labels):
     for search_path in search_path_list:
         for path in glob.glob(search_path, recursive=True):
             path_list.append(path)
-    
+
     return path_list
 
-    
+
 # img_pathの画像をそのまま・train変換・val変換で表示
 # 変換した画像を確認する
 def show_transform_img(img_path, transform):
     fig, ax = plt.subplots(ncols=3, figsize=(12, 4))
-    
+
     img = Image.open(img_path)
     print("original_img\tmax: {}\tmin: {}".format(np.max(img), np.min(img)))
 
@@ -138,18 +137,18 @@ def show_transform_img(img_path, transform):
     img_transform_train = transform(img, phase="train")
     img_transform_train = img_transform_train.numpy().transpose((1, 2, 0))
     print("train_img\tmax: {}\tmin: {}".format(np.max(img_transform_train), np.min(img_transform_train)))
-#     標準化で0より下の値になるため0~1にクリップ
+    # 標準化で0より下の値になるため0~1にクリップ
     img_transform_train = np.clip(img_transform_train, 0, 1)
     ax[1].imshow(img_transform_train)
     ax[1].set_title("train_transform")
 
     img_transform_val = transform(img, phase="test")
     img_transform_val = img_transform_val.numpy().transpose((1, 2, 0))
-#     標準化で0より下の値になるため0~1にクリップ
+    # 標準化で0より下の値になるため0~1にクリップ
     img_transform_val = np.clip(img_transform_val, 0, 1)
     ax[2].imshow(img_transform_val)
     ax[2].set_title("val_transform")
-    
+
 
 # 識別を間違えた画像を表示する
 # dataset:transformしていないdataset
@@ -159,15 +158,15 @@ def show_transform_img(img_path, transform):
 def show_wrong_img(dataset, ys, ypreds, indices=None, y=None, ypred=None):
     if indices is None:
         indices = range(dataset.__len__())
-    
+
     # miss.shape:(len(dataset), 3)
     miss = np.stack([ys, ypreds, indices], axis=1)
-    miss = miss[miss[:, 0]!=miss[:, 1]]  # ミス画像のみ残す
+    miss = miss[miss[:, 0] != miss[:, 1]]  # ミス画像のみ残す
     if y is not None:
-        miss = miss[miss[:, 0]==y]  # 本物のラベルがyのみ残す
+        miss = miss[miss[:, 0] == y]  # 本物のラベルがyのみ残す
     if ypred is not None:
-        miss = miss[miss[:, 1]==ypred]  # 予測のラベルがypredのみ残す
-        
+        miss = miss[miss[:, 1] == ypred]  # 予測のラベルがypredのみ残す
+
     print("wrong_img_num:", len(miss))
     for (y, ypred, index) in miss:
         img = dataset[index][0]
@@ -180,7 +179,7 @@ def show_wrong_img(dataset, ys, ypreds, indices=None, y=None, ypred=None):
 # jsonファイルを読み込んでパラメータを設定する
 # jsonから読み込むことでpyファイルの書き換えをしなくてよいのでGitが汚れない
 def load_params(path="config/params.json"):
-    if len(sys.argv) == 2: 
+    if len(sys.argv) == 2:
         if os.path.exists(sys.argv[1]):
             path = sys.argv[1]
         else:
@@ -214,6 +213,7 @@ def check_params(params):
     if transfer_learning and (not pretrained):
         print("transfer_learning==True and pretrained=Falseはできません")
         sys.exit()
+
 
 def print_params(params, nest=0):
     for param in params:
@@ -306,8 +306,10 @@ def calc_score(params, y, preds, need_mean=True, need_std=True):
     precision_array, precision_std = mean_and_std_score(all_precision_list, y_class_num, need_mean, need_std)
     recall_array, recall_std = mean_and_std_score(all_recall_list, y_class_num, need_mean, need_std)
     f1_score_array, f1_score_std = mean_and_std_score(all_f1_score_list, y_class_num, need_mean, need_std)
-    accuracy_array, accuracy_std = mean_and_std_score(accuracy_list, y_class_num, need_all_mean=False, need_std=need_std)
-    
+    accuracy_array, accuracy_std = mean_and_std_score(
+        accuracy_list, y_class_num, need_all_mean=False, need_std=need_std
+    )
+
     score = {
         "Precision": precision_array,
         "Precision_Std": precision_std,
@@ -319,7 +321,7 @@ def calc_score(params, y, preds, need_mean=True, need_std=True):
         "Accuracy_Std": accuracy_std
     }
     return score
-    
+
 
 def format_score_line(score_array, std_array=None):
     formated_line = ""
@@ -336,13 +338,17 @@ def print_score(params, score, need_mean=True, need_std=True):
     print(f"\n{params['num_estimate']}回平均", end="\t")
     for label in params["labels"]:
         print(label, end="\t\t" if need_std else "\t")
-    if need_mean: print("平均")
-    else: print("")
+    if need_mean:
+        print("平均")
+    else:
+        print("")
     print(f"Precision\t{format_score_line(score['Precision'], score['Precision_Std'])}")
     print(f"Recall\t\t{format_score_line(score['Recall'], score['Recall_Std'])}")
     print(f"F1 Score\t{format_score_line(score['F1 Score'], score['F1 Score_Std'])}")
-    if need_std: print(f"Accuracy\t{score['Accuracy']:.2f}±{score['Accuracy_Std']:.2f}")
-    else: print(f"Accuracy\t{score['Accuracy']:.2f}")
+    if need_std:
+        print(f"Accuracy\t{score['Accuracy']:.2f}±{score['Accuracy_Std']:.2f}")
+    else:
+        print(f"Accuracy\t{score['Accuracy']:.2f}")
 
 
 def save_score(params, score, need_mean=True, need_std=True):
@@ -353,11 +359,14 @@ def save_score(params, score, need_mean=True, need_std=True):
     recall = format_score_line(score['Recall'], score['Recall_Std']).split()
     f1_score = format_score_line(score['F1 Score'], score['F1 Score_Std']).split()
 
-    if need_std: accuracy = f"{score['Accuracy']:.2f}±{score['Accuracy_Std']:.2f}"
-    else: accuracy = f"{score['Accuracy']:.2f}"
+    if need_std:
+        accuracy = f"{score['Accuracy']:.2f}±{score['Accuracy_Std']:.2f}"
+    else:
+        accuracy = f"{score['Accuracy']:.2f}"
 
     index = params["labels"].copy()
-    if need_mean: index.append("平均")
+    if need_mean:
+        index.append("平均")
 
     df = pd.DataFrame({
         "Precision": precision,
@@ -367,6 +376,7 @@ def save_score(params, score, need_mean=True, need_std=True):
     }, index=index).T
     df.to_csv(os.path.join(path, "score.csv"))
 
+
 def save_y_preds_all_score(params, y, preds):
     # フォルダを作製する
     path = os.path.join("result", params["name"])
@@ -375,7 +385,7 @@ def save_y_preds_all_score(params, y, preds):
 
     y_preds_df = pd.DataFrame(dict(y=y))
     all_score_array = None
-    for i,pred in enumerate(preds):
+    for i, pred in enumerate(preds):
         # 各施行の予測値のdf作成
         y_preds_df[f"pred_{i}"] = pred
 
@@ -387,7 +397,7 @@ def save_y_preds_all_score(params, y, preds):
             all_score_array = score_array
         else:
             all_score_array = np.vstack([all_score_array, score_array])
-    
+
     # 計算したスコアをフォーマットして、予測値dfの末尾に連結できる形式にする
     score_name_list = ["Precision", "Recall", "F1 Score"]
     label_name_list = params["labels"].copy()
@@ -396,8 +406,10 @@ def save_y_preds_all_score(params, y, preds):
     for score_name, label_name in itertools.product(score_name_list, label_name_list):
         score_index.append(f"{score_name}_{label_name}")
     score_index.append("Accuracy")
-    score_df = pd.DataFrame(all_score_array, columns=score_index, index=[f"pred_{i}" for i in range(params["num_estimate"])]).T
-    
+    score_df = pd.DataFrame(
+        all_score_array, columns=score_index, index=[f"pred_{i}" for i in range(params["num_estimate"])]
+    ).T
+
     result_df = pd.concat([y_preds_df, score_df])
     result_df.to_csv(os.path.join(path, "y_preds_all_score.csv"))
 
@@ -415,4 +427,3 @@ def print_and_save_result(params, y, preds, need_mean=True, need_std=True, need_
     print_score(params, score, need_mean, need_std)
     save_score(params, score, need_mean, need_std)
     save_y_preds_all_score(params, y, preds)
-    

@@ -47,7 +47,7 @@ def predict():
         y, ypred = eval_net(net, test_loader, probability=False, device=device)
 
         ys.append(y.cpu().numpy())
-        ypreds.append(ypred.cpu().numpy().argmax(axis=1))
+        ypreds.append(ypred.cpu().numpy())
 
     utils.print_and_save_result(params, ys[0], ypreds)
 

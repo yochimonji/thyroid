@@ -2,10 +2,10 @@ version: "3"
 services: 
     thyroid:
         build: .
-        working_dir: /mnt
+        working_dir: /workspace
         tty: true
         volumes: 
-            - $PWD:/mnt:cached
+            - ./:/workspace:cached
         ports: 
             - "8888:8888"
         runtime: nvidia

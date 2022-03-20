@@ -266,7 +266,7 @@ def calc_confusion_matrix_df(params, y, preds):
             total_confusion_matrix += confusion_matrix(y, pred, labels=range(len(params['labels'])))
     multi_columns = pd.MultiIndex.from_product([["Prediction"], params["labels"]])
     multi_index = pd.MultiIndex.from_product([["Actual"], params["labels"]])
-    confusion_matrix_df = pd.DataFrame(total_confusion_matrix // 10, index=multi_index, columns=multi_columns)
+    confusion_matrix_df = pd.DataFrame(np.rint(total_confusion_matrix / 10).astype(int), index=multi_index, columns=multi_columns)
     return confusion_matrix_df
 
 

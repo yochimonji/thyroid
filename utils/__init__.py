@@ -257,6 +257,19 @@ def print_recall(params, ys, ypreds):
                                 digits=3, zero_division=0))
 
 
+def calc_confusion_matrix_df(params, y, preds):
+    total_confusion_matrix = None
+    for i, pred in enumerate(preds):
+        if total_confusion_matrix is None:
+            total_confusion_matrix = confusion_matrix(y, pred, labels=range(len(params['labels'])))
+        else:
+            total_confusion_matrix += confusion_matrix(y, pred, labels=range(len(params['labels'])))
+    multi_columns = pd.MultiIndex.from_product([["Prediction"], params["labels"]])
+    multi_index = pd.MultiIndex.from_product([["Actual"], params["labels"]])
+    confusion_matrix_df = pd.DataFrame(total_confusion_matrix // 10, index=multi_index, columns=multi_columns)
+    return confusion_matrix_df
+
+
 # 各種パラメータ、結果、ネットワークの重みを保存する
 def save_params(params, weights):
     # フォルダ作成
@@ -414,16 +427,21 @@ def save_y_preds_all_score(params, y, preds):
     result_df.to_csv(os.path.join(path, "y_preds_all_score.csv"))
 
 
-# ys:推論回数　×　データ数　　2次元配列
-# ypreds:推論回数　×　データ数　×　ラベル数　　3次元配列
+# ys:推論回数 × データ数  2次元配列
+# ypreds:推論回数 × データ数 × ラベル数  3次元配列
 def print_and_save_result(params, y, preds, need_mean=True, need_std=True, need_confusion_matrix=False):
-    if need_confusion_matrix:
-        for i, pred in enumerate(preds):
-            print(f"Confusion Matrix {i+1}\n{confusion_matrix(y, pred, labels=range(len(params['labels'])))}\n")
+    # フォルダを作製する
+    path = os.path.join("result", params["name"])
+    if not os.path.exists(path):
+        os.makedirs(path)
 
-    score = calc_score(params, y, preds, need_mean, need_std)
+    if need_confusion_matrix:
+        confusion_matrix_df = calc_confusion_matrix_df(params, y, preds)
+        print(confusion_matrix_df)
+        confusion_matrix_df.to_csv(os.path.join(path, "confusion_matrix.csv"))
 
     # 結果の表示と保存
+    score = calc_score(params, y, preds, need_mean, need_std)
     print_score(params, score, need_mean, need_std)
     save_score(params, score, need_mean, need_std)
     save_y_preds_all_score(params, y, preds)

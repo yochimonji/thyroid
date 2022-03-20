@@ -1,33 +1,27 @@
 # 標準ライブラリ
-import json
-import sys
 import os
 
 # 外部ライブラリ
-import numpy as np
 import torch
 from torch.utils.data import DataLoader
-from sklearn.metrics import confusion_matrix, classification_report
 
 # 自作ライブラリ
 import utils
-from utils.dataset import ArrangeNumDataset
 from model import create_net, eval_net
+from utils.dataset import ArrangeNumDataset
 
 
 def predict():
     # jsonファイルを読み込んでパラメータを設定する
     # よく呼び出すパラメータを変数に代入
     params = utils.load_params()
-    optim_params = params["optim_params"]
 
     # GPUが使用可能ならGPU、不可能ならCPUを使う
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("使用デバイス：", device)
 
     test_dataset = ArrangeNumDataset(params=params, phase="test")
-    test_loader = DataLoader(test_dataset, batch_size=params["batch_size"],
-                            shuffle=False, num_workers=4)
+    test_loader = DataLoader(test_dataset, batch_size=params["batch_size"], shuffle=False, num_workers=4)
 
     net = create_net(params)
 
@@ -49,7 +43,8 @@ def predict():
         ys.append(y.cpu().numpy())
         ypreds.append(ypred.cpu().numpy())
 
-    utils.print_and_save_result(params, ys[0], ypreds)
+    utils.print_and_save_result(params, ys[0], ypreds, need_confusion_matrix=True)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     predict()

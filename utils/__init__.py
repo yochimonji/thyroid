@@ -364,10 +364,7 @@ def print_score(params, score, need_mean=True, need_std=True):
         print(f"Accuracy\t{score['Accuracy']:.2f}")
 
 
-def save_score(params, score, need_mean=True, need_std=True):
-    path = os.path.join("result", params["name"])
-    if not os.path.exists(path):
-        os.makedirs(path)
+def save_score(params, score, path, need_mean=True, need_std=True):
     precision = format_score_line(score['Precision'], score['Precision_Std']).split()
     recall = format_score_line(score['Recall'], score['Recall_Std']).split()
     f1_score = format_score_line(score['F1 Score'], score['F1 Score_Std']).split()
@@ -390,12 +387,7 @@ def save_score(params, score, need_mean=True, need_std=True):
     df.to_csv(os.path.join(path, "score.csv"))
 
 
-def save_y_preds_all_score(params, y, preds):
-    # フォルダを作製する
-    path = os.path.join("result", params["name"])
-    if not os.path.exists(path):
-        os.makedirs(path)
-
+def save_y_preds_all_score(params, y, preds, path):
     y_preds_df = pd.DataFrame(dict(y=y))
     all_score_array = None
     for i, pred in enumerate(preds):
@@ -443,5 +435,5 @@ def print_and_save_result(params, y, preds, need_mean=True, need_std=True, need_
     # 結果の表示と保存
     score = calc_score(params, y, preds, need_mean, need_std)
     print_score(params, score, need_mean, need_std)
-    save_score(params, score, need_mean, need_std)
-    save_y_preds_all_score(params, y, preds)
+    save_score(params, score, path, need_mean, need_std)
+    save_y_preds_all_score(params, y, preds, path)

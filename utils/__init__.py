@@ -421,7 +421,7 @@ def save_y_preds_all_score(params, y, preds, path):
 
 # ys:推論回数 × データ数  2次元配列
 # ypreds:推論回数 × データ数 × ラベル数  3次元配列
-def print_and_save_result(params, y, preds, need_mean=True, need_std=True, need_confusion_matrix=False):
+def print_and_save_result(params, y, preds, need_mean=True, need_std=True, need_confusion_matrix=True):
     # フォルダを作製する
     path = os.path.join("result", params["name"])
     if not os.path.exists(path):

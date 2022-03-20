@@ -43,7 +43,7 @@ def predict():
         ys.append(y.cpu().numpy())
         ypreds.append(ypred.cpu().numpy())
 
-    utils.print_and_save_result(params, ys[0], ypreds, need_confusion_matrix=True)
+    utils.print_and_save_result(params, ys[0], ypreds)
 
 
 if __name__ == "__main__":

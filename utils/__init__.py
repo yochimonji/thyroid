@@ -365,13 +365,15 @@ def print_score(params, score, need_mean=True, need_std=True):
 
 
 def save_score(params, score, path, need_mean=True, need_std=True):
-    precision = format_score_line(score['Precision'], score['Precision_Std']).split()
-    recall = format_score_line(score['Recall'], score['Recall_Std']).split()
-    f1_score = format_score_line(score['F1 Score'], score['F1 Score_Std']).split()
-
     if need_std:
+        precision = format_score_line(score['Precision'], score['Precision_Std']).split()
+        recall = format_score_line(score['Recall'], score['Recall_Std']).split()
+        f1_score = format_score_line(score['F1 Score'], score['F1 Score_Std']).split()
         accuracy = f"{score['Accuracy']:.2f}±{score['Accuracy_Std']:.2f}"
     else:
+        precision = format_score_line(score['Precision'], None).split()
+        recall = format_score_line(score['Recall'], None).split()
+        f1_score = format_score_line(score['F1 Score'], None).split()
         accuracy = f"{score['Accuracy']:.2f}"
 
     index = params["labels"].copy()
@@ -384,7 +386,7 @@ def save_score(params, score, path, need_mean=True, need_std=True):
         "F1 Score": f1_score,
         "Accuracy": accuracy
     }, index=index).T
-    df.to_csv(os.path.join(path, "score.csv"))
+    df.to_csv(path)
 
 
 def save_y_preds_all_score(params, y, preds, path):
@@ -419,6 +421,26 @@ def save_y_preds_all_score(params, y, preds, path):
     result_df.to_csv(os.path.join(path, "y_preds_all_score.csv"))
 
 
+def calc_voting_score(params, y, preds, need_mean=True):
+    sum_preds = np.sum(preds, 0)
+    voting_preds = np.argmax(sum_preds, 1)
+    result = scores(y, voting_preds, labels=range(len(params["labels"])), zero_division=0)
+
+    y_class_num = np.unique(y).size
+    precision_array, _ = mean_and_std_score([result[0]*100], y_class_num, need_mean, False)
+    recall_array, _ = mean_and_std_score([result[1]*100], y_class_num, need_mean, False)
+    f1_score_array, _ = mean_and_std_score([result[2]*100], y_class_num, need_mean, False)
+    accuracy_array, _ = mean_and_std_score([accuracy_score(y, voting_preds) * 100], y_class_num, False, False)
+
+    score = {
+        "Precision": precision_array,
+        "Recall": recall_array,
+        "F1 Score": f1_score_array,
+        "Accuracy": accuracy_array,
+    }
+    return score
+
+
 # ys:推論回数 × データ数  2次元配列
 # ypreds:推論回数 × データ数 × ラベル数  3次元配列
 def print_and_save_result(params, y, preds, need_mean=True, need_std=True, need_confusion_matrix=True):
@@ -427,13 +449,21 @@ def print_and_save_result(params, y, preds, need_mean=True, need_std=True, need_
     if not os.path.exists(path):
         os.makedirs(path)
 
+    preds_non_probability = np.argmax(preds, 2)
+    print(np.array(preds).shape)
+    print(preds_non_probability.shape)
+
     if need_confusion_matrix:
-        confusion_matrix_df = calc_confusion_matrix_df(params, y, preds)
+        confusion_matrix_df = calc_confusion_matrix_df(params, y, preds_non_probability)
         print(confusion_matrix_df)
         confusion_matrix_df.to_csv(os.path.join(path, "confusion_matrix.csv"))
 
     # 結果の表示と保存
-    score = calc_score(params, y, preds, need_mean, need_std)
+    score = calc_score(params, y, preds_non_probability, need_mean, need_std)
     print_score(params, score, need_mean, need_std)
-    save_score(params, score, path, need_mean, need_std)
-    save_y_preds_all_score(params, y, preds, path)
+    save_score(params, score, os.path.join(path, "score.csv"), need_mean, need_std)
+    save_y_preds_all_score(params, y, preds_non_probability, path)
+
+    # SoftVotingの計算と保存
+    voting_score = calc_voting_score(params, y, preds, need_mean)
+    save_score(params, voting_score, os.path.join(path, "score_soft_voting.csv"), need_mean, False)

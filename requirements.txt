@@ -11,6 +11,7 @@ scikit-learn
 tensorboard
 opencv-python
 efficientnet_pytorch
+pytorch-gradcam
 flake8
 black
 isort

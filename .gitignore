@@ -2,9 +2,9 @@
 /material/
 /notebook/
 /.vscode/
-*/__pycache__/*
+**/__pycache__/**
 /logs/
-/config/*
+/config/**
 !/config/default.json
 /result
 /weight/*.pth

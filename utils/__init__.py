@@ -178,7 +178,7 @@ def show_wrong_img(dataset, ys, ypreds, indices=None, y=None, ypred=None):
 
 # jsonファイルを読み込んでパラメータを設定する
 # jsonから読み込むことでpyファイルの書き換えをしなくてよいのでGitが汚れない
-def load_params(path="config/params.json"):
+def load_params(phase="train", path="config/params.json"):
     if len(sys.argv) == 2:
         if os.path.exists(sys.argv[1]):
             path = sys.argv[1]
@@ -188,6 +188,17 @@ def load_params(path="config/params.json"):
     with open(path, "r") as file:
         params = json.load(file)
     check_params(params)
+
+    # 訓練時のみparams["data_path"]["trainA"]直下のファルダ名をlabelsとして設定
+    if phase == "train":
+        files = os.listdir(params["data_path"]["trainA"])
+        files_dir = [
+            f
+            for f in files
+            if os.path.isdir(os.path.join(params["data_path"]["trainA"], f))
+        ]
+        params["labels"] = files_dir
+
     print_params(params)
     return params
 

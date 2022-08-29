@@ -1,31 +1,28 @@
 {
     "name": "experiment",
-
     "data_path": {
-        "train": "data/train/",
-        "test": "data/test/",
-        "tissue_train": "data/03_迅速標本frozen/padding_and_remove_white_train/",
-        "tissue_test": "data/03_迅速標本frozen/padding_and_remove_white_test/"
+        "trainA": "data/HE/train/",
+        "trainB": null
     },
-
-    "labels":[
-        "Normal",
-        "PTC"
-    ],
-    
     "num_estimate": 10,
     "epochs": 10,
     "batch_size": 32,
     "imbalance": null,
-
     "transform_params": {
         "img_resize": 224,
-        "mean": [0.485, 0.456, 0.406],
-        "std": [0.229, 0.224, 0.225],
+        "mean": [
+            0.485,
+            0.456,
+            0.406
+        ],
+        "std": [
+            0.229,
+            0.224,
+            0.225
+        ],
         "grayscale_flag": false,
         "normalize_per_img": false
     },
-
     "net_params": {
         "name": "resnet18",
         "multi_net": false,
@@ -33,7 +30,6 @@
         "pretrained": true,
         "weight_path": null
     },
-    
     "optim_params": {
         "name": "Adam",
         "lr_not_pretrained": 1e-4,

@@ -14,7 +14,7 @@ from utils.dataset import ArrangeNumDataset
 def predict():
     # jsonファイルを読み込んでパラメータを設定する
     # よく呼び出すパラメータを変数に代入
-    params = utils.load_params()
+    params = utils.load_params(phase="test")
 
     # GPUが使用可能ならGPU、不可能ならCPUを使う
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

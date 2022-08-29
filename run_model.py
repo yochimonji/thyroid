@@ -23,7 +23,7 @@ random.seed(1234)
 
 # jsonファイルを読み込んでパラメータを設定する
 # よく呼び出すパラメータを変数に代入
-params = utils.load_params()
+params = utils.load_params(phase="train")
 optim_params = params["optim_params"]
 
 # GPUが使用可能ならGPU、不可能ならCPUを使う

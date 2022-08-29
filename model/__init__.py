@@ -241,7 +241,7 @@ def eval_net(net, loader, probability=False, device="cpu"):
 
 
 # ネットワークの訓練を行う
-def train_net(net, train_loader, val_loader, optimizer, loss_fn=nn.CrossEntropyLoss(), epochs=10, device="cpu"):
+def train_net(net, train_loader, optimizer, loss_fn=nn.CrossEntropyLoss(), epochs=10, device="cpu"):
     dt_now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     writer = SummaryWriter(log_dir=os.path.join("./logs", dt_now))
 
@@ -272,18 +272,13 @@ def train_net(net, train_loader, val_loader, optimizer, loss_fn=nn.CrossEntropyL
         # len(train_loader.dataset)：データセット数
         train_loss = train_loss / len(train_loader.dataset)
         train_acc = train_acc / len(train_loader.dataset)
-        val_ys, val_ypreds = eval_net(net, val_loader, device=device)
-        val_acc = (val_ys == val_ypreds).sum().float() / len(val_loader.dataset)
 
         print(
-            "epoch:{}/{}  train_loss: {:.3f}  train_acc: {:.3f}  val_acc: {:.3f}".format(
-                epoch + 1, epochs, train_loss, train_acc, val_acc
-            ),
+            "epoch:{}/{}  train_loss: {:.3f}  train_acc: {:.3f}".format(epoch + 1, epochs, train_loss, train_acc),
             flush=True,
         )
         writer.add_scalar("train/loss", train_loss, epoch)
         writer.add_scalar("train/acc", train_acc, epoch)
-        writer.add_scalar("val/acc", val_acc, epoch)
 
     if not os.path.exists("weight"):
         os.makedirs("weight")

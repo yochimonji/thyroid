@@ -1,12 +1,12 @@
-import random
 import itertools
+import random
 
-import torch
-from torch.utils.data import Dataset
-from PIL import Image
 import numpy as np
+import torch
+from PIL import Image
+from torch.utils.data import Dataset
 
-from utils import make_datapath_list, ImageTransform
+from utils import ImageTransform, make_datapath_list
 
 
 # データ数を調整したDatasetを作成するクラス
@@ -17,65 +17,68 @@ class ArrangeNumDataset(Dataset):
         self.labels = params["labels"]
         self.phase = phase
         self.transform = ImageTransform(params)
-        self.file_list = self.make_file_list()      # データ数調整後のファイルリスト。self.label_listと対。
-        self.label_list = self.make_label_list()    # データ数調整後のラベルリスト。self.file_listと対。
+        self.file_list = self.make_file_list()  # データ数調整後のファイルリスト。self.label_listと対。
+        self.label_list = self.make_label_list()  # データ数調整後のラベルリスト。self.file_listと対。
         self.data_num = np.bincount(np.array(self.label_list))  # クラスごとのデータ数
         if len(self.data_num) < len(self.labels):
             self.data_num = np.concatenate([self.data_num, np.array([0] * (len(self.labels) - len(self.data_num)))])
-        self.weight = self.calc_weight()            # 損失関数の重み調整用の重み。
-        print("{}の各データ数： {}\t計：{}".format(self.phase, self.data_num, self.data_num.sum()))
-        
+        self.weight = self.calc_weight()  # 損失関数の重み調整用の重み。
+        print("{}の各データ数： {}\t計: {}".format(self.phase, self.data_num, self.data_num.sum()))
+
     def __len__(self):
         return len(self.file_list)
-    
+
     def __getitem__(self, index):
         img_path = self.file_list[index]
         img = Image.open(img_path)
         if self.transform:
             img = self.transform(img, self.phase)
-        
+
         label = self.label_list[index]
-        
+
         return img, label
 
     def make_file_list(self):
-        file_list = []
-        path = self.params["data_path"][self.phase]
-        tissue_path = self.params["data_path"]["tissue_"+self.phase]
-        if path:
-            file_list.extend(make_datapath_list(path, self.labels))
-        if tissue_path:
-            file_list.extend(make_datapath_list(tissue_path, self.labels))
-        
+        if self.phase == "train":
+            file_list = []
+            path_trainA = self.params["trainA"]
+            path_trainB = self.params["trainB"]
+            if path_trainA:
+                file_list.extend(make_datapath_list(path_trainA, self.labels))
+            if path_trainB:
+                file_list.extend(make_datapath_list(path_trainB, self.labels))
+        if self.phase == "test":
+            file_list = make_datapath_list(self.params["test"], self.labels)
+
         arrange = self.params["imbalance"]
         # データ数の調整ありの場合
-        if ((arrange=="oversampling") or (arrange=="undersampling")) and (self.phase == "train"):
+        if ((arrange == "oversampling") or (arrange == "undersampling")) and (self.phase == "train"):
             arrange_file_list = []
             file_dict = self.make_file_dict(file_list)
-            
+
             # undrersampling(+bagging)を行う場合
             if arrange == "undersampling":
                 min_file_num = float("inf")
                 for val in file_dict.values():
                     min_file_num = min(min_file_num, len(val))
                 for val in file_dict.values():
-#                     データの重複あり(baggingする場合はこっち)
-#                     arrange_file_list.append(random.choices(val, k=min_file_num))
-#                     データの重複なし(baggingしない場合はこっち)
+                    # データの重複あり(baggingする場合はこっち)
+                    # arrange_file_list.append(random.choices(val, k=min_file_num))
+                    # データの重複なし(baggingしない場合はこっち)
                     arrange_file_list.append(random.sample(val, min_file_num))
-            
+
             # oversamplingを行う場合
             elif arrange == "oversampling":
                 max_file_num = 0
                 for val in file_dict.values():
                     max_file_num = max(max_file_num, len(val))
                 for val in file_dict.values():
-                    arrange_file_list.append(random.choices(val, k=max_file_num)) # 重複あり
-#                     random.sampleは再標本化後の数値kがもとの要素数より大きいと使えない
-                
+                    arrange_file_list.append(random.choices(val, k=max_file_num))  # 重複あり
+                # random.sampleは再標本化後の数値kがもとの要素数より大きいと使えない
+
             file_list = list(itertools.chain.from_iterable(arrange_file_list))
         return file_list
-    
+
     # key:ラベル、value:ファイルパスリストの辞書を作成
     def make_file_dict(self, file_list):
         label_dict = {}
@@ -86,7 +89,7 @@ class ArrangeNumDataset(Dataset):
                 if key in file:
                     label_dict[key].append(file)
         return label_dict
-    
+
     # self.fileリストと対になるラベルのリストを作成する
     def make_label_list(self):
         label_list = []
@@ -94,9 +97,9 @@ class ArrangeNumDataset(Dataset):
             for label in self.labels:
                 if label in file:
                     label_list.append(self.labels.index(label))
-            
+
         return label_list
-    
+
     # ラベル数に応じてweightを計算する
     # 戻り値がnp.arrayなのに注意。PyTorchで使う場合、Tensorに変換する必要あり
     def calc_weight(self):
@@ -109,7 +112,7 @@ class ArrangeNumDataset(Dataset):
                 weight.append(data_num_sum / n)
         weight = torch.tensor(weight).float()
         return weight
-            
+
 
 # 複数のデータセットを結合し、1つのデータセットとするクラス
 class ConcatDataset(Dataset):
@@ -117,7 +120,7 @@ class ConcatDataset(Dataset):
         self.datasets = datasets
         self.label_list = self.make_label_list()
         self.weight = self.calc_weight()
-    
+
     def __len__(self):
         length = 0
         for dataset in self.datasets:

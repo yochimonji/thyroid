@@ -1,3 +1,4 @@
+import argparse
 import glob
 import itertools
 import json
@@ -10,8 +11,7 @@ import numpy as np
 import pandas as pd
 import torch
 from PIL import Image
-from sklearn.metrics import (accuracy_score, classification_report,
-                             confusion_matrix, mean_squared_error)
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, mean_squared_error
 from sklearn.metrics import precision_recall_fscore_support as scores
 from sklearn.metrics import recall_score
 from torchvision import transforms
@@ -20,7 +20,7 @@ from torchvision import transforms
 # 与えられた角度をランダムに一つ選択する
 # 0, 90, 180, 270度で回転
 # angles:回転したい角度のリスト
-class MyRotationTransform():
+class MyRotationTransform:
     def __init__(self, angles):
         self.angles = angles
 
@@ -31,7 +31,7 @@ class MyRotationTransform():
 
 # 画像に変換処理を行う
 # ResNetで転移学習するとき、sizeは224×224、defaultのmean,stdで標準化する
-class ImageTransform():
+class ImageTransform:
     def __init__(self, params):
         self.grayscale_flag = params["transform_params"]["grayscale_flag"]
         self.normalize_per_img = params["transform_params"]["normalize_per_img"]
@@ -47,44 +47,52 @@ class ImageTransform():
 
         size = params["transform_params"]["img_resize"]
         self.transform_rgb = {
-            "train": transforms.Compose([  # 他の前処理をまとめる
-                transforms.Resize((size, size)),  # リサイズ, 最初にしたほうが処理が軽い
-                # scaleのサイズとratioのアスペクト比でクロップ後、sizeにリサイズ
-                # transforms.RandomResizedCrop(size, scale=(0.8, 1.0)),
-                # transforms.RandomCrop(size),  # ランダムにクロップ後、sizeにリサイズ
-                transforms.RandomHorizontalFlip(),  # 50%の確率で左右対称に変換
-                transforms.RandomVerticalFlip(),  # 50%の確率で上下対象に変換
-                MyRotationTransform([0, 90, 180, 270]),  # [0, 90, 180, 270]度で回転
-                transforms.ToTensor()  # ndarrayをTensorに変換、0〜1に正規化
-                # transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
-            ]),
-            "test": transforms.Compose([  # 他の前処理をまとめる
-                transforms.Resize((size, size)),
-                # transforms.CenterCrop(size),
-                transforms.ToTensor()  # ndarrayをTensorに変換
-                # transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
-            ])
+            "train": transforms.Compose(
+                [  # 他の前処理をまとめる
+                    transforms.Resize((size, size)),  # リサイズ, 最初にしたほうが処理が軽い
+                    # scaleのサイズとratioのアスペクト比でクロップ後、sizeにリサイズ
+                    # transforms.RandomResizedCrop(size, scale=(0.8, 1.0)),
+                    # transforms.RandomCrop(size),  # ランダムにクロップ後、sizeにリサイズ
+                    transforms.RandomHorizontalFlip(),  # 50%の確率で左右対称に変換
+                    transforms.RandomVerticalFlip(),  # 50%の確率で上下対象に変換
+                    MyRotationTransform([0, 90, 180, 270]),  # [0, 90, 180, 270]度で回転
+                    transforms.ToTensor()  # ndarrayをTensorに変換、0〜1に正規化
+                    # transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
+                ]
+            ),
+            "test": transforms.Compose(
+                [  # 他の前処理をまとめる
+                    transforms.Resize((size, size)),
+                    # transforms.CenterCrop(size),
+                    transforms.ToTensor()  # ndarrayをTensorに変換
+                    # transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
+                ]
+            ),
         }
         self.transform_gray = {
-            "train": transforms.Compose([  # 他の前処理をまとめる
-                transforms.Resize((size, size)),  # リサイズ, 最初にしたほうが処理が軽い
-                transforms.Grayscale(num_output_channels=3),
-                # scaleのサイズとratioのアスペクト比でクロップ後、sizeにリサイズ
-                # transforms.RandomResizedCrop(size, scale=(0.8, 1.0)),
-                # transforms.RandomCrop(size),  # ランダムにクロップ後、sizeにリサイズ
-                transforms.RandomHorizontalFlip(),  # 50%の確率で左右対称に変換
-                transforms.RandomVerticalFlip(),  # 50%の確率で上下対象に変換
-                MyRotationTransform([0, 90, 180, 270]),  # [0, 90, 180, 270]度で回転
-                transforms.ToTensor()  # ndarrayをTensorに変換、0〜1に正規化
-                # transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
-            ]),
-            "test": transforms.Compose([  # 他の前処理をまとめる
-                transforms.Resize((size, size)),
-                transforms.Grayscale(num_output_channels=3),
-                # transforms.CenterCrop(size),
-                transforms.ToTensor()  # ndarrayをTensorに変換
-                # transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
-            ])
+            "train": transforms.Compose(
+                [  # 他の前処理をまとめる
+                    transforms.Resize((size, size)),  # リサイズ, 最初にしたほうが処理が軽い
+                    transforms.Grayscale(num_output_channels=3),
+                    # scaleのサイズとratioのアスペクト比でクロップ後、sizeにリサイズ
+                    # transforms.RandomResizedCrop(size, scale=(0.8, 1.0)),
+                    # transforms.RandomCrop(size),  # ランダムにクロップ後、sizeにリサイズ
+                    transforms.RandomHorizontalFlip(),  # 50%の確率で左右対称に変換
+                    transforms.RandomVerticalFlip(),  # 50%の確率で上下対象に変換
+                    MyRotationTransform([0, 90, 180, 270]),  # [0, 90, 180, 270]度で回転
+                    transforms.ToTensor()  # ndarrayをTensorに変換、0〜1に正規化
+                    # transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
+                ]
+            ),
+            "test": transforms.Compose(
+                [  # 他の前処理をまとめる
+                    transforms.Resize((size, size)),
+                    transforms.Grayscale(num_output_channels=3),
+                    # transforms.CenterCrop(size),
+                    transforms.ToTensor()  # ndarrayをTensorに変換
+                    # transforms.Normalize(mean, std)  # 各色の平均値と標準偏差で標準化
+                ]
+            ),
         }
 
     def __call__(self, img, phase):
@@ -112,7 +120,7 @@ def make_datapath_list(path, labels):
         path += "/"
     search_path_list = []
     for label in labels:
-        search_path_list.append(os.path.join(path, '*'+label+'*/**/*.tif'))
+        search_path_list.append(os.path.join(path, "*" + label + "*/**/*.tif"))
 
     path_list = []
     # recursive=True:子ディレクトリも再帰的に探索する
@@ -171,33 +179,26 @@ def show_wrong_img(dataset, ys, ypreds, indices=None, y=None, ypred=None):
     for (y, ypred, index) in miss:
         img = dataset[index][0]
         plt.imshow(img)
-        plt.title("real:{}  prediction:{}".format(
-            dataset.label_list[y], dataset.label_list[ypred]))
+        plt.title("real:{}  prediction:{}".format(dataset.label_list[y], dataset.label_list[ypred]))
         plt.show()
 
 
 # jsonファイルを読み込んでパラメータを設定する
 # jsonから読み込むことでpyファイルの書き換えをしなくてよいのでGitが汚れない
-def load_params(phase="train", path="config/params.json"):
-    if len(sys.argv) == 2:
-        if os.path.exists(sys.argv[1]):
-            path = sys.argv[1]
-        else:
-            print("Error:指定した引数のパスにファイルが存在しません")
-            sys.exit()
-    with open(path, "r") as file:
-        params = json.load(file)
+def load_params(args: argparse.Namespace, phase="train"):
+    with open(args.params_path, "r") as params_file:
+        params = json.load(params_file)
     check_params(params)
 
-    # 訓練時のみparams["data_path"]["trainA"]直下のファルダ名をlabelsとして設定
+    # 訓練時のみparams["trainA"]直下のファルダ名をlabelsとして設定
     if phase == "train":
-        files = os.listdir(params["data_path"]["trainA"])
-        files_dir = [
-            f
-            for f in files
-            if os.path.isdir(os.path.join(params["data_path"]["trainA"], f))
-        ]
+        files = os.listdir(params["trainA"])
+        files_dir = [f for f in files if os.path.isdir(os.path.join(params["trainA"], f))]
         params["labels"] = files_dir
+
+    # テスト時のみargsからparams["test"]を設定
+    if phase == "test":
+        params["test"] = args.dataroot
 
     print_params(params)
     return params
@@ -212,10 +213,10 @@ def check_params(params):
     pretrained = params["net_params"]["pretrained"]
 
     # 誤っているparamsがあれば終了する
-    if not(("resnet" in net_name) or ("efficientnet" in net_name)):
+    if not (("resnet" in net_name) or ("efficientnet" in net_name)):
         print("ParamsError:net_params['name']=='{}'は定義されていない".format(net_name))
         sys.exit()
-    if not((optim_name == "Adam") or (optim_name == "SGD")):
+    if not ((optim_name == "Adam") or (optim_name == "SGD")):
         print("optim_params['name']=='{}'は定義されていない".format(optim_name))
         sys.exit()
     if grayscale_flag and multi_net:
@@ -228,10 +229,10 @@ def check_params(params):
 
 def print_params(params, nest=0):
     for param in params:
-        print("\t"*nest, param, end=":")
+        print("\t" * nest, param, end=":")
         if type(params[param]) == dict:
             print("{")
-            print_params(params[param], nest=nest+1)
+            print_params(params[param], nest=nest + 1)
             print("}\n")
         else:
             print("\t", params[param])
@@ -257,27 +258,28 @@ def print_recall(params, ys, ypreds):
     # 結果表示
     print("各感度の{}回平均".format(params["num_estimate"]))
     print(params["labels"])
-    print(np.round(recall_means_by_type*100, decimals=1))
-    print("各感度の{}回平均の平均：{}".format(params["num_estimate"], np.round(np.mean(recalls)*100, decimals=1)))
+    print(np.round(recall_means_by_type * 100, decimals=1))
+    print("各感度の{}回平均の平均：{}".format(params["num_estimate"], np.round(np.mean(recalls) * 100, decimals=1)))
     print("↑に近い各感度の{}回平均のインデックス:".format(params["num_estimate"]), min_error_index)
 
     y = ys[min_error_index]
     ypred = ypreds[min_error_index]
     print(confusion_matrix(y, ypred))
-    print(classification_report(y, ypred, target_names=params["labels"],
-                                digits=3, zero_division=0))
+    print(classification_report(y, ypred, target_names=params["labels"], digits=3, zero_division=0))
 
 
 def calc_confusion_matrix_df(params, y, preds):
     total_confusion_matrix = None
     for i, pred in enumerate(preds):
         if total_confusion_matrix is None:
-            total_confusion_matrix = confusion_matrix(y, pred, labels=range(len(params['labels'])))
+            total_confusion_matrix = confusion_matrix(y, pred, labels=range(len(params["labels"])))
         else:
-            total_confusion_matrix += confusion_matrix(y, pred, labels=range(len(params['labels'])))
+            total_confusion_matrix += confusion_matrix(y, pred, labels=range(len(params["labels"])))
     multi_columns = pd.MultiIndex.from_product([["Prediction"], params["labels"]])
     multi_index = pd.MultiIndex.from_product([["Actual"], params["labels"]])
-    confusion_matrix_df = pd.DataFrame(np.rint(total_confusion_matrix / 10).astype(int), index=multi_index, columns=multi_columns)
+    confusion_matrix_df = pd.DataFrame(
+        np.rint(total_confusion_matrix / 10).astype(int), index=multi_index, columns=multi_columns
+    )
     return confusion_matrix_df
 
 
@@ -289,7 +291,7 @@ def save_params(params, weights):
         os.makedirs(os.path.join(path, "weight"))
 
     # パラメータ保存
-    with open(os.path.join(path, "params.json"), "w") as params_file:
+    with open(os.path.join(path, "params.example.json"), "w") as params_file:
         json.dump(params, params_file)
 
     # ネットワークの重み保存
@@ -342,7 +344,7 @@ def calc_score(params, y, preds, need_mean=True, need_std=True):
         "F1 Score": f1_score_array,
         "F1 Score_Std": f1_score_std,
         "Accuracy": accuracy_array,
-        "Accuracy_Std": accuracy_std
+        "Accuracy_Std": accuracy_std,
     }
     return score
 
@@ -377,26 +379,23 @@ def print_score(params, score, need_mean=True, need_std=True):
 
 def save_score(params, score, path, need_mean=True, need_std=True):
     if need_std:
-        precision = format_score_line(score['Precision'], score['Precision_Std']).split()
-        recall = format_score_line(score['Recall'], score['Recall_Std']).split()
-        f1_score = format_score_line(score['F1 Score'], score['F1 Score_Std']).split()
+        precision = format_score_line(score["Precision"], score["Precision_Std"]).split()
+        recall = format_score_line(score["Recall"], score["Recall_Std"]).split()
+        f1_score = format_score_line(score["F1 Score"], score["F1 Score_Std"]).split()
         accuracy = f"{score['Accuracy']:.2f}±{score['Accuracy_Std']:.2f}"
     else:
-        precision = format_score_line(score['Precision'], None).split()
-        recall = format_score_line(score['Recall'], None).split()
-        f1_score = format_score_line(score['F1 Score'], None).split()
+        precision = format_score_line(score["Precision"], None).split()
+        recall = format_score_line(score["Recall"], None).split()
+        f1_score = format_score_line(score["F1 Score"], None).split()
         accuracy = f"{score['Accuracy']:.2f}"
 
     index = params["labels"].copy()
     if need_mean:
         index.append("平均")
 
-    df = pd.DataFrame({
-        "Precision": precision,
-        "Recall": recall,
-        "F1 Score": f1_score,
-        "Accuracy": accuracy
-    }, index=index).T
+    df = pd.DataFrame(
+        {"Precision": precision, "Recall": recall, "F1 Score": f1_score, "Accuracy": accuracy}, index=index
+    ).T
     df.to_csv(path)
 
 
@@ -438,9 +437,9 @@ def calc_voting_score(params, y, preds, need_mean=True):
     result = scores(y, voting_preds, labels=range(len(params["labels"])), zero_division=0)
 
     y_class_num = np.unique(y).size
-    precision_array, _ = mean_and_std_score([result[0]*100], y_class_num, need_mean, False)
-    recall_array, _ = mean_and_std_score([result[1]*100], y_class_num, need_mean, False)
-    f1_score_array, _ = mean_and_std_score([result[2]*100], y_class_num, need_mean, False)
+    precision_array, _ = mean_and_std_score([result[0] * 100], y_class_num, need_mean, False)
+    recall_array, _ = mean_and_std_score([result[1] * 100], y_class_num, need_mean, False)
+    f1_score_array, _ = mean_and_std_score([result[2] * 100], y_class_num, need_mean, False)
     accuracy_array, _ = mean_and_std_score([accuracy_score(y, voting_preds) * 100], y_class_num, False, False)
 
     score = {

@@ -1,13 +1,11 @@
 {
     "name": "experiment",
-    "data_path": {
-        "trainA": "data/HE/train/",
-        "trainB": null
-    },
+    "trainA": "./data/HE/train",
+    "trainB": "./data/tissue/train/",
     "num_estimate": 10,
     "epochs": 10,
     "batch_size": 32,
-    "imbalance": null,
+    "imbalance": "undersampling",
     "transform_params": {
         "img_resize": 224,
         "mean": [

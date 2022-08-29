@@ -5,7 +5,7 @@
 **/__pycache__/**
 /logs/
 /config/**
-!/config/default.json
+!/config/params.example.json
 /result
 /weight/*.pth
 /train.sh

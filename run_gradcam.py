@@ -17,7 +17,7 @@ from utils.parse import argparse_gradcam
 def main():
     # 使用するファイルのパスを読み込む
     args = argparse_gradcam()
-    params_path = str(args.params_path) if args.params_path else os.path.join(str(args.dir), "params.json")
+    params_path = str(args.params_path) if args.params_path else os.path.join(str(args.dir), "params.example.json")
     params = utils.load_params(params_path)
     image_dir_path = str(args.image_dir_path) if args.image_dir_path else str(params["data_path"]["test"])
     if image_dir_path[-1] != "/":

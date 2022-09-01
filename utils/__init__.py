@@ -199,6 +199,9 @@ def load_params(args: argparse.Namespace, phase="train"):
     # テスト時のみargsからparams["test"]を設定
     if phase == "test":
         params["test"] = args.dataroot
+        params["test_name"] = args.name
+
+    params["phase"] = phase
 
     print_params(params)
     return params
@@ -283,20 +286,29 @@ def calc_confusion_matrix_df(params, y, preds):
     return confusion_matrix_df
 
 
-# 各種パラメータ、結果、ネットワークの重みを保存する
-def save_params(params, weights):
+def save_weights(params, weights):
     # フォルダ作成
     path = os.path.join("result", params["name"])
     if not os.path.exists(os.path.join(path, "weight")):
         os.makedirs(os.path.join(path, "weight"))
 
-    # パラメータ保存
-    with open(os.path.join(path, "params.json"), "w") as params_file:
-        json.dump(params, params_file, indent=4)
-
     # ネットワークの重み保存
     for i, weight in enumerate(weights):
         torch.save(weight, os.path.join(path, "weight", "weight" + str(i) + ".pth"))
+
+
+def save_params(params):
+    # フォルダ作成
+    if params["phase"] == "train":
+        path = os.path.join("result", params["name"])
+    elif params["phase"] == "test":
+        path = os.path.join("result", params["name"], params["test_name"])
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    # パラメータ保存
+    with open(os.path.join(path, "params.json"), "w") as params_file:
+        json.dump(params, params_file, indent=4)
 
 
 def mean_and_std_score(all_score_list, y_class_num, need_all_mean=True, need_std=True):
@@ -455,7 +467,7 @@ def calc_voting_score(params, y, preds, need_mean=True):
 # ypreds:推論回数 × データ数 × ラベル数  3次元配列
 def print_and_save_result(params, y, preds, need_mean=True, need_std=True, need_confusion_matrix=True):
     # フォルダを作製する
-    path = os.path.join("result", params["name"])
+    path = os.path.join("result", params["name"], params["test_name"])
     if not os.path.exists(path):
         os.makedirs(path)
 

@@ -9,12 +9,16 @@ from torch.utils.data import DataLoader
 import utils
 from model import create_net, eval_net
 from utils.dataset import ArrangeNumDataset
+from utils.parse import argparse_test
 
 
 def predict():
+    # オプション引数をparamsに格納
+    args = argparse_test()
+
     # jsonファイルを読み込んでパラメータを設定する
     # よく呼び出すパラメータを変数に代入
-    params = utils.load_params(phase="test")
+    params = utils.load_params(args, phase="test")
 
     # GPUが使用可能ならGPU、不可能ならCPUを使う
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -29,9 +33,9 @@ def predict():
     ypreds = []
 
     for i in range(params["num_estimate"]):
-        print("\n推論：{}/{}".format(i+1, params["num_estimate"]))
+        print("\n推論: {}/{}".format(i + 1, params["num_estimate"]))
         # ネットワークに重みをロードする
-        weight_path = os.path.join("result", params["name"], "weight/weight"+str(i)+".pth")
+        weight_path = os.path.join("result", params["name"], "weight/weight" + str(i) + ".pth")
         load_weight = torch.load(weight_path, map_location=device)
         net.load_state_dict(load_weight)
         print("ネットワークに重みをロードしました")
@@ -44,6 +48,7 @@ def predict():
         ypreds.append(ypred.cpu().numpy())
 
     utils.print_and_save_result(params, ys[0], ypreds)
+    utils.save_params(params)
 
 
 if __name__ == "__main__":

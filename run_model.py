@@ -39,7 +39,7 @@ def main():
     net_weights = []  # estimateごとのネットワークの重みリスト
 
     for i in range(params["num_estimate"]):
-        print("\n学習・推論：{}/{}".format(i + 1, params["num_estimate"]))
+        print("\n学習・推論: {}/{}".format(i + 1, params["num_estimate"]))
 
         # 訓練とテストのデータセットを作成する
         train_dataset = ArrangeNumDataset(params=params, phase="train")
@@ -89,7 +89,8 @@ def main():
         net_weights.append(net.cpu().state_dict())
 
     # utils.print_and_save_result(params, ys[0], ypreds, need_mean=True, need_std=True)
-    utils.save_params(params, net_weights)
+    utils.save_params(params)
+    utils.save_weights(params, net_weights)
 
 
 if __name__ == "__main__":

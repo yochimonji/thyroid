@@ -15,6 +15,7 @@ def argparse_train():
 def argparse_test():
     parser = argparse_base()
     parser.add_argument("-d", "--dataroot", type=str)
+    parser.add_argument("-n", "--name", type=str, required=True)
     return parser.parse_args()
 
 

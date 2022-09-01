@@ -291,8 +291,8 @@ def save_params(params, weights):
         os.makedirs(os.path.join(path, "weight"))
 
     # パラメータ保存
-    with open(os.path.join(path, "params.example.json"), "w") as params_file:
-        json.dump(params, params_file)
+    with open(os.path.join(path, "params.json"), "w") as params_file:
+        json.dump(params, params_file, indent=4)
 
     # ネットワークの重み保存
     for i, weight in enumerate(weights):

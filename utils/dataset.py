@@ -86,7 +86,7 @@ class ArrangeNumDataset(Dataset):
             label_dict[label] = list()
         for file in file_list:
             for key in label_dict:
-                if key in file:
+                if ("/" + key + "/") in file:
                     label_dict[key].append(file)
         return label_dict
 
@@ -95,7 +95,7 @@ class ArrangeNumDataset(Dataset):
         label_list = []
         for file in self.file_list:
             for label in self.labels:
-                if label in file:
+                if ("/" + label + "/") in file:
                     label_list.append(self.labels.index(label))
 
         return label_list

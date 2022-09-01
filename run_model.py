@@ -34,8 +34,8 @@ def main():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("使用デバイス：", device)
 
-    ys = []
-    ypreds = []
+    # ys = []
+    # ypreds = []
     net_weights = []  # estimateごとのネットワークの重みリスト
 
     for i in range(params["num_estimate"]):
@@ -81,14 +81,14 @@ def main():
         # 学習
         train_net(net, train_loader, optimizer=optimizer, loss_fn=loss_fn, epochs=params["epochs"], device=device)
         # 推論
-        y, ypred = eval_net(net, test_loader, probability=False, device=device)
+        # y, ypred = eval_net(net, train_loader, probability=False, device=device)
 
         # 正答率とネットワークの重みをリストに追加
-        ys.append(y.cpu().numpy())
-        ypreds.append(ypred.cpu().numpy())
+        # ys.append(y.cpu().numpy())
+        # ypreds.append(ypred.cpu().numpy())
         net_weights.append(net.cpu().state_dict())
 
-    utils.print_and_save_result(params, ys[0], ypreds, need_mean=True, need_std=True)
+    # utils.print_and_save_result(params, ys[0], ypreds, need_mean=True, need_std=True)
     utils.save_params(params, net_weights)
 
 

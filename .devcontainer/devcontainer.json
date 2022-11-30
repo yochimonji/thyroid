@@ -8,15 +8,21 @@
 	"settings": {
 		"python.linting.enabled": true,
 		"python.linting.pylintEnabled": false,
+		"python.linting.flake8Path": "/usr/local/bin/pflake8",
 		"python.linting.flake8Enabled": true,
 		"python.linting.flake8Args": [
 			"--max-line-length=120"
 		],
 		"python.linting.lintOnSave": true,
+		"python.linting.mypyPath": "/usr/local/bin/mypy",
 		"python.linting.mypyEnabled": true,
 		"python.formatting.provider": "black",
+		"python.formatting.blackPath": "/usr/local/bin/black",
 		"python.formatting.blackArgs": [
 			"--line-length=120"
+		],
+		"isort.path": [
+			"/usr/local/bin/isort"
 		],
 		"editor.formatOnSave": true,
 		"editor.codeActionsOnSave": {
@@ -25,13 +31,19 @@
 	},
 	"extensions": [
 		"ms-python.python",
+		"njpwerner.autodocstring",
+		"streetsidesoftware.code-spell-checker",
+		"usernamehw.errorlens",
 		"donjayamanne.githistory",
-		"yzhang.markdown-all-in-one",
-		"ucodkr.tiff-preview",
-		"ms-ceintl.vscode-language-pack-ja",
-		"janisdd.vscode-edit-csv",
+		"eamodio.gitlens",
 		"oderwat.indent-rainbow",
-		"ms-toolsai.jupyter",
-		"mosapride.zenkaku"
-	]
+		"yzhang.markdown-all-in-one",
+		"davidanson.vscode-markdownlint",
+		"pkief.material-icon-theme",
+		"ms-vscode-remote.remote-containers",
+		"wayou.vscode-todo-highlight",
+		"Gruntfuggly.todo-tree",
+		"analytic-signal.preview-tiff"
+	],
+	"postStartCommand": "git config --global --add safe.directory /workspace"
 }

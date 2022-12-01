@@ -1,7 +1,6 @@
 /data/
 /material/
 /notebook/
-/.vscode/
 **/__pycache__/**
 /logs/
 /config/**

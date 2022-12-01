@@ -43,7 +43,8 @@
 		"ms-vscode-remote.remote-containers",
 		"wayou.vscode-todo-highlight",
 		"Gruntfuggly.todo-tree",
-		"analytic-signal.preview-tiff"
+		"analytic-signal.preview-tiff",
+		"janisdd.vscode-edit-csv"
 	],
 	"postStartCommand": "git config --global --add safe.directory /workspace"
 }

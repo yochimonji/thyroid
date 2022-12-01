@@ -56,7 +56,7 @@ class ArrangeNumDataset(Dataset):
             arrange_file_list = []
             file_dict = self.make_file_dict(file_list)
 
-            # undrersampling(+bagging)を行う場合
+            # undersampling(+bagging)を行う場合
             if arrange == "undersampling":
                 min_file_num = float("inf")
                 for val in file_dict.values():

@@ -1,6 +1,5 @@
 import copy
 import os
-import sys
 from datetime import datetime
 
 import torch
@@ -11,6 +10,7 @@ from torchvision import models
 from tqdm import tqdm
 
 
+# FIXME: pretrainedは非推奨、かわりにweightsを使う
 def create_net(params):
     net_params = params["net_params"]
     out_features = len(params["labels"])
@@ -224,7 +224,7 @@ def eval_net(net, loader, probability=False, device="cpu"):
     ys = []
     ypreds = []
 
-    for x, y in loader:
+    for (x, y) in tqdm(loader, total=len(loader)):
         x = x.to(device)
         y = y.to(device)
         with torch.no_grad():

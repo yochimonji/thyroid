@@ -11,7 +11,12 @@ import numpy as np
 import pandas as pd
 import torch
 from PIL import Image
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, mean_squared_error
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report,
+    confusion_matrix,
+    mean_squared_error,
+)
 from sklearn.metrics import precision_recall_fscore_support as scores
 from sklearn.metrics import recall_score
 from torchvision import transforms
@@ -199,7 +204,12 @@ def load_params(args: argparse.Namespace, phase="train"):
     # テスト時のみargsからparams["test"]を設定
     if phase == "test":
         params["test"] = args.dataroot
-        params["test_name"] = args.name
+        params["test_name"] = args.test_name
+
+    if phase == "gradcam":
+        params["dataroot_A"] = args.dataroot_A
+        params["dataroot_B"] = args.dataroot_B
+        params["test_name"] = args.test_name
 
     params["phase"] = phase
 
@@ -362,14 +372,14 @@ def calc_score(params, y, preds, need_mean=True, need_std=True):
 
 
 def format_score_line(score_array, std_array=None):
-    formated_line = ""
+    formatted_line = ""
     if std_array is None:
         for score in score_array:
-            formated_line += f"{score:.2f}\t"
+            formatted_line += f"{score:.2f}\t"
     else:
         for score, std in zip(score_array, std_array):
-            formated_line += f"{score:.2f}±{std:.2f}\t"
-    return formated_line
+            formatted_line += f"{score:.2f}±{std:.2f}\t"
+    return formatted_line
 
 
 def print_score(params, score, need_mean=True, need_std=True):

@@ -11,7 +11,6 @@ ARG USER_GID=${USER_GID}
 
 WORKDIR /workspace
 COPY pyproject.toml poetry.lock /workspace
-COPY pyproject.toml /workspace
 
 RUN groupadd --gid $USER_GID $USER_NAME && \
     useradd --uid $USER_UID --gid $USER_GID -m $USER_NAME && \

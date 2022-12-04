@@ -1,4 +1,3 @@
-import json
 import os
 from glob import glob
 
@@ -8,6 +7,7 @@ from gradcam import GradCAM
 from gradcam.utils import visualize_cam
 from torchvision import transforms
 from torchvision.utils import make_grid
+from tqdm import tqdm
 
 import utils
 from model import create_net
@@ -17,13 +17,10 @@ from utils.parse import argparse_gradcam
 def main():
     # 使用するファイルのパスを読み込む
     args = argparse_gradcam()
-    params = utils.load_params(args, phase="test")
-    image_dir_A_path = str(args.image_dir_A)
-    image_dir_B_path = str(args.image_dir_B)
-    weight_path = str(args.weight_path) if args.weight_path else os.path.join(str(args.dir), "weight/weight0.pth")
-    save_dir = os.path.join(str(args.params_path).replace("params.json", ""), "gradcam", args.save_name)
-    os.makedirs(save_dir, exist_ok=True)
-    print(save_dir)
+    params = utils.load_params(args, phase="gradcam")
+    dataroot = params["test"]
+    weight_path = os.path.join("result", params["name"], "weight/weight0.pth")
+    save_dir = os.path.join("result", params["name"], params["test_name"], "gradcam")
 
     # GPUが使用可能ならGPU、不可能ならCPUを使う
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -44,43 +41,27 @@ def main():
     gradcam = GradCAM(net, target_layer)
 
     # 可視化する画像のパスを貯める辞書
-    image_path_list_A = glob(image_dir_A_path + "/**/*.tif", recursive=True)
-    print(len(image_path_list_A))
+    image_path_list: list[str] = glob(dataroot + "/**/*.tif", recursive=True)
 
-    # ラベルごとに可視化する画像を決定
-    # for path in image_paths_all:
-    #     pil_img = PIL.Image.open(path)
-    #     torch_img = trans_tensor(pil_img).to(device)
-    #     normed_torch_img = trans_norm(torch_img)[None]
-    #     logit = net(normed_torch_img)
+    for path in tqdm(image_path_list, total=len(image_path_list)):
+        # 推論とヒートマップ生成
+        pil_img = PIL.Image.open(path)
+        torch_img = trans_tensor(pil_img).to(device)
+        normed_torch_img = trans_norm(torch_img)[None]
+        logit = net(normed_torch_img)
+        pred = params["labels"][logit.cpu()[0].argmax()]
+        mask, _ = gradcam(normed_torch_img)
+        heatmap, result = visualize_cam(mask, torch_img)
 
-    #     temp_path = path.replace(image_dir_path, "")
-    #     actual = temp_path[: temp_path.find("/")]
-    #     pred = labels[logit.cpu()[0].argmax()]
-    #     image_paths_key = actual + "_" + pred
+        # 保存するファイル名を生成
+        save_file_name, _ = os.path.splitext(path.replace(dataroot, "").replace("_fake", "").strip("/"))
+        save_file_name_suffix = save_file_name + "_pred_" + pred + ".tif"
+        save_path = os.path.join(save_dir, save_file_name_suffix)
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
-    #     if len(image_paths[image_paths_key]) <= 5:
-    #         image_paths[image_paths_key].append(path)
-
-    # # 可視化
-    # for key, path_list in image_paths.items():
-    #     if path_list == []:
-    #         continue
-    #     images = []
-    #     for path in path_list:
-    #         pil_img = PIL.Image.open(path)
-    #         torch_img = trans_tensor(pil_img).to(device)
-    #         normed_torch_img = trans_norm(torch_img)[None]
-    #         mask, _ = gradcam(normed_torch_img)
-    #         heatmap, result = visualize_cam(mask, torch_img)
-    #         images.extend([torch_img.cpu(), heatmap, result])
-    #     grid_image = make_grid(images, nrow=3)
-
-    #     filename = "actual_" + key.split("_")[0] + "_pred_" + key.split("_")[1] + ".png"
-    #     transforms.ToPILImage()(grid_image).save(os.path.join(save_dir, filename))
-
-    # with open(os.path.join(save_dir, "visualized_image_paths.json"), "w") as file:
-    #     json.dump(image_paths, file, indent=4)
+        images = [torch_img.cpu(), heatmap, result]
+        grid_image = make_grid(images, nrow=3)
+        transforms.ToPILImage()(grid_image).save(save_path)
 
 
 if __name__ == "__main__":

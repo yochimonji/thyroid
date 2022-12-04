@@ -206,11 +206,6 @@ def load_params(args: argparse.Namespace, phase="train"):
         params["test"] = args.dataroot
         params["test_name"] = args.test_name
 
-    if phase == "gradcam":
-        params["dataroot_A"] = args.dataroot_A
-        params["dataroot_B"] = args.dataroot_B
-        params["test_name"] = args.test_name
-
     params["phase"] = phase
 
     print_params(params)

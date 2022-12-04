@@ -9,3 +9,4 @@
 /weight/*.pth
 /train.sh
 .mypy_cache
+.env

@@ -10,7 +10,6 @@ from torchvision import models
 from tqdm import tqdm
 
 
-# FIXME: pretrainedは非推奨、かわりにweightsを使う
 def create_net(params):
     net_params = params["net_params"]
     out_features = len(params["labels"])
@@ -44,7 +43,10 @@ class CustomResNet(nn.Module):
     def __init__(self, transfer_learning=True, pretrained=True, model_name="resnet18", out_features=8):
         super().__init__()
         self.transfer_learning = transfer_learning
-        self.net = getattr(models, model_name)(pretrained=pretrained)
+        if pretrained:
+            self.net = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+        else:
+            self.net = models.resnet18()
         fc_input_dim = self.net.fc.in_features
         self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, out_features))
         self.set_grad()
@@ -87,7 +89,10 @@ class CustomResNetGray(nn.Module):
     def __init__(self, transfer_learning=True, pretrained=True, model_name="resnet18", out_features=8):
         super().__init__()
         self.transfer_learning = transfer_learning
-        self.net = getattr(models, model_name)(pretrained=pretrained)
+        if pretrained:
+            self.net = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+        else:
+            self.net = models.resnet18()
         self.net.conv1 = nn.Conv2d(1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
         fc_input_dim = self.net.fc.in_features
         self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, out_features))

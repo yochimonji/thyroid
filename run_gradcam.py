@@ -41,7 +41,7 @@ def main():
     gradcam = GradCAM(net, target_layer)
 
     # 可視化する画像のパスを貯める辞書
-    image_path_list: list[str] = glob(dataroot + "/**/*.tif", recursive=True)
+    image_path_list = glob(dataroot + "/**/*.tif", recursive=True)
 
     for path in tqdm(image_path_list, total=len(image_path_list)):
         # 推論とヒートマップ生成

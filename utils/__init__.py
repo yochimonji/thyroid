@@ -495,12 +495,25 @@ def print_and_save_result(params, y, preds, need_mean=True, need_std=True, need_
 
 
 def save_path_y_ypred(paths: list[str], ys: list, ypreds: list, labels: list[str], save_dir: str):
+    """パス、ラベル、予測をCSVファイルに保存する。
+
+    Args:
+        paths (list[str]): 保存するパスの一覧。
+        ys (list): 保存する本物のラベル（数値）の一覧。
+        ypreds (list): 保存する予測したラベル（数値）の一覧。
+        labels (list[str]): ラベルのリスト。ys, ypredsのラベル名はlabels[ys[i]], labels[ypreds[i]]となる。
+        save_dir (str): 保存するフォルダのパス。
+
+    Raises:
+        ValueError: paths, ys, ypredsの配列長が異なる場合に発生。
+    """
     if len(paths) != len(ys) or len(paths) != len(ypreds):
         raise ValueError(
             f"Number of paths and y, ypred are not same: \
                 len(paths)={len(paths)}. len(y)={len(ys)}. len(ypred)={len(ypreds)}"
         )
 
+    # 理解しやすいようにys, ypredsを癌の名前の一覧に変換する
     ys_label = list(map(lambda y: labels[y], ys))
     ypreds_label = list(map(lambda ypred: labels[np.argmax(ypred)], ypreds))
 

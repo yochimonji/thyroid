@@ -48,6 +48,13 @@ def predict():
         ypreds.append(ypred.cpu().numpy())
 
     utils.print_and_save_result(params, ys[0], ypreds)
+    utils.save_path_y_ypred(
+        test_dataset.file_list,
+        ys[0],
+        ypreds[0],
+        params["labels"],
+        os.path.join("result", params["name"], params["test_name"]),
+    )
     utils.save_params(params)
 
 

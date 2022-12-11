@@ -76,7 +76,7 @@ class ArrangeNumDataset(Dataset):
                     arrange_file_list.append(random.choices(val, k=max_file_num))  # 重複あり
                 # random.sampleは再標本化後の数値kがもとの要素数より大きいと使えない
 
-            file_list = list(itertools.chain.from_iterable(arrange_file_list))
+            file_list = sorted(list(itertools.chain.from_iterable(arrange_file_list)))
         return file_list
 
     # key:ラベル、value:ファイルパスリストの辞書を作成

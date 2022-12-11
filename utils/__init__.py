@@ -199,7 +199,7 @@ def load_params(args: argparse.Namespace, phase="train"):
     if phase == "train":
         files = os.listdir(params["trainA"])
         files_dir = [f for f in files if os.path.isdir(os.path.join(params["trainA"], f))]
-        params["labels"] = files_dir
+        params["labels"] = sorted(files_dir)
 
     # テスト時のみargsからparams["test"]を設定
     if phase == "test":
@@ -477,8 +477,6 @@ def print_and_save_result(params, y, preds, need_mean=True, need_std=True, need_
         os.makedirs(path)
 
     preds_non_probability = np.argmax(preds, 2)
-    print(np.array(preds).shape)
-    print(preds_non_probability.shape)
 
     if need_confusion_matrix:
         confusion_matrix_df = calc_confusion_matrix_df(params, y, preds_non_probability)
@@ -494,3 +492,18 @@ def print_and_save_result(params, y, preds, need_mean=True, need_std=True, need_
     # SoftVotingの計算と保存
     voting_score = calc_voting_score(params, y, preds, need_mean)
     save_score(params, voting_score, os.path.join(path, "score_soft_voting.csv"), need_mean, False)
+
+
+def save_path_y_ypred(paths: list[str], ys: list, ypreds: list, labels: list[str], save_dir: str):
+    if len(paths) != len(ys) or len(paths) != len(ypreds):
+        raise ValueError(
+            f"Number of paths and y, ypred are not same: \
+                len(paths)={len(paths)}. len(y)={len(ys)}. len(ypred)={len(ypreds)}"
+        )
+
+    ys_label = list(map(lambda y: labels[y], ys))
+    ypreds_label = list(map(lambda ypred: labels[np.argmax(ypred)], ypreds))
+
+    ys_ypreds_array = np.array([ys_label, ypreds_label]).T
+    ys_ypreds_df = pd.DataFrame(ys_ypreds_array, columns=["real", "pred"], index=paths)
+    ys_ypreds_df.to_csv(os.path.join(save_dir, "path_real_pred.csv"))

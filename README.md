@@ -11,7 +11,7 @@ python run_model.py -p <params_path>
 test
 
 ```sh
-python predict.py -p <params_path> -d <dataroot_dir_path>
+python predict.py -p <params_path> -d <dataroot_dir_path> -n exp
 ```
 
 GradCAMで可視化  

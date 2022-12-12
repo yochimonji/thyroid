@@ -4,7 +4,6 @@ import itertools
 import json
 import os
 import random
-import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -38,11 +37,11 @@ class MyRotationTransform:
 # ResNetで転移学習するとき、sizeは224×224、defaultのmean,stdで標準化する
 class ImageTransform:
     def __init__(self, params):
-        self.grayscale_flag = params["transform_params"]["grayscale_flag"]
-        self.normalize_per_img = params["transform_params"]["normalize_per_img"]
-        self.multi_net = params["net_params"]["multi_net"]
-        mean = params["transform_params"]["mean"]
-        std = params["transform_params"]["std"]
+        self.grayscale_flag = params["grayscale_flag"]
+        self.normalize_per_img = params["normalize_per_img"]
+        self.multi_net = params["multi_net"]
+        mean = params["mean"]
+        std = params["std"]
         if self.multi_net:
             self.mean = np.hstack((mean, mean))
             self.std = np.hstack((std, std))
@@ -50,7 +49,7 @@ class ImageTransform:
             self.mean = mean
             self.std = std
 
-        size = params["transform_params"]["img_resize"]
+        size = params["img_resize"]
         self.transform_rgb = {
             "train": transforms.Compose(
                 [  # 他の前処理をまとめる
@@ -193,7 +192,6 @@ def show_wrong_img(dataset, ys, ypreds, indices=None, y=None, ypred=None):
 def load_params(args: argparse.Namespace, phase="train"):
     with open(args.params_path, "r") as params_file:
         params = json.load(params_file)
-    check_params(params)
 
     # 訓練時のみparams["trainA"]直下のファルダ名をlabelsとして設定
     if phase == "train":
@@ -208,42 +206,7 @@ def load_params(args: argparse.Namespace, phase="train"):
 
     params["phase"] = phase
 
-    print_params(params)
     return params
-
-
-def check_params(params):
-    net_name = params["net_params"]["name"]
-    optim_name = params["optim_params"]["name"]
-    grayscale_flag = params["transform_params"]["grayscale_flag"]
-    multi_net = params["net_params"]["multi_net"]
-    transfer_learning = params["net_params"]["transfer_learning"]
-    pretrained = params["net_params"]["pretrained"]
-
-    # 誤っているparamsがあれば終了する
-    if not (("resnet" in net_name) or ("efficientnet" in net_name)):
-        print("ParamsError:net_params['name']=='{}'は定義されていない".format(net_name))
-        sys.exit()
-    if not ((optim_name == "Adam") or (optim_name == "SGD")):
-        print("optim_params['name']=='{}'は定義されていない".format(optim_name))
-        sys.exit()
-    if grayscale_flag and multi_net:
-        print("grayscale==True and multi_net==Trueはできません")
-        sys.exit()
-    if transfer_learning and (not pretrained):
-        print("transfer_learning==True and pretrained=Falseはできません")
-        sys.exit()
-
-
-def print_params(params, nest=0):
-    for param in params:
-        print("\t" * nest, param, end=":")
-        if type(params[param]) == dict:
-            print("{")
-            print_params(params[param], nest=nest + 1)
-            print("}\n")
-        else:
-            print("\t", params[param])
 
 
 # 結果（主にrecall）を表示する

@@ -4,6 +4,7 @@
         "dataroot",
         "efficientnet",
         "gradcam",
+        "lossweight",
         "optim",
         "preds",
         "tqdm",

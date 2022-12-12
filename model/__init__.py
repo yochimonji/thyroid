@@ -11,29 +11,28 @@ from tqdm import tqdm
 
 
 def create_net(params):
-    net_params = params["net_params"]
     out_features = len(params["labels"])
 
-    if "resnet" in net_params["name"]:
-        if net_params["multi_net"]:
+    if "resnet" in params["net_name"]:
+        if params["multi_net"]:
             net = ConcatMultiResNet(
-                transfer_learning=net_params["transfer_learning"],
-                pretrained=net_params["pretrained"],
-                model_name=net_params["name"],
+                transfer_learning=params["transfer_learning"],
+                pretrained=params["pretrained"],
+                model_name=params["name"],
                 out_features=out_features,
             )
         else:
             net = CustomResNet(
-                transfer_learning=net_params["transfer_learning"],
-                pretrained=net_params["pretrained"],
-                model_name=net_params["name"],
+                transfer_learning=params["transfer_learning"],
+                pretrained=params["pretrained"],
+                model_name=params["name"],
                 out_features=out_features,
             )
-    elif "efficientnet" in net_params["name"]:
+    elif "efficientnet" in params["name"]:
         net = CustomEfficientNet(
-            transfer_learning=net_params["transfer_learning"],
-            pretrained=net_params["pretrained"],
-            model_name=net_params["name"],
+            transfer_learning=params["transfer_learning"],
+            pretrained=params["pretrained"],
+            model_name=params["name"],
             out_features=out_features,
         )
     return net

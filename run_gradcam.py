@@ -9,15 +9,13 @@ from torchvision import transforms
 from torchvision.utils import make_grid
 from tqdm import tqdm
 
-import utils
 from model import create_net
 from utils.parse import argparse_gradcam
 
 
 def main():
     # 使用するファイルのパスを読み込む
-    args = argparse_gradcam()
-    params = utils.load_params(args, phase="gradcam")
+    params = argparse_gradcam()
     dataroot = params["test"]
     weight_path = os.path.join("result", params["name"], "weight/weight0.pth")
     save_dir = os.path.join("result", params["name"], params["test_name"], "gradcam")

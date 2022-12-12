@@ -8,3 +8,4 @@
 /train.sh
 .mypy_cache
 .env
+script.sh

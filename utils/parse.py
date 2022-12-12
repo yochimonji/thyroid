@@ -54,7 +54,7 @@ def argparse_base_test() -> argparse.ArgumentParser:
     return parser
 
 
-def argparse_test() -> argparse.Namespace:
+def argparse_test() -> dict:
     parser = argparse_base_test()
     parser.add_argument("-t", "--test_name", type=str, required=True)
     parser.add_argument("-d", "--dataroot", type=str, required=True)
@@ -72,9 +72,16 @@ def argparse_test() -> argparse.Namespace:
     return params
 
 
-def argparse_gradcam() -> argparse.Namespace:
+def argparse_gradcam() -> dict:
     parser = argparse_base_test()
-    return parser.parse_args()
+
+    args = parser.parse_args()
+    with open(args.params_path, "r") as params_file:
+        params = json.load(params_file)
+
+    params["phase"] = "gradcam"
+    print_params(params)
+    return params
 
 
 def args_to_params(args: argparse.Namespace) -> dict:

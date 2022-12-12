@@ -4,12 +4,21 @@ import os
 
 
 def argparse_base() -> argparse.ArgumentParser:
+    """すべてのargparseの元。共通で処理させたいことを記述。
+
+    Returns:
+        argparse.ArgumentParser: argparseの実体。
+    """
     parser = argparse.ArgumentParser()
     return parser
 
 
-# TODO: README更新
 def argparse_train() -> dict:
+    """訓練用のオプションパラメータを定義。
+
+    Returns:
+        dict: 訓練のパラメータを辞書に格納したもの。本来ならパラメータを直接返すべき。負の遺産。
+    """
     parser = argparse_base()
     parser.add_argument("-n", "--name", type=str, required=True)
     parser.add_argument("-A", "--trainA", type=str, required=True)
@@ -18,7 +27,10 @@ def argparse_train() -> dict:
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument(
-        "--imbalance", type=str, default="undersampling", help="[undersampling | oversampling | lossweight, None]"
+        "--imbalance",
+        type=str,
+        choices=["undersampling", "oversampling", "lossweight"],
+        help='["undersampling", "oversampling", "lossweight"] or None',
     )
     parser.add_argument("--img_resize", type=int, default=224)
     parser.add_argument("--mean", type=float, nargs=3, default=[0.485, 0.456, 0.406])
@@ -37,46 +49,62 @@ def argparse_train() -> dict:
     parser.add_argument("--weight_decay", type=float, default=1e-4)
 
     args = parser.parse_args()
-    params = args_to_params(args)
+    params = args_to_dict(args)
 
+    # trainA直下のフォルダの名前をラベル名とする
     dirs = os.listdir(params["trainA"])
     params["labels"] = sorted(dirs)
     params["phase"] = "train"
 
-    params = sort_dict(params)
+    params = sort_dict_by_key(params)
     print_params(params)
     return params
 
 
 def argparse_base_test() -> argparse.ArgumentParser:
+    """テストのオプションパラメータのベース。argparse_testとargparse_gradcamで呼び出す。
+
+    Returns:
+        argparse.ArgumentParser: argparseの実体。
+    """
     parser = argparse_base()
     parser.add_argument("-p", "--params_path", type=str, required=True)
     return parser
 
 
 def argparse_test() -> dict:
+    """テストのオプションパラメータを定義。
+
+    Returns:
+        dict: テストのパラメータを格納した辞書。
+    """
     parser = argparse_base_test()
     parser.add_argument("-t", "--test_name", type=str, required=True)
     parser.add_argument("-d", "--dataroot", type=str, required=True)
 
     args = parser.parse_args()
-    with open(args.params_path, "r") as params_file:
+    with open(args.params_path, "r") as params_file:  # テストはparams.jsonからパラメータを取得
         params = json.load(params_file)
 
     params["test_name"] = args.test_name
     params["test"] = args.dataroot
     params["phase"] = "test"
 
-    params = sort_dict(params)
+    params = sort_dict_by_key(params)
     print_params(params)
     return params
 
 
 def argparse_gradcam() -> dict:
+    """GradCAMのオプションパラメータを定義。
+
+    Returns:
+        dict: GradCAMのパラメータを格納した辞書。
+    """
     parser = argparse_base_test()
 
     args = parser.parse_args()
-    with open(args.params_path, "r") as params_file:
+    with open(args.params_path, "r") as params_file:  # GradCAMもparams.jsonからパラメータを取得
         params = json.load(params_file)
 
     params["phase"] = "gradcam"
@@ -84,15 +112,31 @@ def argparse_gradcam() -> dict:
     return params
 
 
-def args_to_params(args: argparse.Namespace) -> dict:
-    params = dict()
+def args_to_dict(args: argparse.Namespace) -> dict:
+    """argparseの各パラメータを辞書型に変換。
+
+    Args:
+        args (argparse.Namespace): 変換するargparseの実体。
+
+    Returns:
+        dict: 辞書型に変換されたパラメータ。
+    """
+    temp_dict = dict()
     for arg in dir(args):
-        if arg[0] != "_":
-            params[arg] = getattr(args, arg)
-    return params
+        if arg[0] != "_":  # 文字列の先頭が"_"の属性はargparseが定義済みのアクセスが制限された属性。
+            temp_dict[arg] = getattr(args, arg)
+    return temp_dict
 
 
-def sort_dict(dict_items: dict) -> dict:
+def sort_dict_by_key(dict_items: dict) -> dict:
+    """辞書をキーでソートする。
+
+    Args:
+        dict_items (dict): ソートした辞書。
+
+    Returns:
+        dict: キーでソートされた辞書。
+    """
     sorted_items = sorted(dict_items.items())
     sorted_dict_items = {}
     for (key, value) in sorted_items:
@@ -101,6 +145,12 @@ def sort_dict(dict_items: dict) -> dict:
 
 
 def print_params(params: dict, nest: int = 0):
+    """ネストされた辞書型のパラメータを整えて表示する。
+
+    Args:
+        params (dict): 表示するパラメータ。
+        nest (int, optional): ネストの深さ。再起呼び出しで自動で加算される。 Defaults to 0.
+    """
     print("=============== params ===============")
     for param in params:
         print("\t" * nest, param, end=":")

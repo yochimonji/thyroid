@@ -242,7 +242,7 @@ def save_weights(params, weights):
         torch.save(weight, os.path.join(path, "weight", "weight" + str(i) + ".pth"))
 
 
-def save_params(params):
+def save_params(params: dict):
     # フォルダ作成
     if params["phase"] == "train":
         path = os.path.join("result", params["name"])
@@ -250,6 +250,7 @@ def save_params(params):
         path = os.path.join("result", params["name"], params["test_name"])
     if not os.path.exists(path):
         os.makedirs(path)
+    params.pop("gpu_id")
 
     # パラメータ保存
     with open(os.path.join(path, "params.json"), "w") as params_file:

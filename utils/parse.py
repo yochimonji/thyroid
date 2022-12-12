@@ -10,6 +10,7 @@ def argparse_base() -> argparse.ArgumentParser:
         argparse.ArgumentParser: argparseの実体。
     """
     parser = argparse.ArgumentParser()
+    parser.add_argument("--gpu_id", type=str, default="0")
     return parser
 
 
@@ -88,6 +89,7 @@ def argparse_test() -> dict:
 
     params["test_name"] = args.test_name
     params["test"] = args.dataroot
+    params["gpu_id"] = args.gpu_id
     params["phase"] = "test"
 
     params = sort_dict_by_key(params)
@@ -107,7 +109,10 @@ def argparse_gradcam() -> dict:
     with open(args.params_path, "r") as params_file:  # GradCAMもparams.jsonからパラメータを取得
         params = json.load(params_file)
 
+    params["gpu_id"] = args.gpu_id
     params["phase"] = "gradcam"
+
+    params = sort_dict_by_key(params)
     print_params(params)
     return params
 

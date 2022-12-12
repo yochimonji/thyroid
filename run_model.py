@@ -26,7 +26,7 @@ def main():
     params = argparse_train()
 
     # GPUが使用可能ならGPU、不可能ならCPUを使う
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:" + params["gpu_id"] if torch.cuda.is_available() else "cpu")
     print("使用デバイス：", device)
 
     # ys = []

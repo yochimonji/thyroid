@@ -187,28 +187,6 @@ def show_wrong_img(dataset, ys, ypreds, indices=None, y=None, ypred=None):
         plt.show()
 
 
-# jsonファイルを読み込んでパラメータを設定する
-# jsonから読み込むことでpyファイルの書き換えをしなくてよいのでGitが汚れない
-def load_params(args: argparse.Namespace, phase="train"):
-    with open(args.params_path, "r") as params_file:
-        params = json.load(params_file)
-
-    # 訓練時のみparams["trainA"]直下のファルダ名をlabelsとして設定
-    if phase == "train":
-        files = os.listdir(params["trainA"])
-        files_dir = [f for f in files if os.path.isdir(os.path.join(params["trainA"], f))]
-        params["labels"] = sorted(files_dir)
-
-    # テスト時のみargsからparams["test"]を設定
-    if phase == "test":
-        params["test"] = args.dataroot
-        params["test_name"] = args.test_name
-
-    params["phase"] = phase
-
-    return params
-
-
 # 結果（主にrecall）を表示する
 def print_recall(params, ys, ypreds):
     # recall計算

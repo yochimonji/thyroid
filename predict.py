@@ -13,12 +13,8 @@ from utils.parse import argparse_test
 
 
 def predict():
-    # オプション引数をparamsに格納
-    args = argparse_test()
-
-    # jsonファイルを読み込んでパラメータを設定する
-    # よく呼び出すパラメータを変数に代入
-    params = utils.load_params(args, phase="test")
+    # オプション引数からjsonファイルを読み込んでパラメータを設定する
+    params = argparse_test()
 
     # GPUが使用可能ならGPU、不可能ならCPUを使う
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

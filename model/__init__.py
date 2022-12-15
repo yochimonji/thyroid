@@ -10,7 +10,7 @@ from torchvision import models
 from tqdm import tqdm
 
 
-def create_net(params):
+def create_net(params: dict):
     out_features = len(params["labels"])
 
     if "resnet" in params["net_name"]:
@@ -22,14 +22,15 @@ def create_net(params):
                 out_features=out_features,
             )
         else:
-            net = CustomResNet(
+            net = CustomResNet(  # type: ignore
                 transfer_learning=params["transfer_learning"],
                 pretrained=params["pretrained"],
                 model_name=params["name"],
                 out_features=out_features,
+                weight_path=params["weight_path"],
             )
     elif "efficientnet" in params["name"]:
-        net = CustomEfficientNet(
+        net = CustomEfficientNet(  # type: ignore
             transfer_learning=params["transfer_learning"],
             pretrained=params["pretrained"],
             model_name=params["name"],
@@ -39,14 +40,30 @@ def create_net(params):
 
 
 class CustomResNet(nn.Module):
-    def __init__(self, transfer_learning=True, pretrained=True, model_name="resnet18", out_features=8):
+    def __init__(
+        self,
+        transfer_learning: bool = True,
+        pretrained: bool = True,
+        model_name: str = "resnet18",
+        out_features: int = 8,
+        weight_path: str | None = None,
+    ):
         super().__init__()
         self.transfer_learning = transfer_learning
         if pretrained:
             self.net = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+            fc_input_dim = self.net.fc.in_features
+            if weight_path:
+                state_dict = torch.load(weight_path, map_location="cpu")
+                fixed_state_dict = fix_model_state_dict(state_dict)
+                self.net.fc = nn.Sequential(
+                    nn.Dropout(0.4), nn.Linear(fc_input_dim, fixed_state_dict["fc.1.weight"].size(0))
+                )
+                self.net.load_state_dict(fixed_state_dict)
         else:
             self.net = models.resnet18()
-        fc_input_dim = self.net.fc.in_features
+            fc_input_dim = self.net.fc.in_features
+
         self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, out_features))
         self.set_grad()
 
@@ -289,3 +306,12 @@ def train_net(net, train_loader, optimizer, loss_fn=nn.CrossEntropyLoss(), epoch
     torch.save(net.state_dict(), "weight/last_weight.pth")
 
     return net
+
+
+def fix_model_state_dict(state_dict):
+    new_state_dict = dict()
+    for name, v in state_dict.items():
+        if name.startswith("net."):
+            name = name[4:]
+        new_state_dict[name] = v
+    return new_state_dict

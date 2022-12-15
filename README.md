@@ -49,4 +49,3 @@ python run_gradcam.py -p result/<train_name>/<test_name>/params.json
 - `result/<train_name>/<test_name>/score.csv`：weightごとの予測結果の平均と標準偏差のスコアのファイル。
 - `result/<train_name>/<test_name>/y_preds_all_score.csv`：weightごとの予測結果をすべて保存した結果とスコアのファイル。
 - `result/<train_name>/<test_name>/gradcam/`：テストデータのGradCAMの可視化結果を保存したフォルダ。現在はテストで使用したすべての画像を可視化している。
-

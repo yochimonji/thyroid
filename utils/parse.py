@@ -14,12 +14,7 @@ def argparse_base() -> argparse.ArgumentParser:
     return parser
 
 
-def argparse_train() -> dict:
-    """訓練用のオプションパラメータを定義。
-
-    Returns:
-        dict: 訓練のパラメータを辞書に格納したもの。本来ならパラメータを直接返すべき。負の遺産。
-    """
+def argparse_base_train() -> argparse.ArgumentParser:
     parser = argparse_base()
     parser.add_argument("-n", "--name", type=str, required=True)
     parser.add_argument("-A", "--trainA", type=str, required=True)
@@ -48,6 +43,33 @@ def argparse_train() -> dict:
     parser.add_argument("--lr_pretrained", type=float, default=1e-5)
     parser.add_argument("--momentum", type=float, default=0.9)
     parser.add_argument("--weight_decay", type=float, default=1e-4)
+
+    return parser
+
+
+def argparse_train() -> dict:
+    """訓練用のオプションパラメータを定義。
+
+    Returns:
+        dict: 訓練のパラメータを辞書に格納したもの。本来ならパラメータを直接返すべき。負の遺産。
+    """
+    parser = argparse_base_train()
+    args = parser.parse_args()
+    params = args_to_dict(args)
+
+    # trainA直下のフォルダの名前をラベル名とする
+    dirs = os.listdir(params["trainA"])
+    params["labels"] = sorted(dirs)
+    params["phase"] = "train"
+
+    params = sort_dict_by_key(params)
+    print_params(params)
+    return params
+
+
+def argparse_cv() -> dict:
+    parser = argparse_base_train()
+    parser.add_argument("--cv_n_split", type=int, default=10)
 
     args = parser.parse_args()
     params = args_to_dict(args)

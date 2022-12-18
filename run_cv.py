@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 
 from model import eval_net, train_net
 from utils import ImageTransform, make_datapath_list, make_label_list
-from utils.dataset import ArrangeNumDataset
+from utils.dataset import CustomImageDataset
 from utils.parse import argparse_cv
 
 
@@ -29,29 +29,28 @@ def main():
 
     path_list = make_datapath_list(params["trainA"], params["labels"])
     label_list = make_label_list(path_list, params["labels"])
+    if params["trainB"]:
+        B_path_list = make_datapath_list(params["trainB"], params["labels"])
+        B_label_list = make_label_list(B_path_list, params["labels"])
+        path_list += B_path_list
+        label_list += B_label_list
     print(len(path_list), len(label_list))
 
     # ys = []
     # ypreds = []
     # val_indices_after_skf = []
-    # batch_size = 128
-    # num_workers = 8
-    # only_fc = True  # 転移学習：True, FineTuning：False
-    # pretrained = True
-    # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    # print("使用デバイス：", device)
 
-    skf = StratifiedKFold(n_splits=params["cv_n_split"], shuffle=True, random_state=0)
+    # skf = StratifiedKFold(n_splits=params["cv_n_split"], shuffle=True, random_state=0)
 
-    for cv_num, (train_indices, val_indices) in enumerate(skf.split(path_list, label_list)):
-        print(cv_num, len(train_indices), len(val_indices))
-
+    # for cv_num, (train_indices, val_indices) in enumerate(skf.split(path_list, label_list)):
     #     print("交差検証：{}/{}".format(cv_num + 1, skf.get_n_splits()))
 
-    #     train_list = [file_list[i] for i in train_indices]
-    #     val_list = [file_list[i] for i in val_indices]
+    #     train_path_list = [path_list[i] for i in train_indices]
+    #     train_label_list = [label_list[i] for i in train_indices]
+    #     val_path_list = [path_list[i] for i in val_indices]
+    #     val_label_list = [label_list[i] for i in val_indices]
 
-    #     train_dataset = ArrangeNumDataset(
+    #     train_dataset = CustomImageDataset(
     #         train_list, label_list, phase="train", arrange=None, transform=ImageTransform()
     #     )
     #     val_dataset = ArrangeNumDataset(val_list, label_list, phase="test", arrange=None, transform=ImageTransform())

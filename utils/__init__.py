@@ -142,7 +142,7 @@ def make_datapath_list(dir_path: str, labels: list[str]) -> list[str]:
     return path_list
 
 
-def make_label_list(path_list: list[str], labels: list[str]) -> list[str]:
+def make_label_list(path_list: list[str], labels: list[str]) -> list[int]:
     """tifファイルのリストからtifファイルと組になるlabelのリスト生成する
 
     Args:
@@ -150,13 +150,13 @@ def make_label_list(path_list: list[str], labels: list[str]) -> list[str]:
         labels (list[str]): ラベルの一覧のリスト
 
     Returns:
-        list[str]: tifファイルと組になるlabelのリスト
+        list[str]: tifファイルと組になるlabelのindexのリスト
     """
-    label_list: list[str] = []
+    label_list: list[int] = []
     for path in path_list:
         for label in labels:
             if label in path:
-                label_list.append(label)
+                label_list.append(labels.index(label))
                 break
     return label_list
 

@@ -117,21 +117,48 @@ class ImageTransform:
         return normalize(transform_img)
 
 
-# path以下にあり、labelsと一致するすべてのディレクトリからtifファイルのパスリスト取得
-def make_datapath_list(path, labels):
-    if path[-1] != "/":
-        path += "/"
-    search_path_list = []
-    for label in labels:
-        search_path_list.append(os.path.join(path, "*" + label + "*/**/*.tif"))
+def make_datapath_list(dir_path: str, labels: list[str]) -> list[str]:
+    """path以下のフォルダ名がlabelsと一致するすべてのフォルダからtifファイルのパスリスト取得
 
-    path_list = []
+    Args:
+        dir_path (str): 探索するフォルダ
+        labels (list[str]): dir_path以下に存在するフォルダ名のリスト
+
+    Returns:
+        list[str]: tifファイルのリスト
+    """
+    if dir_path[-1] != "/":
+        dir_path += "/"
+    search_path_list: list[str] = []
+    for label in labels:
+        search_path_list.append(os.path.join(dir_path, label, "**/*.tif"))
+
+    path_list: list[str] = []
     # recursive=True:子ディレクトリも再帰的に探索する
     for search_path in search_path_list:
         for path in glob.glob(search_path, recursive=True):
             path_list.append(path)
 
     return path_list
+
+
+def make_label_list(path_list: list[str], labels: list[str]) -> list[str]:
+    """tifファイルのリストからtifファイルと組になるlabelのリスト生成する
+
+    Args:
+        path_list (list[str]): tifファイルのリスト
+        labels (list[str]): ラベルの一覧のリスト
+
+    Returns:
+        list[str]: tifファイルと組になるlabelのリスト
+    """
+    label_list: list[str] = []
+    for path in path_list:
+        for label in labels:
+            if label in path:
+                label_list.append(label)
+                break
+    return label_list
 
 
 # img_pathの画像をそのまま・train変換・val変換で表示

@@ -3,6 +3,8 @@ import random
 
 import numpy as np
 import torch
+from imblearn.over_sampling import RandomOverSampler
+from imblearn.under_sampling import RandomUnderSampler
 from PIL import Image
 from torch.utils.data import Dataset
 
@@ -114,6 +116,29 @@ class ArrangeNumDataset(Dataset):
         return weight
 
 
+class CustomImageDataset(Dataset):
+    def __init__(
+        self, path_list: list[str], label_list: list[int], transform: ImageTransform | None = None, phase: str = "train"
+    ):
+        self.path_list = path_list
+        self.label_list = label_list
+        self.transform = transform
+        self.phase = phase
+
+    def __len__(self):
+        return len(self.path_list)
+
+    def __getitem__(self, index):
+        img_path = self.path_list[index]
+        img = Image.open(img_path)
+        if self.transform:
+            img = self.transform(img, self.phase)
+
+        label = self.label_list[index]
+
+        return img, label
+
+
 # 複数のデータセットを結合し、1つのデータセットとするクラス
 class ConcatDataset(Dataset):
     def __init__(self, *datasets):
@@ -151,3 +176,32 @@ class ConcatDataset(Dataset):
             weight.append(data_num_sum / n)
         weight = torch.tensor(weight).float()
         return weight
+
+
+def arrange_data_num_per_label(
+    imbalance: str, path_list: list[str], label_list: list[int]
+) -> tuple[list[str], list[int]]:
+    """クラスごとのデータ数を揃える
+
+    Args:
+        imbalance (str): データ数を揃える方式。"undersampling" or "oversampling".
+        path_list (list[str]): データ数を揃えるパスのリスト。
+        label_list (list[int]): データ数を揃えるラベルのリスト。
+
+    Returns:
+        tuple[list[str], list[int]]: データ数を揃えたパスのリストとラベルのリストのタプル。
+    """
+    if imbalance == "undersampling":
+        path_array = np.array(path_list).reshape(len(path_list), 1)
+        rus = RandomUnderSampler(random_state=0)
+        path_array_resampled, label_list_resampled = rus.fit_resample(path_array, label_list)
+        path_list_resampled = list(path_array_resampled.reshape(len(label_list_resampled)))
+        return path_list_resampled, label_list_resampled
+    elif imbalance == "oversampling":
+        path_array = np.array(path_list).reshape(len(path_list), 1)
+        ros = RandomOverSampler(random_state=0)
+        path_array_resampled, label_list_resampled = ros.fit_resample(path_array, label_list)
+        path_list_resampled = list(path_array_resampled.reshape(len(label_list_resampled)))
+        return path_list_resampled, label_list_resampled
+    else:
+        return path_list, label_list

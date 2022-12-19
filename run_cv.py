@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 
 from model import eval_net, train_net
 from utils import ImageTransform, make_datapath_list, make_label_list
-from utils.dataset import CustomImageDataset
+from utils.dataset import CustomImageDataset, arrange_data_num_per_label
 from utils.parse import argparse_cv
 
 
@@ -34,29 +34,32 @@ def main():
         B_label_list = make_label_list(B_path_list, params["labels"])
         path_list += B_path_list
         label_list += B_label_list
-    print(len(path_list), len(label_list))
+
+    transform = ImageTransform(params)
 
     # ys = []
     # ypreds = []
     # val_indices_after_skf = []
 
-    # skf = StratifiedKFold(n_splits=params["cv_n_split"], shuffle=True, random_state=0)
+    skf = StratifiedKFold(n_splits=params["cv_n_split"], shuffle=True, random_state=0)
 
-    # for cv_num, (train_indices, val_indices) in enumerate(skf.split(path_list, label_list)):
-    #     print("交差検証：{}/{}".format(cv_num + 1, skf.get_n_splits()))
+    for cv_num, (train_indices, val_indices) in enumerate(skf.split(path_list, label_list)):
+        print("交差検証：{}/{}".format(cv_num + 1, skf.get_n_splits()))
 
-    #     train_path_list = [path_list[i] for i in train_indices]
-    #     train_label_list = [label_list[i] for i in train_indices]
-    #     val_path_list = [path_list[i] for i in val_indices]
-    #     val_label_list = [label_list[i] for i in val_indices]
+        train_path_list = [path_list[i] for i in train_indices]
+        train_label_list = [label_list[i] for i in train_indices]
+        val_path_list = [path_list[i] for i in val_indices]
+        val_label_list = [label_list[i] for i in val_indices]
 
-    #     train_dataset = CustomImageDataset(
-    #         train_list, label_list, phase="train", arrange=None, transform=ImageTransform()
-    #     )
-    #     val_dataset = ArrangeNumDataset(val_list, label_list, phase="test", arrange=None, transform=ImageTransform())
+        train_path_list, train_label_list = arrange_data_num_per_label(
+            params["imbalance"], train_path_list, train_label_list
+        )
 
-    #     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-    #     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+        train_dataset = CustomImageDataset(train_path_list, train_label_list, transform, phase="train")
+        val_dataset = CustomImageDataset(val_path_list, val_label_list, phase="test")
+
+        train_loader = DataLoader(train_dataset, batch_size=params["batch_size"], shuffle=True, num_workers=4)
+        val_loader = DataLoader(val_dataset, batch_size=params["batch_size"], shuffle=False, num_workers=4)
 
     #     net = InitEfficientNet(only_fc=only_fc, pretrained=pretrained, model_name="efficientnet-b3")
     #     optimizer = optim.Adam(net.get_params_lr())

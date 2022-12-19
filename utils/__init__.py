@@ -301,17 +301,17 @@ def mean_and_std_score(all_score_list, y_class_num, need_all_mean=True, need_std
         return score_array, None
 
 
-def calc_score(params, y, preds, need_mean=True, need_std=True):
+def calc_score(ys, ypreds, label_num, need_mean=True, need_std=True):
     all_precision_list = []
     all_recall_list = []
     all_f1_score_list = []
     accuracy_list = []
-    for i, pred in enumerate(preds):
-        result = scores(y, pred, labels=range(len(params["labels"])), zero_division=0)
+    for y, ypred in zip(ys, ypreds):
+        result = scores(y, ypred, labels=range(label_num), zero_division=0)
         all_precision_list.append(result[0] * 100)
         all_recall_list.append(result[1] * 100)
         all_f1_score_list.append(result[2] * 100)
-        accuracy_list.append(accuracy_score(y, pred) * 100)
+        accuracy_list.append(accuracy_score(y, ypred) * 100)
 
     y_class_num = np.unique(y).size
     precision_array, precision_std = mean_and_std_score(all_precision_list, y_class_num, need_mean, need_std)
@@ -345,9 +345,9 @@ def format_score_line(score_array, std_array=None):
     return formatted_line
 
 
-def print_score(params, score, need_mean=True, need_std=True):
-    print(f"\n{params['num_estimate']}回平均", end="\t")
-    for label in params["labels"]:
+def print_score(score, labels, need_mean=True, need_std=True):
+    print("", end="\t\t")
+    for label in labels:
         print(label, end="\t\t" if need_std else "\t")
     if need_mean:
         print("平均")
@@ -362,7 +362,7 @@ def print_score(params, score, need_mean=True, need_std=True):
         print(f"Accuracy\t{score['Accuracy']:.2f}")
 
 
-def save_score(params, score, path, need_mean=True, need_std=True):
+def save_score(score, labels, path, need_mean=True, need_std=True):
     if need_std:
         precision = format_score_line(score["Precision"], score["Precision_Std"]).split()
         recall = format_score_line(score["Recall"], score["Recall_Std"]).split()
@@ -374,7 +374,7 @@ def save_score(params, score, path, need_mean=True, need_std=True):
         f1_score = format_score_line(score["F1 Score"], None).split()
         accuracy = f"{score['Accuracy']:.2f}"
 
-    index = params["labels"].copy()
+    index = labels.copy()
     if need_mean:
         index.append("平均")
 
@@ -438,28 +438,41 @@ def calc_voting_score(params, y, preds, need_mean=True):
 
 # ys:推論回数 × データ数  2次元配列
 # ypreds:推論回数 × データ数 × ラベル数  3次元配列
-def print_and_save_result(params, y, preds, need_mean=True, need_std=True, need_confusion_matrix=True):
+def print_and_save_result(
+    ys: list,
+    ypreds: list,
+    labels: list[str],
+    dir_path: str,
+    need_mean: bool = True,
+    need_std: bool = True,
+    need_confusion_matrix: bool = True,
+    is_cv: bool = False,
+):
     # フォルダを作製する
-    path = os.path.join("result", params["name"], params["test_name"])
-    if not os.path.exists(path):
-        os.makedirs(path)
-
-    preds_non_probability = np.argmax(preds, 2)
-
-    if need_confusion_matrix:
-        confusion_matrix_df = calc_confusion_matrix_df(params, y, preds_non_probability)
-        print(confusion_matrix_df)
-        confusion_matrix_df.to_csv(os.path.join(path, "confusion_matrix.csv"))
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
 
     # 結果の表示と保存
-    score = calc_score(params, y, preds_non_probability, need_mean, need_std)
-    print_score(params, score, need_mean, need_std)
-    save_score(params, score, os.path.join(path, "score.csv"), need_mean, need_std)
-    save_y_preds_all_score(params, y, preds_non_probability, path)
 
-    # SoftVotingの計算と保存
-    voting_score = calc_voting_score(params, y, preds, need_mean)
-    save_score(params, voting_score, os.path.join(path, "score_soft_voting.csv"), need_mean, False)
+    if is_cv:
+        score = calc_score(ys, ypreds, len(labels), need_mean, need_std)
+        print_score(score, labels, need_mean, need_std)
+        save_score(score, labels, os.path.join(dir_path, "score_cv.csv"), need_mean, need_std)
+    else:
+        ypreds_non_probability = np.argmax(ypreds, 2)
+        score = calc_score(ys, ypreds_non_probability, len(labels), need_mean, need_std)
+        print_score(score, labels, need_mean, need_std)
+        save_score(score, labels, os.path.join(dir_path, "score.csv"), need_mean, need_std)
+        save_y_preds_all_score(params, y, ypreds_non_probability, dir_path)
+
+        # SoftVotingの計算と保存
+        voting_score = calc_voting_score(params, y, ypreds, need_mean)
+        save_score(params, voting_score, os.path.join(dir_path, "score_soft_voting.csv"), need_mean, False)
+
+    if need_confusion_matrix and not is_cv:
+        confusion_matrix_df = calc_confusion_matrix_df(params, y, ypreds_non_probability)
+        print(confusion_matrix_df)
+        confusion_matrix_df.to_csv(os.path.join(dir_path, "confusion_matrix.csv"))
 
 
 def save_path_y_ypred(paths: list[str], ys: list, ypreds: list, labels: list[str], save_dir: str):

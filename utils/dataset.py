@@ -117,9 +117,7 @@ class ArrangeNumDataset(Dataset):
 
 
 class CustomImageDataset(Dataset):
-    def __init__(
-        self, path_list: list[str], label_list: list[int], transform: ImageTransform | None = None, phase: str = "train"
-    ):
+    def __init__(self, path_list: list[str], label_list: list[int], transform: ImageTransform, phase: str = "train"):
         self.path_list = path_list
         self.label_list = label_list
         self.transform = transform
@@ -131,9 +129,7 @@ class CustomImageDataset(Dataset):
     def __getitem__(self, index):
         img_path = self.path_list[index]
         img = Image.open(img_path)
-        if self.transform:
-            img = self.transform(img, self.phase)
-
+        img = self.transform(img, self.phase)
         label = self.label_list[index]
 
         return img, label

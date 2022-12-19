@@ -1,15 +1,19 @@
-import itertools
+import os
 import random
 
 import numpy as np
 import torch
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import StratifiedKFold
-from torch import nn, optim
+from torch import optim
 from torch.utils.data import DataLoader
 
-from model import eval_net, train_net
-from utils import ImageTransform, make_datapath_list, make_label_list
+from model import create_net, eval_net, train_net
+from utils import (
+    ImageTransform,
+    make_datapath_list,
+    make_label_list,
+    print_and_save_result,
+)
 from utils.dataset import CustomImageDataset, arrange_data_num_per_label
 from utils.parse import argparse_cv
 
@@ -37,14 +41,14 @@ def main():
 
     transform = ImageTransform(params)
 
-    # ys = []
-    # ypreds = []
+    ys = []
+    ypreds = []
     # val_indices_after_skf = []
 
     skf = StratifiedKFold(n_splits=params["cv_n_split"], shuffle=True, random_state=0)
 
     for cv_num, (train_indices, val_indices) in enumerate(skf.split(path_list, label_list)):
-        print("交差検証：{}/{}".format(cv_num + 1, skf.get_n_splits()))
+        print("\n交差検証: {}/{}".format(cv_num + 1, skf.get_n_splits()))
 
         train_path_list = [path_list[i] for i in train_indices]
         train_label_list = [label_list[i] for i in train_indices]
@@ -56,29 +60,47 @@ def main():
         )
 
         train_dataset = CustomImageDataset(train_path_list, train_label_list, transform, phase="train")
-        val_dataset = CustomImageDataset(val_path_list, val_label_list, phase="test")
+        val_dataset = CustomImageDataset(val_path_list, val_label_list, transform, phase="test")
 
         train_loader = DataLoader(train_dataset, batch_size=params["batch_size"], shuffle=True, num_workers=4)
         val_loader = DataLoader(val_dataset, batch_size=params["batch_size"], shuffle=False, num_workers=4)
 
-    #     net = InitEfficientNet(only_fc=only_fc, pretrained=pretrained, model_name="efficientnet-b3")
-    #     optimizer = optim.Adam(net.get_params_lr())
-    #     weights = torch.tensor(train_dataset.weights).float().cuda()
-    #     loss_fn = nn.CrossEntropyLoss(weight=weights)
+        # 損失関数のクラス数に合わせてweightをかけるか決める
+        if params["imbalance"] == "lossweight":
+            loss_weight = train_dataset.weight.to(device)  # deviceに送らないと動かない
+            print("lossweight:", loss_weight.cpu())
+        else:
+            loss_weight = None
+        loss_fn = torch.nn.CrossEntropyLoss(weight=loss_weight)
 
-    #     train_net(net(), train_loader, val_loader, optimizer=optimizer, epochs=2, device=device, loss_fn=loss_fn)
-    #     ys_ypreds = eval_net(net(), val_loader, device=device)
-    #     ys.append(ys_ypreds[0])
-    #     ypreds.append(ys_ypreds[1])
-    #     val_indices_after_skf.append(val_indices)
+        net = create_net(params)
 
-    # ys = torch.cat(ys).cpu().numpy()
-    # ypreds = torch.cat(ypreds).cpu().numpy()
-    # val_indices_after_skf = list(itertools.chain.from_iterable(val_indices_after_skf))
+        # 使用する最適化手法を設定する
+        if "Adam" == params["optim_name"]:
+            optimizer = optim.Adam(
+                net.get_params_lr(lr_not_pretrained=params["lr_not_pretrained"], lr_pretrained=params["lr_pretrained"]),
+                weight_decay=params["weight_decay"],
+            )
+        elif "SGD" == params["optim_name"]:
+            optimizer = optim.SGD(
+                net.get_params_lr(lr_not_pretrained=params["lr_not_pretrained"], lr_pretrained=params["lr_pretrained"]),
+                momentum=params["momentum"],
+                weight_decay=params["weight_decay"],
+            )
 
-    # print("accuracy_score:", accuracy_score(ys, ypreds))
-    # print(confusion_matrix(ys, ypreds))
-    # print(classification_report(ys, ypreds, target_names=label_list, digits=3))
+        # 学習
+        print("学習")
+        train_net(net, train_loader, optimizer=optimizer, loss_fn=loss_fn, epochs=params["epochs"], device=device)
+
+        # 推論
+        print("\n推論")
+        y, ypred = eval_net(net, val_loader, probability=False, device=device)
+
+        ys.append(y.cpu().numpy())
+        ypreds.append(ypred.cpu().numpy())
+
+    dir_path = os.path.join("result", params["name"])
+    print_and_save_result(ys, ypreds, params["labels"], dir_path, is_cv=True)
 
 
 if __name__ == "__main__":

@@ -243,30 +243,29 @@ def print_recall(params, ys, ypreds):
     print(classification_report(y, ypred, target_names=params["labels"], digits=3, zero_division=0))
 
 
-def calc_confusion_matrix_df(params, y, preds):
+def calc_confusion_matrix_df(y, ypreds, labels):
     total_confusion_matrix = None
-    for i, pred in enumerate(preds):
+    for i, pred in enumerate(ypreds):
         if total_confusion_matrix is None:
-            total_confusion_matrix = confusion_matrix(y, pred, labels=range(len(params["labels"])))
+            total_confusion_matrix = confusion_matrix(y, pred, labels=range(len(labels)))
         else:
-            total_confusion_matrix += confusion_matrix(y, pred, labels=range(len(params["labels"])))
-    multi_columns = pd.MultiIndex.from_product([["Prediction"], params["labels"]])
-    multi_index = pd.MultiIndex.from_product([["Actual"], params["labels"]])
+            total_confusion_matrix += confusion_matrix(y, pred, labels=range(len(labels)))
+    multi_columns = pd.MultiIndex.from_product([["Prediction"], labels])
+    multi_index = pd.MultiIndex.from_product([["Actual"], labels])
     confusion_matrix_df = pd.DataFrame(
-        np.rint(total_confusion_matrix / 10).astype(int), index=multi_index, columns=multi_columns
+        np.rint(total_confusion_matrix / len(ypreds)).astype(int), index=multi_index, columns=multi_columns
     )
     return confusion_matrix_df
 
 
-def save_weights(params, weights):
+def save_weights(weights, dir_path):
     # フォルダ作成
-    path = os.path.join("result", params["name"])
-    if not os.path.exists(os.path.join(path, "weight")):
-        os.makedirs(os.path.join(path, "weight"))
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
 
     # ネットワークの重み保存
     for i, weight in enumerate(weights):
-        torch.save(weight, os.path.join(path, "weight", "weight" + str(i) + ".pth"))
+        torch.save(weight, os.path.join(dir_path, "weight", "weight" + str(i) + ".pth"))
 
 
 def save_params(params: dict):
@@ -384,15 +383,15 @@ def save_score(score, labels, path, need_mean=True, need_std=True):
     df.to_csv(path)
 
 
-def save_y_preds_all_score(params, y, preds, path):
-    y_preds_df = pd.DataFrame(dict(y=y))
+def save_y_ypreds_all_score(y, ypreds, labels, dir_path):
+    y_ypreds_df = pd.DataFrame(dict(y=y))
     all_score_array = None
-    for i, pred in enumerate(preds):
+    for i, pred in enumerate(ypreds):
         # 各施行の予測値のdf作成
-        y_preds_df[f"pred_{i}"] = pred
+        y_ypreds_df[f"pred_{i}"] = pred
 
         # 各施行のスコアを計算
-        score = calc_score(params, y, [pred], True, False)
+        score = calc_score([y], [pred], len(labels), need_mean=True, need_std=False)
         score_array = np.hstack([score["Precision"], score["Recall"], score["F1 Score"], score["Accuracy"]])
         score_array = format_score_line(score_array).split()
         if all_score_array is None:
@@ -402,30 +401,28 @@ def save_y_preds_all_score(params, y, preds, path):
 
     # 計算したスコアをフォーマットして、予測値dfの末尾に連結できる形式にする
     score_name_list = ["Precision", "Recall", "F1 Score"]
-    label_name_list = params["labels"].copy()
+    label_name_list = labels.copy()
     label_name_list.append("Mean")
     score_index = []
     for score_name, label_name in itertools.product(score_name_list, label_name_list):
         score_index.append(f"{score_name}_{label_name}")
     score_index.append("Accuracy")
-    score_df = pd.DataFrame(
-        all_score_array, columns=score_index, index=[f"pred_{i}" for i in range(params["num_estimate"])]
-    ).T
+    score_df = pd.DataFrame(all_score_array, columns=score_index, index=[f"pred_{i}" for i in range(len(ypreds))]).T
 
-    result_df = pd.concat([y_preds_df, score_df])
-    result_df.to_csv(os.path.join(path, "y_preds_all_score.csv"))
+    result_df = pd.concat([y_ypreds_df, score_df])
+    result_df.to_csv(os.path.join(dir_path, "y_ypreds_all_score.csv"))
 
 
-def calc_voting_score(params, y, preds, need_mean=True):
-    sum_preds = np.sum(preds, 0)
-    voting_preds = np.argmax(sum_preds, 1)
-    result = scores(y, voting_preds, labels=range(len(params["labels"])), zero_division=0)
+def calc_voting_score(y, ypreds, labels_num, need_mean=True):
+    sum_ypreds = np.sum(ypreds, 0)
+    voting_ypreds = np.argmax(sum_ypreds, 1)
+    result = scores(y, voting_ypreds, labels=range(labels_num), zero_division=0)
 
     y_class_num = np.unique(y).size
     precision_array, _ = mean_and_std_score([result[0] * 100], y_class_num, need_mean, False)
     recall_array, _ = mean_and_std_score([result[1] * 100], y_class_num, need_mean, False)
     f1_score_array, _ = mean_and_std_score([result[2] * 100], y_class_num, need_mean, False)
-    accuracy_array, _ = mean_and_std_score([accuracy_score(y, voting_preds) * 100], y_class_num, False, False)
+    accuracy_array, _ = mean_and_std_score([accuracy_score(y, voting_ypreds) * 100], y_class_num, False, False)
 
     score = {
         "Precision": precision_array,
@@ -453,7 +450,6 @@ def print_and_save_result(
         os.makedirs(dir_path)
 
     # 結果の表示と保存
-
     if is_cv:
         score = calc_score(ys, ypreds, len(labels), need_mean, need_std)
         print_score(score, labels, need_mean, need_std)
@@ -463,14 +459,14 @@ def print_and_save_result(
         score = calc_score(ys, ypreds_non_probability, len(labels), need_mean, need_std)
         print_score(score, labels, need_mean, need_std)
         save_score(score, labels, os.path.join(dir_path, "score.csv"), need_mean, need_std)
-        save_y_preds_all_score(params, y, ypreds_non_probability, dir_path)
+        save_y_ypreds_all_score(ys[0], ypreds_non_probability, labels, dir_path)
 
         # SoftVotingの計算と保存
-        voting_score = calc_voting_score(params, y, ypreds, need_mean)
-        save_score(params, voting_score, os.path.join(dir_path, "score_soft_voting.csv"), need_mean, False)
+        voting_score = calc_voting_score(ys[0], ypreds, len(labels), need_mean)
+        save_score(voting_score, labels, os.path.join(dir_path, "score_soft_voting.csv"), need_mean, False)
 
     if need_confusion_matrix and not is_cv:
-        confusion_matrix_df = calc_confusion_matrix_df(params, y, ypreds_non_probability)
+        confusion_matrix_df = calc_confusion_matrix_df(ys[0], ypreds_non_probability, labels)
         print(confusion_matrix_df)
         confusion_matrix_df.to_csv(os.path.join(dir_path, "confusion_matrix.csv"))
 

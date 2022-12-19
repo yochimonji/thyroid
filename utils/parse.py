@@ -19,7 +19,6 @@ def argparse_base_train() -> argparse.ArgumentParser:
     parser.add_argument("-n", "--name", type=str, required=True)
     parser.add_argument("-A", "--trainA", type=str, required=True)
     parser.add_argument("-B", "--trainB", type=str)
-    parser.add_argument("--num_estimate", type=int, default=10)
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument(
@@ -54,6 +53,7 @@ def argparse_train() -> dict:
         dict: 訓練のパラメータを辞書に格納したもの。本来ならパラメータを直接返すべき。負の遺産。
     """
     parser = argparse_base_train()
+    parser.add_argument("--num_estimate", type=int, default=10)
     args = parser.parse_args()
     params = args_to_dict(args)
 

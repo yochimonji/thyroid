@@ -107,8 +107,8 @@ def main():
         ys.append(y.cpu().numpy())
         ypreds.append(ypred.cpu().numpy())
 
-        score = calc_score(ys, ypreds, len(params["labels"]))
-        print_score(score, params["labels"])
+        score = calc_score(ys, ypreds, len(params["labels"]), need_std=False)
+        print_score(score, params["labels"], need_std=False)
 
     dir_path = os.path.join("result", params["name"])
     print_and_save_result(ys, ypreds, params["labels"], dir_path, is_cv=True)

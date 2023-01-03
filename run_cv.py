@@ -3,18 +3,24 @@ import random
 
 import numpy as np
 import torch
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import GroupShuffleSplit
 from torch import optim
 from torch.utils.data import DataLoader
 
 from model import create_net, eval_net, train_net
 from utils import (
     ImageTransform,
+    calc_score,
     make_datapath_list,
     make_label_list,
     print_and_save_result,
+    print_score,
 )
-from utils.dataset import CustomImageDataset, arrange_data_num_per_label
+from utils.dataset import (
+    CustomImageDataset,
+    arrange_data_num_per_label,
+    make_group_list,
+)
 from utils.parse import argparse_cv
 
 
@@ -33,22 +39,24 @@ def main():
 
     path_list = make_datapath_list(params["trainA"], params["labels"])
     label_list = make_label_list(path_list, params["labels"])
+    group_list = make_group_list(path_list, params["trainA"])
     if params["trainB"]:
         B_path_list = make_datapath_list(params["trainB"], params["labels"])
         B_label_list = make_label_list(B_path_list, params["labels"])
+        B_group_list = make_group_list(B_path_list, params["trainB"])
         path_list += B_path_list
         label_list += B_label_list
+        group_list += B_group_list
 
     transform = ImageTransform(params)
 
     ys = []
     ypreds = []
-    # val_indices_after_skf = []
 
-    skf = StratifiedKFold(n_splits=params["cv_n_split"], shuffle=True, random_state=0)
+    gss = GroupShuffleSplit(n_splits=params["cv_n_split"], test_size=0.33, random_state=7)
 
-    for cv_num, (train_indices, val_indices) in enumerate(skf.split(path_list, label_list)):
-        print("\n交差検証: {}/{}".format(cv_num + 1, skf.get_n_splits()))
+    for cv_num, (train_indices, val_indices) in enumerate(gss.split(path_list, label_list, group_list)):
+        print("\n交差検証: {}/{}".format(cv_num + 1, params["cv_n_split"]))
 
         train_path_list = [path_list[i] for i in train_indices]
         train_label_list = [label_list[i] for i in train_indices]
@@ -98,6 +106,9 @@ def main():
 
         ys.append(y.cpu().numpy())
         ypreds.append(ypred.cpu().numpy())
+
+        score = calc_score(ys, ypreds, len(params["labels"]))
+        print_score(score, params["labels"])
 
     dir_path = os.path.join("result", params["name"])
     print_and_save_result(ys, ypreds, params["labels"], dir_path, is_cv=True)

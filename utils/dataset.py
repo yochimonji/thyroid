@@ -1,4 +1,5 @@
 import itertools
+import os
 import random
 from collections import Counter
 
@@ -205,9 +206,18 @@ def arrange_data_num_per_label(
         return path_list, label_list
 
 
-def compute_class_weight(label_list: list[int]):
+def compute_class_weight(label_list: list[int]) -> torch.Tensor:
     label_count = Counter(label_list)
     sorted_label_count = sorted(label_count.items())
     tensor_label_count = torch.tensor(sorted_label_count)[:, 1]
     weight = len(label_list) / tensor_label_count
     return weight
+
+
+def make_group_list(path_list: list[str], path_root: str) -> list[str]:
+    group_list = []
+    for path in path_list:
+        group = path.replace(path_root, "")
+        group = group[: group.rfind("/")]
+        group_list.append(group)
+    return group_list

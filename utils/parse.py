@@ -69,7 +69,7 @@ def argparse_train() -> dict:
 
 def argparse_cv() -> dict:
     parser = argparse_base_train()
-    parser.add_argument("--cv_n_split", type=int, default=10)
+    parser.add_argument("--cv_n_split", type=int, default=3)
 
     args = parser.parse_args()
     params = args_to_dict(args)

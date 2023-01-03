@@ -1,5 +1,6 @@
 import itertools
 import random
+from collections import Counter
 
 import numpy as np
 import torch
@@ -122,6 +123,7 @@ class CustomImageDataset(Dataset):
         self.label_list = label_list
         self.transform = transform
         self.phase = phase
+        self.weight = compute_class_weight(self.label_list)
 
     def __len__(self):
         return len(self.path_list)
@@ -201,3 +203,11 @@ def arrange_data_num_per_label(
         return path_list_resampled, label_list_resampled
     else:
         return path_list, label_list
+
+
+def compute_class_weight(label_list: list[int]):
+    label_count = Counter(label_list)
+    sorted_label_count = sorted(label_count.items())
+    tensor_label_count = torch.tensor(sorted_label_count)[:, 1]
+    weight = len(label_list) / tensor_label_count
+    return weight

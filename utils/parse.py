@@ -42,6 +42,8 @@ def argparse_base_train() -> argparse.ArgumentParser:
     parser.add_argument("--lr_pretrained", type=float, default=1e-5)
     parser.add_argument("--momentum", type=float, default=0.9)
     parser.add_argument("--weight_decay", type=float, default=1e-4)
+    parser.add_argument("--loss_name", type=str, choices=["crossentropy", "focal"], default="crossentropy")
+    parser.add_argument("--focal_gamma", type=float, default=2.0)
 
     return parser
 

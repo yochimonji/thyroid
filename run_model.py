@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader
 # 自作ライブラリ
 import utils
 from model import create_net, train_net
+from model.loss import create_loss
 from utils.dataset import ArrangeNumDataset
 from utils.parse import argparse_train
 
@@ -46,7 +47,7 @@ def main():
             print("inverse_class_freq:", loss_weight.cpu())
         else:
             loss_weight = None
-        loss_fn = torch.nn.CrossEntropyLoss(weight=loss_weight)
+        loss_fn = create_loss(params["loss_name"], weight=loss_weight, focal_gamma=params["focal_gamma"])
 
         net = create_net(params)
 

@@ -1,5 +1,6 @@
 import os
 import random
+from collections import Counter
 
 import numpy as np
 import torch
@@ -8,6 +9,7 @@ from torch import optim
 from torch.utils.data import DataLoader
 
 from model import create_net, eval_net, train_net
+from model.loss import create_loss
 from utils import (
     ImageTransform,
     calc_score,
@@ -48,6 +50,7 @@ def main():
         path_list += B_path_list
         label_list += B_label_list
         group_list += B_group_list
+    print("クラスごとのデータ数", Counter(label_list))
 
     transform = ImageTransform(params)
 
@@ -80,7 +83,7 @@ def main():
             print("inverse_class_freq:", loss_weight.cpu())
         else:
             loss_weight = None
-        loss_fn = torch.nn.CrossEntropyLoss(weight=loss_weight)
+        loss_fn = create_loss(params["loss_name"], weight=loss_weight, focal_gamma=params["focal_gamma"])
 
         net = create_net(params)
 

@@ -15,6 +15,7 @@ from utils import (
     make_label_list,
     print_and_save_result,
     print_score,
+    save_params,
 )
 from utils.dataset import (
     CustomImageDataset,
@@ -112,6 +113,7 @@ def main():
 
     dir_path = os.path.join("result", params["name"])
     print_and_save_result(ys, ypreds, params["labels"], dir_path, is_cv=True)
+    save_params(params, file_name="params_cv.json")
 
 
 if __name__ == "__main__":

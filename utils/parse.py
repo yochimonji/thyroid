@@ -24,8 +24,8 @@ def argparse_base_train() -> argparse.ArgumentParser:
     parser.add_argument(
         "--imbalance",
         type=str,
-        choices=["undersampling", "oversampling", "lossweight"],
-        help='["undersampling", "oversampling", "lossweight"] or None',
+        choices=["undersampling", "oversampling", "inverse_class_freq"],
+        help='["undersampling", "oversampling", "inverse_class_freq"] or None',
     )
     parser.add_argument("--img_resize", type=int, default=224)
     parser.add_argument("--mean", type=float, nargs=3, default=[0.485, 0.456, 0.406])

@@ -41,9 +41,9 @@ def main():
         train_loader = DataLoader(train_dataset, batch_size=params["batch_size"], shuffle=True, num_workers=4)
 
         # 損失関数のクラス数に合わせてweightをかけるか決める
-        if params["imbalance"] == "lossweight":
+        if params["imbalance"] == "inverse_class_freq":
             loss_weight = train_dataset.weight.to(device)  # deviceに送らないと動かない
-            print("lossweight:", loss_weight.cpu())
+            print("inverse_class_freq:", loss_weight.cpu())
         else:
             loss_weight = None
         loss_fn = torch.nn.CrossEntropyLoss(weight=loss_weight)

@@ -54,15 +54,15 @@ def main():
         path_list, label_list = arrange_data_num_per_label(params["imbalance"], path_list, label_list)
         train_dataset = CustomImageDataset(path_list, label_list, transform, phase="train")
         train_loader = DataLoader(train_dataset, batch_size=params["batch_size"], shuffle=True, num_workers=4)
-        print("クラスごとのデータ数", sorted(Counter(label_list).items()))
+        print("クラスごとのデータ数: ", sorted(Counter(label_list).items()))
 
-        # 損失関数のクラス数に合わせてweightをかけるか決める
-        if params["imbalance"] == "inverse_class_freq":
-            loss_weight = train_dataset.weight.to(device)  # deviceに送らないと動かない
-            print("loss_weight:", loss_weight.cpu())
-        else:
-            loss_weight = None
-        loss_fn = create_loss(params["loss_name"], weight=loss_weight, focal_gamma=params["focal_gamma"])
+        loss_fn = create_loss(
+            params["loss_name"],
+            imbalance=params["imbalance"],
+            label_list=label_list,
+            focal_gamma=params["focal_gamma"],
+            device=device,
+        )
 
         net = create_net(params)
 

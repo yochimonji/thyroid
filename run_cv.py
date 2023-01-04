@@ -50,7 +50,6 @@ def main():
         path_list += B_path_list
         label_list += B_label_list
         group_list += B_group_list
-    print("クラスごとのデータ数", Counter(label_list))
 
     transform = ImageTransform(params)
 
@@ -70,6 +69,7 @@ def main():
         train_path_list, train_label_list = arrange_data_num_per_label(
             params["imbalance"], train_path_list, train_label_list
         )
+        print("訓練のクラスごとのデータ数: ", Counter(train_label_list))
 
         train_dataset = CustomImageDataset(train_path_list, train_label_list, transform, phase="train")
         val_dataset = CustomImageDataset(val_path_list, val_label_list, transform, phase="test")
@@ -77,14 +77,13 @@ def main():
         train_loader = DataLoader(train_dataset, batch_size=params["batch_size"], shuffle=True, num_workers=4)
         val_loader = DataLoader(val_dataset, batch_size=params["batch_size"], shuffle=False, num_workers=4)
 
-        # 損失関数のクラス数に合わせてweightをかけるか決める
-        if params["imbalance"] == "inverse_class_freq":
-            loss_weight = train_dataset.weight.to(device)  # deviceに送らないと動かない
-            print("inverse_class_freq:", loss_weight.cpu())
-        else:
-            loss_weight = None
-        loss_fn = create_loss(params["loss_name"], weight=loss_weight, focal_gamma=params["focal_gamma"])
-
+        loss_fn = create_loss(
+            params["loss_name"],
+            imbalance=params["imbalance"],
+            label_list=label_list,
+            focal_gamma=params["focal_gamma"],
+            device=device,
+        )
         net = create_net(params)
 
         # 使用する最適化手法を設定する

@@ -260,8 +260,8 @@ def calc_confusion_matrix_df(y, ypreds, labels):
 
 def save_weights(weights, dir_path):
     # フォルダ作成
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
+    if not os.path.exists(os.path.join(dir_path, "weight")):
+        os.makedirs(os.path.join(dir_path, "weight"))
 
     # ネットワークの重み保存
     for i, weight in enumerate(weights):

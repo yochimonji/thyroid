@@ -68,7 +68,7 @@ def main():
         net_weights.append(net.cpu().state_dict())
 
     dir_path = os.path.join("result", params["name"])
-    if not os.path.exists(dir_path):
+    if not os.path.exists(os.path.join(dir_path, "weight")):
         os.makedirs(os.path.join(dir_path, "weight"))
     utils.save_params(params)
     utils.save_weights(net_weights, dir_path)

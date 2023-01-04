@@ -33,7 +33,6 @@ def argparse_base_train() -> argparse.ArgumentParser:
     parser.add_argument("--grayscale_flag", action="store_true")
     parser.add_argument("--normalize_per_img", action="store_true")
     parser.add_argument("--net_name", type=str, default="resnet18")
-    parser.add_argument("--multi_net", action="store_true")
     parser.add_argument("--pretrained", action="store_false")
     parser.add_argument("--transfer_learning", action="store_true")
     parser.add_argument("--weight_path", type=str)

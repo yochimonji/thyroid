@@ -1,14 +1,15 @@
 # 標準ライブラリ
 import os
+from collections import Counter
 
 # 外部ライブラリ
 import torch
 from torch.utils.data import DataLoader
 
 # 自作ライブラリ
-import utils
 from model import create_net, eval_net
-from utils.dataset import ArrangeNumDataset
+from utils import ImageTransform, print_and_save_result, save_params, save_path_y_ypred
+from utils.dataset import CustomImageDataset, make_datapath_list, make_label_list
 from utils.parse import argparse_test
 
 
@@ -20,7 +21,13 @@ def predict():
     device = torch.device("cuda:" + params["gpu_id"] if torch.cuda.is_available() else "cpu")
     print("使用デバイス：", device)
 
-    test_dataset = ArrangeNumDataset(params=params, phase="test")
+    path_list = make_datapath_list(params["test"], params["labels"])
+    label_list = make_label_list(path_list, params["labels"])
+    print("クラスごとのデータ数", sorted(Counter(label_list).items()))
+
+    transform = ImageTransform(params)
+
+    test_dataset = CustomImageDataset(path_list, label_list, transform, phase="test")
     test_loader = DataLoader(test_dataset, batch_size=params["batch_size"], shuffle=False, num_workers=4)
 
     net = create_net(params)
@@ -44,9 +51,9 @@ def predict():
         ypreds.append(ypred.cpu().numpy())
 
     dir_path = os.path.join("result", params["name"], params["test_name"])
-    utils.print_and_save_result(ys, ypreds, params["labels"], dir_path)
-    utils.save_path_y_ypred(test_dataset.file_list, ys[0], ypreds[0], params["labels"], dir_path)
-    utils.save_params(params)
+    print_and_save_result(ys, ypreds, params["labels"], dir_path)
+    save_path_y_ypred(path_list, ys[0], ypreds[0], params["labels"], dir_path)
+    save_params(params)
 
 
 if __name__ == "__main__":

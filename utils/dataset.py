@@ -1,6 +1,5 @@
-import itertools
+import glob
 import os
-import random
 from collections import Counter
 
 import numpy as np
@@ -10,112 +9,7 @@ from imblearn.under_sampling import RandomUnderSampler
 from PIL import Image
 from torch.utils.data import Dataset
 
-from utils import ImageTransform, make_datapath_list
-
-
-# データ数を調整したDatasetを作成するクラス
-# オーバー・アンダーサンプリング用
-class ArrangeNumDataset(Dataset):
-    def __init__(self, params, phase):
-        self.params = params
-        self.labels = params["labels"]
-        self.phase = phase
-        self.transform = ImageTransform(params)
-        self.file_list = self.make_file_list()  # データ数調整後のファイルリスト。self.label_listと対。
-        self.label_list = self.make_label_list()  # データ数調整後のラベルリスト。self.file_listと対。
-        self.data_num = np.bincount(np.array(self.label_list))  # クラスごとのデータ数
-        if len(self.data_num) < len(self.labels):
-            self.data_num = np.concatenate([self.data_num, np.array([0] * (len(self.labels) - len(self.data_num)))])
-        self.weight = self.calc_weight()  # 損失関数の重み調整用の重み。
-        print("{}の各データ数： {}\t計: {}".format(self.phase, self.data_num, self.data_num.sum()))
-
-    def __len__(self):
-        return len(self.file_list)
-
-    def __getitem__(self, index):
-        img_path = self.file_list[index]
-        img = Image.open(img_path)
-        if self.transform:
-            img = self.transform(img, self.phase)
-
-        label = self.label_list[index]
-
-        return img, label
-
-    def make_file_list(self):
-        if self.phase == "train":
-            file_list = []
-            path_trainA = self.params["trainA"]
-            path_trainB = self.params["trainB"]
-            if path_trainA:
-                file_list.extend(make_datapath_list(path_trainA, self.labels))
-            if path_trainB:
-                file_list.extend(make_datapath_list(path_trainB, self.labels))
-        if self.phase == "test":
-            file_list = make_datapath_list(self.params["test"], self.labels)
-
-        arrange = self.params["imbalance"]
-        # データ数の調整ありの場合
-        if ((arrange == "oversampling") or (arrange == "undersampling")) and (self.phase == "train"):
-            arrange_file_list = []
-            file_dict = self.make_file_dict(file_list)
-
-            # undersampling(+bagging)を行う場合
-            if arrange == "undersampling":
-                min_file_num = float("inf")
-                for val in file_dict.values():
-                    min_file_num = min(min_file_num, len(val))
-                for val in file_dict.values():
-                    # データの重複あり(baggingする場合はこっち)
-                    # arrange_file_list.append(random.choices(val, k=min_file_num))
-                    # データの重複なし(baggingしない場合はこっち)
-                    arrange_file_list.append(random.sample(val, min_file_num))
-
-            # oversamplingを行う場合
-            elif arrange == "oversampling":
-                max_file_num = 0
-                for val in file_dict.values():
-                    max_file_num = max(max_file_num, len(val))
-                for val in file_dict.values():
-                    arrange_file_list.append(random.choices(val, k=max_file_num))  # 重複あり
-                # random.sampleは再標本化後の数値kがもとの要素数より大きいと使えない
-
-            file_list = sorted(list(itertools.chain.from_iterable(arrange_file_list)))
-        return file_list
-
-    # key:ラベル、value:ファイルパスリストの辞書を作成
-    def make_file_dict(self, file_list):
-        label_dict = {}
-        for label in self.labels:
-            label_dict[label] = list()
-        for file in file_list:
-            for key in label_dict:
-                if ("/" + key + "/") in file:
-                    label_dict[key].append(file)
-        return label_dict
-
-    # self.fileリストと対になるラベルのリストを作成する
-    def make_label_list(self):
-        label_list = []
-        for file in self.file_list:
-            for label in self.labels:
-                if ("/" + label + "/") in file:
-                    label_list.append(self.labels.index(label))
-
-        return label_list
-
-    # ラベル数に応じてweightを計算する
-    # 戻り値がnp.arrayなのに注意。PyTorchで使う場合、Tensorに変換する必要あり
-    def calc_weight(self):
-        data_num_sum = self.data_num.sum()
-        weight = []
-        for n in self.data_num:
-            if n == 0:
-                weight.append(0)
-            else:
-                weight.append(data_num_sum / n)
-        weight = torch.tensor(weight).float()
-        return weight
+from utils import ImageTransform
 
 
 class CustomImageDataset(Dataset):
@@ -136,45 +30,6 @@ class CustomImageDataset(Dataset):
         label = self.label_list[index]
 
         return img, label
-
-
-# 複数のデータセットを結合し、1つのデータセットとするクラス
-class ConcatDataset(Dataset):
-    def __init__(self, *datasets):
-        self.datasets = datasets
-        self.label_list = self.make_label_list()
-        self.weight = self.calc_weight()
-
-    def __len__(self):
-        length = 0
-        for dataset in self.datasets:
-            length += dataset.__len__()
-        return length
-
-    def __getitem__(self, index):
-        for dataset in self.datasets:
-            length = dataset.__len__()
-            if index < length:
-                img, label = dataset.__getitem__(index)
-                break
-            else:
-                index -= length
-        return img, label
-
-    def make_label_list(self):
-        label_list = []
-        for dataset in self.datasets:
-            label_list.extend(dataset.make_label_list())
-        return label_list
-
-    def calc_weight(self):
-        data_num = np.bincount(np.array(self.label_list))
-        data_num_sum = data_num.sum()
-        weight = []
-        for n in data_num:
-            weight.append(data_num_sum / n)
-        weight = torch.tensor(weight).float()
-        return weight
 
 
 def arrange_data_num_per_label(
@@ -212,6 +67,50 @@ def compute_class_weight(label_list: list[int]) -> torch.Tensor:
     tensor_label_count = torch.tensor(sorted_label_count)[:, 1]
     weight = len(label_list) / tensor_label_count
     return weight
+
+
+def make_datapath_list(dir_path: str, labels: list[str]) -> list[str]:
+    """path以下のフォルダ名がlabelsと一致するすべてのフォルダからtifファイルのパスリスト取得
+
+    Args:
+        dir_path (str): 探索するフォルダ
+        labels (list[str]): dir_path以下に存在するフォルダ名のリスト
+
+    Returns:
+        list[str]: tifファイルのリスト
+    """
+    if dir_path[-1] != "/":
+        dir_path += "/"
+    search_path_list: list[str] = []
+    for label in labels:
+        search_path_list.append(os.path.join(dir_path, label, "**/*.tif"))
+
+    path_list: list[str] = []
+    # recursive=True:子ディレクトリも再帰的に探索する
+    for search_path in search_path_list:
+        for path in glob.glob(search_path, recursive=True):
+            path_list.append(path)
+
+    return path_list
+
+
+def make_label_list(path_list: list[str], labels: list[str]) -> list[int]:
+    """tifファイルのリストからtifファイルと組になるlabelのリスト生成する
+
+    Args:
+        path_list (list[str]): tifファイルのリスト
+        labels (list[str]): ラベルの一覧のリスト
+
+    Returns:
+        list[str]: tifファイルと組になるlabelのindexのリスト
+    """
+    label_list: list[int] = []
+    for path in path_list:
+        for label in labels:
+            if label in path:
+                label_list.append(labels.index(label))
+                break
+    return label_list
 
 
 def make_group_list(path_list: list[str], path_root: str) -> list[str]:

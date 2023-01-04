@@ -13,8 +13,6 @@ from model.loss import create_loss
 from utils import (
     ImageTransform,
     calc_score,
-    make_datapath_list,
-    make_label_list,
     print_and_save_result,
     print_score,
     save_params,
@@ -22,7 +20,9 @@ from utils import (
 from utils.dataset import (
     CustomImageDataset,
     arrange_data_num_per_label,
+    make_datapath_list,
     make_group_list,
+    make_label_list,
 )
 from utils.parse import argparse_cv
 

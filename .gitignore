@@ -1,6 +1,6 @@
 /data/
 /material/
-/notebook/
+/notebook/temp/**
 **/__pycache__/**
 /logs/
 /result

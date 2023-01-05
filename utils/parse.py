@@ -24,8 +24,8 @@ def argparse_base_train() -> argparse.ArgumentParser:
     parser.add_argument(
         "--imbalance",
         type=str,
-        choices=["undersampling", "oversampling", "inverse_class_freq"],
-        help='["undersampling", "oversampling", "inverse_class_freq"] or None',
+        choices=["undersampling", "oversampling", "inverse_class_freq", "class_balanced"],
+        help='["undersampling", "oversampling", "inverse_class_freq", "class_balanced"] or None',
     )
     parser.add_argument("--img_resize", type=int, default=224)
     parser.add_argument("--mean", type=float, nargs=3, default=[0.485, 0.456, 0.406])
@@ -44,6 +44,7 @@ def argparse_base_train() -> argparse.ArgumentParser:
     parser.add_argument("--weight_decay", type=float, default=1e-4)
     parser.add_argument("--loss_name", type=str, choices=["crossentropy", "focal"], default="crossentropy")
     parser.add_argument("--focal_gamma", type=float, default=2.0)
+    parser.add_argument("--class_balanced_beta", type=float, default=0.999)
 
     return parser
 

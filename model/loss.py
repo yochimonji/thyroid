@@ -29,22 +29,29 @@ def create_loss(
     imbalance: str | None = None,
     label_list: list[int] | None = None,
     focal_gamma: float = 2.0,
+    class_balanced_beta: float = 0.999,
     device: str = "cpu",
 ) -> torch.nn.CrossEntropyLoss | FocalLoss:
     """損失関数を作成する
 
     Args:
         loss_name (str): 損失関数名。現在はcrossentropy, focal。
-        weight (torch.Tensor | None, optional): クラスごとの重み. Defaults to None.
-        focal_gamma (float, optional): FocalLossのハイパーパラメータ. Defaults to 2.0.
+        imbalance (str | None, optional): 損失関数で使用するクラスごとの重みの算出方法。 Defaults to None.
+        TODO: コメントつける
+        label_list (list[int] | None, optional): _description_. Defaults to None.
+        focal_gamma (float, optional): Focal Lossのハイパーパラメータ。 Defaults to 2.0.
+        class_balanced_beta (float, optional): Class-balanced Lossのハイパーパラメータ。 Defaults to 0.999.
+        device (str, optional): 使用デバイス。 Defaults to "cpu".
 
     Returns:
         torch.nn.CrossEntropyLoss | FocalLoss: 損失関数
     """
     # 損失関数のweightを定義
     if imbalance and label_list:
-        # else:  # if imbalance == "inverse_class_freq":
-        weight = calc_inverse_class_freq_weight(label_list).to(device)  # deviceに送らないと動かない
+        if imbalance == "class_balanced":
+            weight = calc_class_balanced_weight(label_list, beta=class_balanced_beta).to(device)
+        else:  # elif imbalance == "inverse_class_freq":
+            weight = calc_inverse_class_freq_weight(label_list).to(device)  # deviceに送らないと動かない
         print("クラスごとのweight:", weight.cpu())
     else:
         weight = None
@@ -63,4 +70,17 @@ def calc_inverse_class_freq_weight(label_list: list[int]) -> torch.Tensor:
     sorted_label_count = sorted(label_count.items())
     tensor_label_count = torch.tensor(sorted_label_count)[:, 1]
     weight = len(label_list) / tensor_label_count
+    return weight
+
+
+def calc_class_balanced_weight(label_list: list[int], beta: float = 0.999) -> torch.Tensor:
+    # 実装参考URL: https://qiita.com/myellow/items/75cd786a051d097efa81
+    # クラスごとのデータ数を計算する
+    label_count = Counter(label_list)
+    sorted_label_count = sorted(label_count.items())
+    tensor_label_count = torch.tensor(sorted_label_count)[:, 1]  # クラスごとのデータ数
+
+    # Class-balanced項を計算する
+    weight = (1.0 - beta) / (1.0 - torch.pow(beta, tensor_label_count))
+    weight = weight / torch.mean(weight)
     return weight

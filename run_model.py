@@ -61,6 +61,7 @@ def main():
             imbalance=params["imbalance"],
             label_list=label_list,
             focal_gamma=params["focal_gamma"],
+            class_balanced_beta=params["class_balanced_beta"],
             device=device,
         )
 

@@ -69,7 +69,7 @@ def main():
         train_path_list, train_label_list = arrange_data_num_per_label(
             params["imbalance"], train_path_list, train_label_list
         )
-        print("訓練のクラスごとのデータ数: ", Counter(train_label_list))
+        print("訓練のクラスごとのデータ数: ", sorted(Counter(train_label_list).items()))
 
         train_dataset = CustomImageDataset(train_path_list, train_label_list, transform, phase="train")
         val_dataset = CustomImageDataset(val_path_list, val_label_list, transform, phase="test")
@@ -80,8 +80,9 @@ def main():
         loss_fn = create_loss(
             params["loss_name"],
             imbalance=params["imbalance"],
-            label_list=label_list,
+            label_list=train_label_list,
             focal_gamma=params["focal_gamma"],
+            class_balanced_beta=params["class_balanced_beta"],
             device=device,
         )
         net = create_net(params)

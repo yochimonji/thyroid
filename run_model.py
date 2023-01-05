@@ -54,12 +54,15 @@ def main():
         path_list, label_list = arrange_data_num_per_label(params["imbalance"], path_list, label_list)
         train_dataset = CustomImageDataset(path_list, label_list, transform, phase="train")
         train_loader = DataLoader(train_dataset, batch_size=params["batch_size"], shuffle=True, num_workers=4)
-        print("クラスごとのデータ数: ", sorted(Counter(label_list).items()))
+
+        label_count_items = sorted(Counter(label_list).items())
+        num_per_class = torch.tensor(label_count_items)[:, 1]
+        print("クラスごとのデータ数: ", num_per_class)
 
         loss_fn = create_loss(
             params["loss_name"],
             imbalance=params["imbalance"],
-            label_list=label_list,
+            num_per_class=num_per_class,
             focal_gamma=params["focal_gamma"],
             class_balanced_beta=params["class_balanced_beta"],
             device=device,

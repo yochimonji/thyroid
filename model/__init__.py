@@ -28,6 +28,7 @@ def create_net(params: dict):
                 model_name=params["name"],
                 out_features=out_features,
                 weight_path=params["weight_path"],
+                two_phase_learning=params["two_phase_learning"],
             )
     elif "efficientnet" in params["name"]:
         net = CustomEfficientNet(  # type: ignore
@@ -42,11 +43,12 @@ def create_net(params: dict):
 class CustomResNet(nn.Module):
     def __init__(
         self,
-        transfer_learning: bool = True,
+        transfer_learning: bool = False,
         pretrained: bool = True,
         model_name: str = "resnet18",
         out_features: int = 8,
         weight_path: str | None = None,
+        two_phase_learning: bool = False,
     ):
         super().__init__()
         self.transfer_learning = transfer_learning
@@ -64,7 +66,8 @@ class CustomResNet(nn.Module):
             self.net = models.resnet18()
             fc_input_dim = self.net.fc.in_features
 
-        self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, out_features))
+        if not two_phase_learning:
+            self.net.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(fc_input_dim, out_features))
         self.set_grad()
 
     def forward(self, x):

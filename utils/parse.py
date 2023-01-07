@@ -45,6 +45,7 @@ def argparse_base_train() -> argparse.ArgumentParser:
     parser.add_argument("--loss_name", type=str, choices=["crossentropy", "focal"], default="crossentropy")
     parser.add_argument("--focal_gamma", type=float, default=2.0)
     parser.add_argument("--class_balanced_beta", type=float, default=0.999)
+    parser.add_argument("--two_phase_learning", action="store_true")
 
     return parser
 

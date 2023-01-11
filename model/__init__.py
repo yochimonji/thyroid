@@ -28,7 +28,7 @@ def create_net(params: dict):
                 model_name=params["name"],
                 out_features=out_features,
                 weight_path=params["weight_path"],
-                two_phase_learning=params["two_phase_learning"],
+                two_phase_learning=True if params.get("two_phase_learning") else False,
             )
     elif "efficientnet" in params["name"]:
         net = CustomEfficientNet(  # type: ignore

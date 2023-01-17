@@ -90,6 +90,7 @@ def make_datapath_list(dir_path: str, labels: list[str]) -> list[str]:
     for search_path in search_path_list:
         for path in glob.glob(search_path, recursive=True):
             path_list.append(path)
+    assert path_list != []
 
     return path_list
 

@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+from argparse import Namespace
 
 
 def argparse_base() -> argparse.ArgumentParser:
@@ -141,6 +142,19 @@ def argparse_gradcam() -> dict:
     params = sort_dict_by_key(params)
     print_params(params)
     return params
+
+
+def argparse_ttest_rel() -> Namespace:
+    """対応のあるt検定のオプション引数のパーサー
+
+    Returns:
+        Namespace: オプション引数
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-A", "--pathA", type=str, required=True)
+    parser.add_argument("-B", "--pathB", type=str, required=True)
+    args = parser.parse_args()
+    return args
 
 
 def args_to_dict(args: argparse.Namespace) -> dict:

@@ -238,6 +238,7 @@ def save_params(params: dict, file_name: str = "params.json"):
         json.dump(params, params_file, indent=4)
 
 
+# FIXME: 全体の平均の標準偏差をミスってる
 def mean_and_std_score(all_score_list, y_class_num, need_all_mean=True, need_std=True):
     all_score_array = np.array(all_score_list)
     score_array = all_score_array.mean(axis=0)

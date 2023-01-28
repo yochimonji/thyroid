@@ -1,13 +1,14 @@
 # 標準ライブラリ
 import os
 from collections import Counter
+from glob import glob
 
 # 外部ライブラリ
 import torch
 from torch.utils.data import DataLoader
 
 # 自作ライブラリ
-from model import create_net, eval_net
+from model import change_state_dict_model_to_net, create_net, eval_net
 from utils import ImageTransform, print_and_save_result, save_params, save_path_y_ypred
 from utils.dataset import CustomImageDataset, make_datapath_list, make_label_list
 from utils.parse import argparse_test
@@ -32,14 +33,24 @@ def predict():
 
     net = create_net(params)
 
+    if params["weight_dir"]:
+        weight_path_list = glob(params["weight_dir"] + "/*.pth")
+        params["num_estimate"] = len(weight_path_list)
+        assert weight_path_list != []
+
     ys = []
     ypreds = []
 
     for i in range(params["num_estimate"]):
         print("\n推論: {}/{}".format(i + 1, params["num_estimate"]))
         # ネットワークに重みをロードする
-        weight_path = os.path.join("result", params["name"], "weight/weight" + str(i) + ".pth")
-        load_weight = torch.load(weight_path, map_location=device)
+        if params["weight_dir"]:
+            weight_path = weight_path_list[i]
+            load_weight = torch.load(weight_path, map_location=device)
+            load_weight = change_state_dict_model_to_net(load_weight)
+        else:
+            weight_path = os.path.join("result", params["name"], "weight/weight" + str(i) + ".pth")
+            load_weight = torch.load(weight_path, map_location=device)
         net.load_state_dict(load_weight)
         print("ネットワークに重みをロードしました")
         print("-----推論中-----")

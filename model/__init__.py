@@ -318,3 +318,12 @@ def fix_model_state_dict(state_dict):
             name = name[4:]
         new_state_dict[name] = v
     return new_state_dict
+
+
+def change_state_dict_model_to_net(state_dict):
+    new_state_dict = dict()
+    for name, v in state_dict.items():
+        if name.startswith("model."):
+            name = name.replace("model.", "net.", 1)
+        new_state_dict[name] = v
+    return new_state_dict

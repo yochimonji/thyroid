@@ -109,6 +109,7 @@ def argparse_test() -> dict:
     parser = argparse_base_test()
     parser.add_argument("-t", "--test_name", type=str, required=True)
     parser.add_argument("-d", "--dataroot", type=str, required=True)
+    parser.add_argument("--weight_dir", type=str)
 
     args = parser.parse_args()
     with open(args.params_path, "r") as params_file:  # テストはparams.jsonからパラメータを取得
@@ -116,6 +117,7 @@ def argparse_test() -> dict:
 
     params["test_name"] = args.test_name
     params["test"] = args.dataroot
+    params["weight_dir"] = args.weight_dir
     params["gpu_id"] = args.gpu_id
     params["phase"] = "test"
 

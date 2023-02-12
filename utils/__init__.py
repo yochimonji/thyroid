@@ -238,22 +238,25 @@ def save_params(params: dict, file_name: str = "params.json"):
         json.dump(params, params_file, indent=4)
 
 
-# FIXME: 全体の平均の標準偏差をミスってる
 def mean_and_std_score(all_score_list, y_class_num, need_all_mean=True, need_std=True):
     all_score_array = np.array(all_score_list)
     score_array = all_score_array.mean(axis=0)
-    if need_all_mean:
-        mean_score = score_array[score_array.nonzero()].sum() / y_class_num
-        score_array = np.concatenate([score_array, [mean_score]])
 
+    if (not need_all_mean) and (not need_std):
+        return score_array, None
+    if need_all_mean:
+        mean_score = (all_score_array.sum(axis=1) / y_class_num).mean()
+        score_array_mean = np.concatenate([score_array, [mean_score]])
     if need_std:
         std_array = np.std(all_score_array, axis=0, ddof=1)
         if need_all_mean:
-            mean_std = std_array[std_array.nonzero()].sum() / y_class_num
-            std_array = np.concatenate([std_array, [mean_std]])
-        return score_array, std_array
+            mean_std = (all_score_array.sum(axis=1) / y_class_num).std(ddof=1)
+            std_array_mean = np.concatenate([std_array, [mean_std]])
+            return score_array_mean, std_array_mean
+        else:
+            return score_array, std_array
     else:
-        return score_array, None
+        return score_array_mean, None
 
 
 def calc_score(ys, ypreds, label_num, need_mean=True, need_std=True):

@@ -26,6 +26,7 @@ efficientnet-pytorch = "^0.7.1"
 pytorch-gradcam = "^0.2.1"
 imbalanced-learn = "^0.10.0"
 japanize-matplotlib = "^1.1.3"
+torchviz = "^0.0.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.10.0"
